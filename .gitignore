@@ -30,6 +30,7 @@ Strings.o
 Ty_routines.o
 Type_table.o
 albert
+doxygen
 driver.o
 initGlobals.o
 node_mgt.o

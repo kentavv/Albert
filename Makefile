@@ -106,6 +106,9 @@ node_mgt.o:		Sparse_structs.h Sparse_defs.h Debug.h node_mgt.h
 initGlobals.o:		Build_defs.h Basis_table.h Mult_table.h
 
 
+doxygen:
+	doxygen doxygen_config
+
 install: albert
 	/bin/rm -f ${BIN}/albert4
 	cp albert ${BIN}/albert4
