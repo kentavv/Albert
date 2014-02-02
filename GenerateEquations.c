@@ -72,6 +72,8 @@
 /*********************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"

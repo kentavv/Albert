@@ -25,6 +25,8 @@
 /*******************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "Build_defs.h"
 #include "Alg_elements.h"
 #include "Mult_table.h"

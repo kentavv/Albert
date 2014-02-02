@@ -21,8 +21,10 @@
 /***      homogeneous or not.                                      ***/
 /*********************************************************************/
 
-#include<string.h>
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "Build_defs.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"

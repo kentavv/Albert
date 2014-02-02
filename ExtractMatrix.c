@@ -18,6 +18,8 @@
 /*******************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 #include "Mult_table.h"

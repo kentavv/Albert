@@ -15,9 +15,11 @@
 /***      polynomial,from the input string entered by user.      ***/
 /*******************************************************************/
 
-#include	<string.h>
 #include	<stdio.h>
+#include	<stdlib.h>
+#include	<string.h>
 #include	<setjmp.h>
+
 #include        "Po_create_poly.h"	
 #include        "Po_parse_poly.h"	
 #include        "Po_semantics.h"	

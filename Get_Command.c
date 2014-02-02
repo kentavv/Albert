@@ -13,7 +13,7 @@
 /***      int getchar()                                            ***/
 /***  PRIVATE ROUTINES:                                            ***/
 /***      int DoSubstitution()                                     ***/
-/***      int getline()                                            ***/
+/***      int my_getline()                                         ***/
 /***  MODULE DESCRIPTION:                                          ***/
 /***      Accept command line from the user.                       ***/
 /***      Make use of definitions given in .albert if necessary.   ***/
@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "Get_Command.h"
 
 #undef getchar           /* Use unbuffered getchar(). */
@@ -55,7 +56,7 @@ int *Operand_len_ptr;
     int tl;
 
     total_line[0] = '\0';
-    temp_line_len = getline(temp_line,MAX_LINE);
+    temp_line_len = my_getline(temp_line,MAX_LINE);
     slashfound = TRUE;
     while ((slashfound) && (temp_line_len > 0)) {
         i = 0;
@@ -67,7 +68,7 @@ int *Operand_len_ptr;
             temp_line2[j++] = temp_line[i++];
         if (temp_line[i] == '\\') {
             slashfound = TRUE;
-            temp_line_len = getline(temp_line,MAX_LINE);
+            temp_line_len = my_getline(temp_line,MAX_LINE);
         }
         else
             slashfound = FALSE;
@@ -110,7 +111,7 @@ int *Operand_len_ptr;
 }
 
 /*
- * Called from two places. From getline() in this module and from
+ * Called from two places. From my_getline() in this module and from
  * Po_routines.c. Its purpose is to fix the bug of cntl D which takes
  * Albert into infinite loop. Basically we replace standard bufferd
  * getchar() with unbuffered getchar(). Code is coppied from KR C book.
@@ -129,7 +130,7 @@ int getchar()
  * length. Code copied from KR C book.
  */
 
-getline(s,lim)
+my_getline(s,lim)
 char s[];
 int lim;
 {

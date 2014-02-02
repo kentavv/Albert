@@ -40,6 +40,7 @@
 /***      products are detrmined by solving these equations.       ***/ 
 /*********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "Build_defs.h"
 #include "Alg_elements.h"

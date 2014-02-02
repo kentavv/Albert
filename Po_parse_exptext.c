@@ -15,9 +15,11 @@
 /***            -7x+10y+(x(yx))                                  ***/
 /*******************************************************************/
 
-#include<string.h>
-#include<stdio.h>
-#include<ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
 #include "Po_parse_exptext.h"
 
 

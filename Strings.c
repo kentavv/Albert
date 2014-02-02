@@ -11,6 +11,7 @@
 /*******************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 
@@ -35,8 +36,6 @@ char **Str1_ptr;
 char Str2[];
 int *Str1_maxsize_ptr;
 {
-    char *realloc();
- 
     if ((*Str1_maxsize_ptr) < (strlen(*Str1_ptr) + strlen(Str2))) {
         if (((*Str1_ptr) = realloc(*Str1_ptr,2*((*Str1_maxsize_ptr) + strlen(Str2)))) == NULL)
             No_memory_panic();

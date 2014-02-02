@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "Build_defs.h"
 #include "Basis_table.h"
 #include "Mult_table.h"
@@ -7,9 +9,11 @@
 
 int initGlobals()
 {
-  int i;
+  char *Mymalloc();
   extern char **Pair_present;
   extern Mt_block ***Mt_block_index;
+
+  int i;
 
   Basis_table = (BT_rec *)Mymalloc(sizeof(BT_rec) * (DIMENSION_LIMIT + 1));
   assert_not_null(Basis_table);

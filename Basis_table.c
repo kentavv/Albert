@@ -19,7 +19,9 @@
 /*******************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <setjmp.h>
+
 #include "Build_defs.h"
 #include "Basis_table.h"
 

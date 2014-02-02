@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 #include "Debug.h"
@@ -44,6 +45,8 @@ static short int blocknum=0;
 
 Node *GetRecord() 
 {
+    char *Mymalloc();
+
     Node *return_value = NULL;
     mem_block *new_block;
     int i;

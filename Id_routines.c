@@ -12,8 +12,10 @@
 /***      identities in the Id_queue.                             ***/
 /********************************************************************/
 
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "Id_routines.h"
 #include "Po_parse_exptext.h"
 

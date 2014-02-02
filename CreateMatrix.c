@@ -40,6 +40,8 @@
 /*******************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 #include "Sparse_structs.h"
@@ -359,6 +361,7 @@ FillTheMatrix()
 
 SparseFillTheMatrix()
 {
+    NODE_PTR Locate_Node();
     char *Mymalloc();
     Scalar S_add();
 

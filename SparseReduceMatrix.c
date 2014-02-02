@@ -23,9 +23,9 @@
 /***                   in row canonical form. This code is      ***/
 /***                   similar to the code in ReduceMatrix.c    ***/
 /******************************************************************/
-#include <stdlib.h>
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
+
 #include "Build_defs.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
@@ -534,6 +534,8 @@ Scalar element;
 int column;
 NODE_PTR Prev_Ptr;
 {
+    Node *GetRecord();
+
     NODE_PTR New_Node;
         
     /* get a new node structure from the memory management system */
