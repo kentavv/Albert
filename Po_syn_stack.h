@@ -1,3 +1,6 @@
+#ifndef _PO_SYN_STACK_H_
+#define _PO_SYN_STACK_H_
+
 /*******************************************************************/
 /***  FILE :     Po_syn_stack.h                                  ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -10,3 +13,5 @@ int get_top_token();
 int get_next_to_top_token();
 int pop_token();
 void print_syn_stack();
+
+#endif

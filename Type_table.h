@@ -1,3 +1,6 @@
+#ifndef _TYPE_TABLE_H_
+#define _TYPE_TABLE_H_
+
 /*******************************************************************/
 /***  FILE :        Type_table.h                                 ***/
 /***  AUTHOR:       Sekhar Muddana                               ***/
@@ -9,3 +12,5 @@ typedef struct tt_node {
     Basis end_basis;            /* indices into Base table. */
     Type type;
 } TT_node; 
+
+#endif

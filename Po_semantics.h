@@ -1,15 +1,18 @@
+#ifndef _PO_SEMANTICS_H_
+#define _PO_SEMANTICS_H_
+
 /*******************************************************************/
 /***  FILE :     Po_semantics.h                                  ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
 /*******************************************************************/
 
 /* The following are the codes for operator */
-#define    	INVALID_OPERATOR    -1	
-#define    	SMALL_LETTER         0
-#define    	SCALAR               1 
-#define    	UNARY_MINUS          2 
-#define    	UNARY_PLUS           3 
-#define    	ADDITION             4 
+#define     INVALID_OPERATOR    -1	
+#define     SMALL_LETTER         0
+#define     SCALAR               1 
+#define     UNARY_MINUS          2 
+#define     UNARY_PLUS           3 
+#define     ADDITION             4 
 #define     SUBTRACTION          5
 #define	    SCALAR_MULT          6 
 #define     EXPONENTIATION       7     
@@ -27,3 +30,5 @@
 void reduce_semantics();
 void store_semantics();
 void print_sem_stack();
+
+#endif

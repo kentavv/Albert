@@ -1,3 +1,6 @@
+#ifndef _CREATEMATRIX_H_
+#define _CREATEMATRIX_H_
+
 /*******************************************************************/
 /***  FILE :        CreateMatrix.h                               ***/
 /***  AUTHOR:       Sekhar Muddana                               ***/
@@ -22,3 +25,5 @@ typedef struct eqn_list_node{
     Basis_pair *basis_pairs;
     struct eqn_list_node *next;
 } Eqn_list_node; 
+
+#endif

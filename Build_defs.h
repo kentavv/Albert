@@ -1,3 +1,6 @@
+#ifndef _BUILD_DEFS_H_
+#define _BUILD_DEFS_H_
+
 /*******************************************************************/
 /***  FILE :     Build_defs.h                                    ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -40,3 +43,4 @@ typedef char Degree;
 typedef Degree *Type;
 typedef int Name;
 
+#endif

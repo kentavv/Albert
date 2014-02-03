@@ -1,3 +1,6 @@
+#ifndef _PO_CREATE_POLY_H_
+#define _PO_CREATE_POLY_H_
+
 /*******************************************************************/
 /***  FILE :     Po_create_poly.h                                ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -8,3 +11,5 @@
 
 static char OPR_SYMBOL[] = {' ',' ','-','+','+','-','M','E','*','.','C','A',
     'J','<','O','`','\'','W'};  /* For Debugging. */
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef _ALG_ELEMENTS_H_
+#define _ALG_ELEMENTS_H_
+
 /*******************************************************************/
 /***  FILE :     Alg_elements.h                                  ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -26,3 +29,4 @@ int AssignLast(Alg_element *p);
 int MultAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3);
 Alg_element *AllocAE();
 
+#endif

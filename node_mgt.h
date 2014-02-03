@@ -1,3 +1,6 @@
+#ifndef _NODE_MGT_H_
+#define _NODE_MGT_H_
+
 /******************************************************************/
 /***  FILE :        node_mgt.h                                  ***/
 /***  AUTHOR:       David P. Jacobs                             ***/
@@ -25,3 +28,5 @@ typedef struct block {
                             short int id;
 #endif
 } mem_block;
+
+#endif

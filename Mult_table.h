@@ -1,3 +1,6 @@
+#ifndef _MULT_TABLE_H_
+#define _MULT_TABLE_H_
+
 /*******************************************************************/
 /***  FILE :        Mult_table.h                                 ***/
 /***  AUTHOR:       Sekhar Muddana                               ***/
@@ -25,3 +28,5 @@ typedef struct terms_block {
     Term *terms;		/* TW 9/22/93 - changed terms from array to ptr */
     struct terms_block *next;
 } Terms_block;
+
+#endif

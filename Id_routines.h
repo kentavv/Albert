@@ -1,3 +1,6 @@
+#ifndef _ID_ROUTINES_H_
+#define _ID_ROUTINES_H_
+
 /*******************************************************************/
 /***  FILE :     Id_routines.h                                   ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -12,3 +15,5 @@ typedef struct id_queue_node {
 typedef struct id_queue_head{
     struct id_queue_node *first;
 } id_queue_head; 
+
+#endif

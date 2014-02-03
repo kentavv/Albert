@@ -1,3 +1,6 @@
+#ifndef _PO_PROD_BST_H_
+#define _PO_PROD_BST_H_
+
 /*******************************************************************/
 /***  FILE :     Po_prod_bst.h                                   ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -25,3 +28,5 @@ typedef  struct  prod_tnode {
 PROD_TREEPTR prod_insert();
 PROD_TREEPTR prod_member();
 void prt_prod_inorder();
+
+#endif

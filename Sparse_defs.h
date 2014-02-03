@@ -1,3 +1,6 @@
+#ifndef _SPARSE_DEFS_H_
+#define _SPARSE_DEFS_H_
+
 /******************************************************************/
 /***  FILE :        Sparse_defs.h                               ***/
 /***  PROGRAMMER:   David Lee                                   ***/
@@ -9,3 +12,5 @@
 /******************************************************************/
 #define MAT_PTR 	Node **
 #define NODE_PTR 	Node *
+
+#endif

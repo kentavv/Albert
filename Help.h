@@ -1,3 +1,6 @@
+#ifndef _HELP_H_
+#define _HELP_H_
+
 /*******************************************************************/
 /***  FILE :     Help.h                                          ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -536,3 +539,5 @@ construct its algebras:\n\n\
     Computers & Mathematics with Applications\",\n\
     22 (1991), 12, 61-66.\n\n"
 };
+
+#endif

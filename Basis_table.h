@@ -1,3 +1,6 @@
+#ifndef _BASIS_TABLE_H_
+#define _BASIS_TABLE_H_
+
 /*******************************************************************/
 /***  FILE :        Basis_table.h                                ***/
 /***  AUTHOR:       Sekhar Muddana                               ***/
@@ -18,3 +21,5 @@ typedef struct {
     Basis first_basis;
     Basis last_basis;
 } Deg_to_basis_rec; 
+
+#endif

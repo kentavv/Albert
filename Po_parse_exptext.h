@@ -1,3 +1,6 @@
+#ifndef _PO_PARSE_EXPTEXT_H_
+#define _PO_PARSE_EXPTEXT_H_
+
 /*******************************************************************/
 /***  FILE :     Po_parse_exptext.h                              ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -68,3 +71,5 @@ struct polynomial *parse_exptext();
 void   print_poly();
 
 /*char   *malloc();  TW 9/21/93 - invalid redeclaration of void *malloc() */
+
+#endif

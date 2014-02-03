@@ -1,3 +1,6 @@
+#ifndef _SPARSE_STRUCTS_H_
+#define _SPARSE_STRUCTS_H_
+
 /******************************************************************/
 /***  FILE :        Sparse_structs.h                            ***/
 /***  AUTHOR:       David Lee                                   ***/
@@ -19,5 +22,4 @@
 
 typedef struct Node_struct Node;
 
-
-
+#endif

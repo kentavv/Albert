@@ -1,3 +1,6 @@
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
+
 /************************************************************/
 /***  FILE :  Debug.h                                     ***/
 /***  AUTHOR: Sekhar Muddana                              ***/
@@ -13,3 +16,5 @@
 #define PRINT_BASIS_TABLE      0
 #define PRINT_TYPE_TABLE       0
 #define PRINT_MULT_TABLE       0
+
+#endif

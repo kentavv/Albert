@@ -1,3 +1,6 @@
+#ifndef _GET_COMMAND_H_
+#define _GET_COMMAND_H_
+
 /*******************************************************************/
 /***  FILE :     Get_Command.h                                   ***/
 /***  AUTHOR:    Sekhar Muddana                                  ***/
@@ -13,3 +16,5 @@ typedef struct dalbert_node {
     char *rhs;
     struct dalbert_node *next;
 } Dalbert_node;
+
+#endif
