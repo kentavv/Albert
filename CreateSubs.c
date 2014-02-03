@@ -49,8 +49,6 @@
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 int *Deg_var;
 Basis *Substitution;
 struct polynomial *The_ident;

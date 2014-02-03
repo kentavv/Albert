@@ -41,9 +41,6 @@ extern jmp_buf env;
 /* TW 9/25/93 - line counter for view */
 int lineCnt;
 
-
-#define assert_not_null(p) if (p == NULL) return(0)
-
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
 /*     Basis_table -- to zeroes.                                   */

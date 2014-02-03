@@ -20,6 +20,8 @@
 #define MEM_ERR   0
 #define NULL_PTR_ERR   0
 
+#define assert_not_null(p) if (p == NULL) return(NULL_PTR_ERR)
+
 /* TW - used in dimension limit cmd line parameters */
 #define DIM_LIM_MIN     500
 #define DIM_LIM_MAX     10000

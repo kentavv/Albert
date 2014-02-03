@@ -48,8 +48,6 @@
 #include "Sparse_defs.h"
 
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 /* Added by DCL 8/92. These are variables used for gathering density stats */
 
 extern short int gather_density_flag;

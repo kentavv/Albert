@@ -70,8 +70,6 @@
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 int Num_vars;
 Name *Var_types;
 int *Deg_var_types;

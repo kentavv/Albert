@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <time.h>
+
 #include "Build_defs.h"
 #include "Mult_table.h"
 #include "CreateMatrix.h"
@@ -35,8 +36,6 @@
 #include "Sparse_defs.h"
 #include "Debug.h"
 
-
-#define assert_not_null(p) if (p == NULL) return(0)
 
 /*****************************
  These variables are for the sparse implementation

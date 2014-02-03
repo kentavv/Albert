@@ -93,8 +93,6 @@ int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 int GenerateEquations(F,N,L)
 struct polynomial *F;
 Name N;

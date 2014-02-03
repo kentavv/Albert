@@ -32,8 +32,6 @@
 
 #undef getchar
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */

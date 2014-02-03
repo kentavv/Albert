@@ -33,8 +33,6 @@
 
 #define  DEBUG_DESTROY_MT  0
 
-#define assert_not_null(p) if (p == NULL) return(NULL_PTR_ERR)
-
 /* Table of pointers to table of pointers to Term_lists. */
 /*static Mt_block *Mt_block_index[MTB_INDEX_SIZE][MTB_INDEX_SIZE];*/
 Mt_block ***Mt_block_index;

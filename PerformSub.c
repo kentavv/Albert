@@ -50,8 +50,6 @@
 #include "Debug.h"
 
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 typedef int *Perm;
 
 Basis *Substitution;

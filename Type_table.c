@@ -34,8 +34,6 @@
 #include "Build_defs.h"
 #include "Type_table.h"
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 static Type Target_type;  /* Input from higher level module. */
 static int Target_type_len;  /* Computed from Target_type.      */
 static int Target_type_deg;  /* Computed from Target_type.      */

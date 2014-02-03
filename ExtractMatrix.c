@@ -26,8 +26,6 @@
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 static Type Cur_type;
 static Type T1;
 static Type T2;

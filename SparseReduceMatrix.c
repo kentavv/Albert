@@ -30,10 +30,6 @@
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
-
-
-#define assert_not_null(p)              if (p==NULL) return (0);
-
 /* These external variables are for measuring density of last generated matrix*/
 
 extern short int gather_density_flag;

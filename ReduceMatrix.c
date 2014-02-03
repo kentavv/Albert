@@ -15,8 +15,6 @@
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 
-#define assert_not_null(p) if (p == NULL) return(0)
-
 /*********************
 These are for density measurement on last matrix. 
 *********************/

@@ -5,7 +5,6 @@
 #include "Basis_table.h"
 #include "Mult_table.h"
 
-#define assert_not_null(p) if (p == NULL) return(0)
 
 int initGlobals()
 {

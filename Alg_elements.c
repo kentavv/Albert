@@ -33,8 +33,6 @@
 #include "Alg_elements.h"
 #include "Memory_routines.h"
 
-#define assert_not_null(p)  if (p == NULL) return(NULL_PTR_ERR)
-
 int Mult2basis();
 
 Scalar S_add();
