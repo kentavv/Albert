@@ -49,16 +49,16 @@ static void PrintTypetable(void);
 static void PrintTypetableindex(void);
 /*static void PrintSbsizes(void);*/
 
-static Type Target_type;  /* Input from higher level module. */
-static int Target_type_len;  /* Computed from Target_type.      */
-static int Target_type_deg;  /* Computed from Target_type.      */
-static int *Type_count;      /* Used to fill Type_table.        */
-static TT_node *Type_table;  /* Heart of the matter.            */
-static int *Type_table_index;/* Map type to Type_table.         */
-static int Tot_subtypes;     /* Computed from Type_count. Size of Type_table. */
-static int *Deg_to_type_table_index; /* Map Degree to Type_table.*/
-static int *Temp_dttt_index; /* Used to fill Type_table_index.  */
-static int *Store_block_sizes; /* To find offset into Type_table. */
+static Type Target_type;                    /* Input from higher level module. */
+static int Target_type_len;                 /* Computed from Target_type.      */
+static int Target_type_deg;                 /* Computed from Target_type.      */
+static int *Type_count = NULL;              /* Used to fill Type_table.        */
+static TT_node *Type_table = NULL;          /* Heart of the matter.            */
+static int *Type_table_index = NULL;        /* Map type to Type_table.         */
+static int Tot_subtypes;                    /* Computed from Type_count. Size of Type_table. */
+static int *Deg_to_type_table_index = NULL; /* Map Degree to Type_table.*/
+static int *Temp_dttt_index = NULL;         /* Used to fill Type_table_index.  */
+static int *Store_block_sizes = NULL;       /* To find offset into Type_table. */
 
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
@@ -110,8 +110,15 @@ int CreateTypeTable(Type Cur_type)
     if (InitTypetable() != OK)
         return(0);
 
-    free(Temp_dttt_index);
-    free(Type_count);
+    if(Temp_dttt_index) {
+      free(Temp_dttt_index);
+      Temp_dttt_index = NULL;
+    }
+    
+    if(Type_count) {
+      free(Type_count);
+      Type_count = NULL;
+    }
 
     return(OK);
 }
@@ -127,7 +134,6 @@ Type GetNewType(void)
     Type temp_type;
     int i;
 
-    temp_type = NULL;
     temp_type = (Type) (Mymalloc((Target_type_len + 1) * sizeof(Degree))); 
     assert_not_null(temp_type);
     for (i=0;i<=Target_type_len;i++)
@@ -244,7 +250,6 @@ int InitStoreblocksizes(void)
 {
     int i;
 
-    Store_block_sizes = NULL;
     Store_block_sizes = (int *) (Mymalloc(Target_type_len * sizeof(int)));
     assert_not_null(Store_block_sizes);
     Store_block_sizes[Target_type_len - 1] = 1;
@@ -318,18 +323,15 @@ int InitTypetable(void)
     for (i=0;i<=Target_type_deg;i++)
         Tot_subtypes += Type_count[i];
 
-    Type_table = NULL;
     Type_table = (TT_node *) (Mymalloc(Tot_subtypes * sizeof(TT_node)));
     assert_not_null(Type_table);
 
     for (i=0;i<Tot_subtypes;i++) {
-        Type_table[i].type = NULL; 
         Type_table[i].type = GetNewType(); 
         assert_not_null(Type_table[i].type);
         Type_table[i].begin_basis = Type_table[i].end_basis = 0;
     }
    
-    Deg_to_type_table_index = NULL; 
     Deg_to_type_table_index = (int *) (Mymalloc((Target_type_deg + 1) * sizeof(int)));
     assert_not_null(Deg_to_type_table_index);
 
@@ -337,13 +339,11 @@ int InitTypetable(void)
     for (i=1;i<=Target_type_deg;i++)
         Deg_to_type_table_index[i] = Deg_to_type_table_index[i - 1] + Type_count[i - 1];
     
-    Temp_dttt_index = NULL; 
     Temp_dttt_index = (int *) (Mymalloc((Target_type_deg + 1) * sizeof(int)));
     assert_not_null(Temp_dttt_index);
     for (i=0;i<=Target_type_deg;i++)
         Temp_dttt_index[i] = Deg_to_type_table_index[i]; 
     
-    Type_table_index = NULL; 
     Type_table_index = (int *) (Mymalloc(Tot_subtypes * sizeof(int)));
     assert_not_null(Type_table_index);
 
@@ -354,10 +354,25 @@ int InitTypetable(void)
 
 void DestroyTypeTable(void)
 {
-    free(Type_table);
-    free(Deg_to_type_table_index);
-    free(Type_table_index);
-    free(Store_block_sizes);
+    if(Type_table) {
+      free(Type_table);
+      Type_table = NULL;
+    }
+
+    if(Deg_to_type_table_index) {
+      free(Deg_to_type_table_index);
+      Deg_to_type_table_index = NULL;
+    }
+
+    if(Type_table_index) {
+      free(Type_table_index);
+      Type_table_index = NULL;
+    }
+
+    if(Store_block_sizes) {
+      free(Store_block_sizes);
+      Store_block_sizes = NULL;
+    }
 }
 
 

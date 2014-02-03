@@ -792,6 +792,8 @@ type to show */
                  break;
         }
    }
+   DestroyTypeTable();
+   DestroyMultTable();
    free(Command);
    free(Operand);
    freeGlobals();	/* TW 9/27/93 - forgot to free these up */

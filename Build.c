@@ -191,7 +191,7 @@ int InitializeStructures(void)
 
 void DestroyStructures(void)
 {
-     DestroyTypeTable();
+     /*DestroyTypeTable();*/ /* if we delete this we will not be able to use the 'v b' command */
 }
 
 
