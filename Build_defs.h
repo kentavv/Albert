@@ -10,7 +10,6 @@
 /***                    upper and lower bounds and an increment  ***/
 /***                    for the dimension limit                  ***/
 /*******************************************************************/
-#include <signal.h>
 
 #define DEFAULT_FIELD      251
 

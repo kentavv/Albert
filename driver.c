@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <setjmp.h>
+#include <signal.h>
+
 #include "Build_defs.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
