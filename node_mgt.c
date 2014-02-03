@@ -35,10 +35,6 @@
 #include "Sparse_defs.h"
 #include "Debug.h"
 
-Node *GetRecord(void);
-void PutRecord(Node *freed_node);
-void DestroySparseMatrix(MAT_PTR Sparse_Matrix);
-
 static mem_block *block_list_head=NULL;
 static mem_block *current_block=NULL;
 static Node *node_list_head=NULL;

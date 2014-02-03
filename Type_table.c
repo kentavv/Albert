@@ -45,7 +45,6 @@ static int GetIndex(Type Pntr);
 static int NumberOfBasis(Name n);
 static void PrintTypecount(void);
 static PrintType(Type Pntr, FILE *filePtr);
-void PrintTypeName(Name n, FILE *filePtr);
 static void PrintTypetable(void);
 static void PrintTypetableindex(void);
 /*static void PrintSbsizes(void);*/

@@ -34,8 +34,6 @@
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
 
-int Mult2basis();
-
 static Alg_element *CreateAE();
 static int AssignAddAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3);
 static int AssignSubAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3);

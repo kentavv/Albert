@@ -34,9 +34,6 @@
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
 
-Alg_element *AllocAE();	/* TW 9/22/93 - change prod[] to *prod */
-int DestroyAE();              /* TW 9/23/93 - need to free up memory */
-
 static int TermsListLength(Term Tl[]);
 static Term *RetrieveProduct(Basis B1, Basis B2);
 static int FreeTermsBlocks(Terms_block *P, int *X);

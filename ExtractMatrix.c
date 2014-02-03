@@ -29,8 +29,6 @@
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
-Term *Alloc_Terms_list();
-
 static void SparseFillDependent(void);
 static void FillDependent(void);
 static int DestroyDependent(void);

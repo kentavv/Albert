@@ -27,6 +27,7 @@ int IsSubtype(Name n1, Name n2);
 void EnterEndBasis(int TTindex, Basis basis);
 void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis);
 void DestroyTypeTable(void);
+void PrintTypeName(Name n, FILE *filePtr);
 Name FirstTypeDegree(Degree D);
 Name NextTypeSameDegree(Name n);
 Basis FirstBasis(Name N);
