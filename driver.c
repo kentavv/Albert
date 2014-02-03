@@ -77,11 +77,6 @@ char *argv[];
     int Homogeneous();                 /* Po_routines.c */
     int IsIdentity();                  /* Po_routines.c */
 
-    int Add_id();                      /* Id_routines.c */
-    int Remove_id();                   /* Id_routines.c */
-    void Print_ids();                  /* Id_routines.c */
-    void Remove_all_ids();             /* Id_routines.c */
-
     int Parse_generator_word();        /* Generators.c */
     int Assoc_number();                /* Ty_routines.c */
 

@@ -17,7 +17,11 @@
 #include <string.h>
 
 #include "Id_routines.h"
+#include "Memory_routines.h"
 #include "Po_parse_exptext.h"
+
+struct id_queue_node *Id_queue_node_alloc();
+
 
 /********************************************************************/
 /* MODIFIES:                                                        */
@@ -35,14 +39,8 @@
 /*     This routine is called when the command "i identity" is      */
 /*     issued.                                                      */
 /********************************************************************/
-int Add_id(Id,Str,Id_queue)
-struct polynomial *Id;
-char Str[];
-struct id_queue_head *Id_queue; 
+int Add_id(struct polynomial *Id, char Str[], struct id_queue_head *Id_queue)
 {
-    struct id_queue_node *Id_queue_node_alloc();
-    char *Mymalloc();
-
     struct id_queue_node *pntr;
     struct id_queue_node *temp;
     int id_no = 1;
@@ -86,9 +84,7 @@ struct id_queue_head *Id_queue;
 /* NOTE:                                                            */
 /*     This routine is called when the command "r number" is issued.*/
 /********************************************************************/ 
-int Remove_id(Id_no,Id_queue)
-int Id_no;
-struct id_queue_head *Id_queue; 
+int Remove_id(int Id_no, struct id_queue_head *Id_queue)
 {
     struct id_queue_node *pntr1,*pntr2;
 
@@ -134,8 +130,7 @@ struct id_queue_head *Id_queue;
 /* NOTE:                                                            */
 /*     This routine is called when the command "r *" is issued.     */
 /********************************************************************/ 
-void Remove_all_ids(Id_queue)
-struct id_queue_head *Id_queue; 
+void Remove_all_ids(struct id_queue_head *Id_queue)
 {
     while (Remove_id(1,Id_queue));
 }
@@ -152,8 +147,7 @@ struct id_queue_head *Id_queue;
 /* NOTE:                                                            */
 /*     This routine is called when the command "d" is issued.       */
 /********************************************************************/ 
-void Print_ids(Id_queue)
-struct id_queue_head Id_queue; 
+void Print_ids(struct id_queue_head Id_queue)
 {
     struct id_queue_node *pntr;
     int i = 1;

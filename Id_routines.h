@@ -16,4 +16,9 @@ typedef struct id_queue_head{
     struct id_queue_node *first;
 } id_queue_head; 
 
+int Add_id(struct polynomial *Id, char Str[], struct id_queue_head *Id_queue);
+int Remove_id(int Id_no, struct id_queue_head *Id_queue);
+void Remove_all_ids(struct id_queue_head *Id_queue);
+void Print_ids(struct id_queue_head Id_queue);
+
 #endif
