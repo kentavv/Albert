@@ -34,3 +34,5 @@ doxygen
 driver.o
 initGlobals.o
 node_mgt.o
+cachegrind.out.*
+callgrind.out.*
