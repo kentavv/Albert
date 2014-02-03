@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Strings.h"
+#include "Memory_routines.h"
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -31,10 +33,7 @@
 /*     changed to reflect the increased size of Str1.              */
 /*     If unable to find space, No_memory_panic() will be called.  */
 /*******************************************************************/ 
-void Str_cat(Str1_ptr,Str2,Str1_maxsize_ptr)
-char **Str1_ptr;
-char Str2[];
-int *Str1_maxsize_ptr;
+void Str_cat(char **Str1_ptr, char Str2[], int *Str1_maxsize_ptr)
 {
     if ((*Str1_maxsize_ptr) < (strlen(*Str1_ptr) + strlen(Str2))) {
         if (((*Str1_ptr) = realloc(*Str1_ptr,2*((*Str1_maxsize_ptr) + strlen(Str2)))) == NULL)

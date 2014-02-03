@@ -15,16 +15,18 @@
 /***      polynomial,from the input string entered by user.      ***/
 /*******************************************************************/
 
-#include	<stdio.h>
-#include	<stdlib.h>
-#include	<string.h>
-#include	<setjmp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <setjmp.h>
 
-#include        "Po_create_poly.h"	
-#include        "Po_parse_poly.h"	
-#include        "Po_semantics.h"	
-#include        "Po_prod_bst.h"	
-#include        "Po_parse_exptext.h"	
+#include "Po_create_poly.h"	
+#include "Memory_routines.h"
+#include "Po_parse_poly.h"	
+#include "Po_semantics.h"	
+#include "Po_prod_bst.h"	
+#include "Po_parse_exptext.h"	
+#include "Strings.h"
 
 extern jmp_buf env;
 
@@ -72,8 +74,6 @@ int *Out_of_memory;
 
     void Print_tree();
     void Create_exp_str();
-    void Str_cat();
-    char *Mymalloc();
 
     void Free_tnode_tree();
     static struct unexp_tnode *temp;
@@ -348,8 +348,6 @@ struct unexp_tnode  *Pntr;
 char **Str_ptr;
 int  *Maxsize_str_ptr;
 {
-    void Str_cat();
-
     int Found_minus();
 
     char Temp_str[10];

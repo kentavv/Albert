@@ -23,7 +23,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "Get_Command.h"
+#include "Memory_routines.h"
+#include "Strings.h"
 
 #undef getchar           /* Use unbuffered getchar(). */
 
@@ -46,8 +49,6 @@ char **Operand_ptr;
 int *Command_len_ptr;
 int *Operand_len_ptr;
 {
-    char *Mymalloc();
-
     char temp_line[MAX_LINE];
     char temp_line2[MAX_LINE];
     int slashfound;
@@ -152,8 +153,6 @@ int lim;
 
 DoSubstitution()
 {
-    char *Mymalloc();
-
     char *str1;
     char *str2;
     char *str3;
@@ -243,7 +242,6 @@ int ReadDotAlbert(dalbert_node_ptr, albertFileLoc)
 Dalbert_node *dalbert_node_ptr;
 char *albertFileLoc;			/* TW - location of the .albert file */
 {
-    char *Mymalloc();
     FILE *fopen();
     FILE *albert_fp;
     char temp_line[MAX_LINE];
