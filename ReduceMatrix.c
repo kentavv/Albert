@@ -12,8 +12,27 @@
 /*******************************************************************/
 
 #include <stdio.h>
+
+#include "ReduceMatrix.h"
 #include "Build_defs.h"
 #include "CreateMatrix.h"
+
+    void S_init();
+    Scalar S_one();
+    Scalar S_inv();
+    Scalar S_minus();
+    Scalar S_zero();
+    Scalar S_add();
+    Scalar S_mul();
+
+static void Interchange(int Row1, int Row2);
+static void Knockout(int Row, int Col);
+static void MultRow(int Row, Scalar Factor);
+static void AddRow(Scalar Factor, int Row1, int Row2);
+//static int GetRank(void);
+static void PrintTheRMatrix(void);
+//static void CreateRandomMatrix(void);
+
 
 /*********************
 These are for density measurement on last matrix. 
@@ -27,15 +46,10 @@ static int Num_rows;
 static int Num_cols;
 
 
-int ReduceTheMatrix(Mptr,Rows,Cols,Rank)
-Matrix Mptr;
-int Rows;
-int Cols;
-int *Rank;
+int ReduceTheMatrix(Matrix Mptr, int Rows, int Cols, int *Rank)
 {
     int i,j;
     int nextstairrow = 0;					/* next row with stair step 1 */
-    Scalar S_zero();
 
     TheMatrix = Mptr; 
     Num_rows = Rows;
@@ -64,8 +78,7 @@ int *Rank;
 }
 
 
-Interchange(Row1,Row2)
-int Row1,Row2;
+void Interchange(int Row1, int Row2)
 {
     int j;
     int row1_start,row2_start;
@@ -82,14 +95,8 @@ int Row1,Row2;
 }
 
 
-Knockout(Row,Col)
-int Row;
-int Col;
+void Knockout(int Row, int Col)
 {
-    Scalar S_one();
-    Scalar S_inv();
-    Scalar S_minus();
-
     int j;
     Scalar x;
     Scalar one = S_one();
@@ -103,12 +110,8 @@ int Col;
 }
 
 
-MultRow(Row,Factor)
-int Row;
-Scalar Factor;
+void MultRow(int Row, Scalar Factor)
 {
-    Scalar S_mul();
-
     int j;
     int row_start = Row * Num_cols;
 
@@ -119,14 +122,8 @@ Scalar Factor;
 } 
 
 
-AddRow(Factor,Row1,Row2)
-Scalar Factor;
-int Row1,Row2;
+void AddRow(Scalar Factor, int Row1, int Row2)
 {
-    Scalar S_zero();
-    Scalar S_add();
-    Scalar S_mul();
-
     Scalar before;
     Scalar after;
 
@@ -165,10 +162,8 @@ int Row1,Row2;
     
 
 /*
-int GetRank()
+int GetRank(void)
 {
-    Scalar S_zero();
-
     int i,j;
     int rank = 0;
 
@@ -185,7 +180,7 @@ int GetRank()
 
 */
 
-PrintTheRMatrix()
+void PrintTheRMatrix(void)
 {
     int i,j,k=0;
 
@@ -204,21 +199,20 @@ PrintTheRMatrix()
 }
 
 /*
-main()
+int main(void)
 {
-    void S_init();
-
     S_init();
 
     CreateRandomMatrix();
     ReduceTheMatrix();
     PrintTheRMatrix();
     printf("Num_rows = %d Rank = %d\n",Num_rows,GetRank());
+
+    return 0;
 }
 
-CreateRandomMatrix()
+void CreateRandomMatrix(void)
 {
-    char *Mymalloc();
     int i,j,k;
     int Num_cells;
 
@@ -238,7 +232,6 @@ CreateRandomMatrix()
         MultRow(rand()%Num_rows,rand()%25);
         AddRow(rand()%25,rand()%Num_rows,rand()%Num_rows);
     }
-    return(1);
 }
 
 */

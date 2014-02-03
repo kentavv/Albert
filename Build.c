@@ -35,6 +35,7 @@
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
+#include "ReduceMatrix.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 #include "Debug.h"
