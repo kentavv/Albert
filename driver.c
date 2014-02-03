@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
                  }
                  else {
                      if (!out_of_memory)
-                         printf("%s not a polynomial.",Operand);
+                         printf("%s is not a polynomial.",Operand);
                  }
                  break;
 
@@ -792,6 +792,8 @@ type to show */
                  break;
         }
    }
+   free(Command);
+   free(Operand);
    freeGlobals();	/* TW 9/27/93 - forgot to free these up */
 }
 
