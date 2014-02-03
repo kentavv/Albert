@@ -64,12 +64,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "Multpart.h"
 #include "Build_defs.h"
 #include "CreateSubs.h"
 #include "Type_table.h"
 #include "CreateMatrix.h"
+#include "Memory_routines.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
+
+Name TypeToName();
+Type GetNewType();
+
+static void SplitJthType(int j);
+static void Gen(Name n, int d, int j);
+static void AddSetPartition(Name n, int j);
+static void DeleteSetPartition(Name j);
+static int OKSetPartitions(void);
+static void PrintVarTypes(void);
+static void PrintSetPartitions(void);
+
 
 int Num_vars;
 Name *Var_types;
@@ -86,18 +100,8 @@ static int status = OK;
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 
-PerformMultiplePartition(Id,List,Nvars,Types,Deg_var)
-struct polynomial *Id;
-Eqn_list_node *List;
-int Nvars;
-Type Types;
-int *Deg_var;
+int PerformMultiplePartition(struct polynomial *Id, Eqn_list_node *List, int Nvars, Type Types, int *Deg_var)
 {
-    char *Mymalloc();
-    Name TypeToName();
-    Type GetNewType();
-
-
     int i,j;
 
     The_ident = Id;
@@ -165,8 +169,7 @@ int *Deg_var;
  * SplitJthType() and Gen() call each other recursively.
  */
 
-SplitJthType(j)
-int j;
+void SplitJthType(int j)
 {
     if (status != OK)
         return;
@@ -185,10 +188,7 @@ int j;
 }
 
 
-Gen(n,d,j)
-Name n;
-int d;
-int j;
+void Gen(Name n, int d, int j)
 {
     int i,degn,lower,upper;
     Name n1,n_minus_n1;
@@ -223,23 +223,20 @@ int j;
 }
 
 
-AddSetPartition(n,j)
-Name n;
-int j;
+void AddSetPartition(Name n, int j)
 {
     Set_partitions[Cur_index_var[j]*Num_vars + j] = n;
     Cur_index_var[j]++;
 }
 
 
-DeleteSetPartition(j)
-Name j;
+void DeleteSetPartition(Name j)
 {
     --Cur_index_var[j];
 }
 
 
-int OKSetPartitions()
+int OKSetPartitions(void)
 {
     int i,j;
 
@@ -252,7 +249,7 @@ int OKSetPartitions()
 }
 
 
-PrintVarTypes()
+void PrintVarTypes(void)
 {
     int i;
 
@@ -263,7 +260,7 @@ PrintVarTypes()
     }
 }
 
-PrintSetPartitions()
+void PrintSetPartitions(void)
 {
     int i,j;
     static int count = 0;

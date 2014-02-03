@@ -78,6 +78,7 @@
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 #include "Memory_routines.h"
+#include "Multpart.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
