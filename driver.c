@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <signal.h>
 
+#include "driver.h"
 #include "Build_defs.h"
 #include "Field.h"
 #include "Generators.h"
@@ -45,6 +46,13 @@
 #include "Basis_table.h"
 #include "Scalar_arithmetic.h"
 #include "Ty_routines.h"
+
+static void Print_title(void);
+static Type CreateTargetType(struct P_type ptype);
+static int Compatible(struct polynomial *Poly, struct P_type ptype);
+static void usage(void);
+static void sigCatch(int x);
+
 
 #define  NOT_PRESENT  0
 #define  PRESENT     1
@@ -61,9 +69,7 @@ static Type Target_type = NULL;
 
 jmp_buf env;
 
-int main(argc, argv)
-int argc;
-char *argv[];
+int main(int argc, char *argv[])
 {
 
     Type CreateTargetType();
@@ -814,7 +820,7 @@ type to show */
    freeGlobals();	/* TW 9/27/93 - forgot to free these up */
 }
 
-void Print_title()
+void Print_title(void)
 {
     printf("\n\n         ((Albert)), Version 4.0, 2008\n");
     printf("Dept. of Computer Science, Clemson University\n\n");
@@ -825,7 +831,7 @@ void Print_title()
 /* Called from S_init() of Scalar_arithmetic.c Used to build the inverse
  * table as a part of initialization. */
 
-Scalar GetField()
+Scalar GetField(void)
 {
     return(Field);
 }
@@ -834,8 +840,7 @@ Scalar GetField()
 /* struct P_type ptype is used to create Target type struct Type ttype.
  * If generators are 3a2b2c then Target type is 322. */
 
-Type CreateTargetType(ptype)
-struct P_type ptype;
+Type CreateTargetType(struct P_type ptype)
 {
     int ttype_len = 1;
     int i,cur_tt_index = 0;
@@ -864,9 +869,7 @@ struct P_type ptype;
  * have at most 3a's,2b's and 2c's. Else we can't use the multiplication
  * table to answer the query whether the poly is an identity or not. */
 
-int Compatible(Poly,ptype)
-struct polynomial *Poly;
-struct P_type ptype;
+int Compatible(struct polynomial *Poly, struct P_type ptype)
 {
     int i;
 
@@ -881,17 +884,16 @@ struct P_type ptype;
 }
 
 
-void usage()
+void usage(void)
 {
     printf("Usage:  albert [-d dimlimit] [-a dirname]\n");
 }
 
 
-void sigCatch()
+void sigCatch(int x)
 {
   signal(SIGINT, sigCatch);
   sigIntFlag = 1;
-  return;
 }
 
 

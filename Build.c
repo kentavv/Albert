@@ -218,8 +218,6 @@ void PrintProgress(int i)
 /*******************************************************************/
 int ProcessDegree(int i)
 {
-   Name FirstTypeDegree();
-   Name NextTypeSameDegree();
    Name n;
    int status = OK;
    Basis begin_basis;

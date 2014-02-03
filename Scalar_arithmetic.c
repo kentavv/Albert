@@ -25,8 +25,7 @@
 
 #include "Scalar_arithmetic.h"
 #include "Build_defs.h"
-
-Scalar GetField();
+#include "driver.h"
 
 static Scalar S_minus1(void);
 static Scalar S_sub(Scalar x, Scalar y);
