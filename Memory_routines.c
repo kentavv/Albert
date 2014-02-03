@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
+
+#include "Memory_routines.h"
 #include "Po_parse_poly.h"
 #include "Po_prod_bst.h"
 #include "Po_parse_exptext.h"
@@ -49,7 +51,6 @@ extern jmp_buf env;
 /*******************************************************************/ 
 struct unexp_tnode *Unexp_tnode_alloc()
 {
-    char *Mymalloc();
     struct unexp_tnode *new_tnode;
 
 #if DB_MEM_ALLOC
@@ -76,8 +77,7 @@ struct unexp_tnode *Unexp_tnode_alloc()
     return(new_tnode);
 }
 
-void Free_tnode(Pntr)
-struct unexp_tnode *Pntr;
+void Free_tnode(struct unexp_tnode *Pntr)
 {
 
 #if DB_MEM_ALLOC
@@ -103,8 +103,6 @@ struct unexp_tnode *Pntr;
 /*******************************************************************/ 
 PROD_TREEPTR  prod_talloc()
 {
-    char *Mymalloc();
-
     PROD_TREEPTR temp;
 
     temp = ((PROD_TREEPTR) Mymalloc(sizeof(PROD_TREENODE))) ;
@@ -121,8 +119,6 @@ PROD_TREEPTR  prod_talloc()
 /*******************************************************************/ 
 struct polynomial *Poly_alloc()
 {
-    char *Mymalloc();
-
     struct polynomial *poly;
 
     poly = ((struct polynomial *) Mymalloc(sizeof(struct polynomial)));
@@ -139,8 +135,6 @@ struct polynomial *Poly_alloc()
 /*******************************************************************/ 
 struct term_node *Term_node_alloc()
 {
-    char *Mymalloc();
-
     struct term_node *temp;
 
     temp =  ((struct term_node *) Mymalloc(sizeof(struct term_node)));
@@ -160,8 +154,6 @@ struct term_node *Term_node_alloc()
 /*******************************************************************/ 
 struct term_head *Term_head_alloc()
 {
-    char *Mymalloc();
-
     struct term_head *temp;
 
     temp = ((struct term_head *) Mymalloc(sizeof(struct term_head)));
@@ -178,13 +170,9 @@ struct term_head *Term_head_alloc()
 /* RETURNS:                                                        */
 /*     Pointer to allocated block of size size.                    */ 
 /*******************************************************************/
-char *Mymalloc(size)
-int size;
+void *Mymalloc(int size)
 {
-    void No_memory_panic();
-    // char *malloc();
-
-    char *temp;
+    void *temp;
 
     if (size <= 0) {
         fprintf(stderr,"\n Severe. Trying to allocate 0 bytes. \n");
@@ -207,8 +195,6 @@ int size;
 /*******************************************************************/ 
 struct id_queue_node *Id_queue_node_alloc()
 {
-    char *Mymalloc();
-
     struct id_queue_node *id;
 
     id = (struct id_queue_node *) Mymalloc(sizeof(struct id_queue_node));
