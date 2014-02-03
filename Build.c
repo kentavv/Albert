@@ -340,9 +340,9 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
 {
     int rows = 0;              /* Size of matrix */
     int cols = 0;              /* Size of matrix */
-    Matrix *mptr = NULL;       /* Pointer to matrix */
+    Matrix mptr = NULL;        /* Pointer to matrix */
     MAT_PTR Sparse_Matrix = NULL;
-    Unique_basis_pair_list *BPCptr = NULL; /* pointer to BPtoCol */
+    Unique_basis_pair_list BPCptr = NULL; /* pointer to BPtoCol */
     int rank = 0;
     int status = OK;
 
@@ -362,11 +362,11 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
 
    if (!sparse)
    {
-     status = CreateTheMatrix(L, &mptr,&rows, &cols, &BPCptr,n);	
+     status = CreateTheMatrix(L, &mptr, &rows, &cols, &BPCptr, n);
    }
    else
    {
-     status = SparseCreateTheMatrix(L, &Sparse_Matrix,&rows, &cols, &BPCptr,n);
+     status = SparseCreateTheMatrix(L, &Sparse_Matrix, &rows, &cols, &BPCptr, n);
    }
 
    /* make sure that we get the correct information from creating the 
