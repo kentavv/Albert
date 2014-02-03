@@ -83,7 +83,7 @@ void Print_poly(struct polynomial *Poly, int Poly_len)
             len_max_coef = Get_len(max_coef);
         }
 
-        Term_str = Mymalloc(Poly_len);
+        Term_str = Mymalloc(Poly_len+1);
         Term_str[0] = '\0';
 
         while(temp_head != NULL) {
