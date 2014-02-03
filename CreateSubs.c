@@ -43,11 +43,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "CreateSubs.h"
 #include "Build_defs.h"
 #include "Type_table.h"
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
+
+static void DoCreateSubs(int row, int col);
+static void PrintSubstitution(void);
 
 int *Deg_var;
 Basis *Substitution;
@@ -58,13 +63,7 @@ Name *Set_partitions;
 int Max_deg_var;
 static int status = OK;
 
-CreateSubs(L,F,Nv,Mdv,Type_lists,Deg_var_types)
-Eqn_list_node *L;
-struct polynomial *F;
-int Nv;
-int Mdv;
-Name *Type_lists;
-int *Deg_var_types;
+int CreateSubs(Eqn_list_node *L, struct polynomial *F, int Nv, int Mdv, Name *Type_lists, int *Deg_var_types)
 {
     char *Mymalloc();
 
@@ -86,9 +85,7 @@ int *Deg_var_types;
     return(status);
 }
 
-DoCreateSubs(row,col)
-int row;
-int col;
+void DoCreateSubs(int row, int col)
 {
     Basis FirstBasis();
     Basis NextBasisSameType();
@@ -119,7 +116,7 @@ int col;
     }
 }
 
-PrintSubstitution()
+void PrintSubstitution(void)
 {
     int i,j;
     static int count = 1;

@@ -65,6 +65,7 @@
 #include <stdlib.h>
 
 #include "Build_defs.h"
+#include "CreateSubs.h"
 #include "Type_table.h"
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
