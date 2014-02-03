@@ -71,6 +71,9 @@ void Print_poly(struct polynomial *Poly, int Poly_len)
     int len_coef = 0;
     int i = 0;
 
+    int maxCols = 80;
+    int maxRows = 100000; /*17;*/ /* "disable" the row paging */
+
     if (Poly == NULL)
         printf("Print_poly(Poly): Poly is null pointer\n");
     else {
@@ -96,12 +99,12 @@ void Print_poly(struct polynomial *Poly, int Poly_len)
                 Term_str[0] = Term_str[term_len - 1] = ' ';
             }
 
-            if (cur_col > 80) {
+            if (cur_col > maxCols) {
                 ++cur_row;
                 printf("\n");
                 cur_col = 3 + len_max_coef + term_len;
             }
-            if (cur_row >= 17) {
+            if (cur_row >= maxRows) {
                 cur_row = 0;
                 printf("\n\n Hit Return to continue-->\n\n");
 		fflush(stdout);
