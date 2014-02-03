@@ -8,10 +8,9 @@
 
 #define    STACK_SIZE    50
 
-void push_token();
-int get_top_token();
-int get_next_to_top_token();
-int pop_token();
-void print_syn_stack();
+void Push_token(int Stack[], int *Sp_ptr, int Token);
+int Get_top_token(int Stack[], int Sp);
+int Get_next_to_top_token(int Stack[], int Sp);
+int Pop_token(int Stack[], int *Sp_ptr);
 
 #endif

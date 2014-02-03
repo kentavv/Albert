@@ -14,8 +14,11 @@
 /***      Po_parse_poly.c while doing the parsing.               ***/
 /*******************************************************************/
 
-#include	<stdio.h>
-#include    "Po_syn_stack.h"	
+#include <stdio.h>
+
+#include "Po_syn_stack.h"	
+
+static void Print_syn_stack(int Stack[], int Sp);
 
 
 /*******************************************************************/
@@ -26,10 +29,7 @@
 /*     token -- to be pushed onto the stack.                       */
 /* RETURNS: None.                                                  */
 /*******************************************************************/ 
-void Push_token(Stack,Sp_ptr,Token)
-int Stack[];
-int *Sp_ptr;
-int Token;
+void Push_token(int Stack[], int *Sp_ptr, int Token)
 {
     if (*Sp_ptr < STACK_SIZE - 1)
         Stack[++(*Sp_ptr)] = Token;
@@ -46,9 +46,7 @@ int Token;
 /* RETURNS:                                                        */
 /*     Token at the top of the stack.                              */
 /*******************************************************************/ 
-int Get_top_token(Stack,Sp)
-int Stack[];
-int Sp;
+int Get_top_token(int Stack[], int Sp)
 {
     return(Stack[Sp]);
 }
@@ -62,9 +60,7 @@ int Sp;
 /* RETURNS:                                                        */
 /*     Token at second from the top of the Stack.                  */
 /*******************************************************************/
-int Get_next_to_top_token(Stack,Sp)
-int Stack[];
-int Sp;
+int Get_next_to_top_token(int Stack[], int Sp)
 {
     return(Stack[Sp-1]);
 }
@@ -78,9 +74,7 @@ int Sp;
 /* RETURNS:                                                        */
 /*     Token popped from the top of the Stack.                     */
 /*******************************************************************/ 
-int Pop_token(Stack,Sp_ptr)
-int Stack[];
-int *Sp_ptr;
+int Pop_token(int Stack[], int *Sp_ptr)
 {
     if ((*Sp_ptr >= 0) && (*Sp_ptr < STACK_SIZE))
         return(Stack[(*Sp_ptr)--]);
@@ -98,9 +92,7 @@ int *Sp_ptr;
 /* FUNCTION:                                                       */
 /*     Print the tokens stored in the stack.                       */
 /*******************************************************************/ 
-void Print_syn_stack(Stack,Sp)
-int Stack[];
-int Sp;
+void Print_syn_stack(int Stack[], int Sp)
 {
     int i;
     for (i=0;i<=Sp;i++)

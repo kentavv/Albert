@@ -21,12 +21,21 @@
 #include <setjmp.h>
 
 #include "Po_create_poly.h"	
+#include "Po_create_poly_pri.h"	
+#include "Po_expand_poly.h"
 #include "Memory_routines.h"
 #include "Po_parse_poly.h"	
 #include "Po_semantics.h"	
 #include "Po_prod_bst.h"	
 #include "Po_parse_exptext.h"	
 #include "Strings.h"
+
+static void Print_tree(struct unexp_tnode *Pntr);
+static void Print_opr_prod_tree(struct unexp_tnode *Pntr);
+static void Print_art_word(struct unexp_tnode *Pntr);
+static void Create_exp_str(struct unexp_tnode *Pntr, char **Str_ptr, int  *Maxsize_str_ptr);
+static int Found_minus(struct unexp_tnode *Pntr);
+static void Free_tnode_tree(struct unexp_tnode *Pntr);
 
 extern jmp_buf env;
 
@@ -61,21 +70,8 @@ extern jmp_buf env;
 /*     The intermediate trees created during the creation of       */
 /*     polynomial can be seen by switching on the DEBUG_EXP flag.  */
 /*******************************************************************/ 
-struct polynomial *Create_poly(In_str,In_str_len,Out_of_memory)
-char In_str[];
-int *In_str_len;
-int *Out_of_memory;
+struct polynomial *Create_poly(char In_str[], int *In_str_len, int *Out_of_memory)
 {
-    struct unexp_tnode *Create_parse_tree();   /* create a parse tree */
-    struct unexp_tnode *Expand_parse_tree();   /* expand the parse tree */
-    struct unexp_tnode *Simplify_parse_tree(); /* simplify the expanded tree */
-    struct unexp_tnode *Elim_subtraction();    /* eliminate subtraction */
-    struct polynomial *Parse_exptext();        /* parse the expanded text */
-
-    void Print_tree();
-    void Create_exp_str();
-
-    void Free_tnode_tree();
     static struct unexp_tnode *temp;
 
     struct unexp_tnode *Unexp_tree1;
@@ -235,12 +231,8 @@ int *Out_of_memory;
 /*     Called only when DEBUG_EXP flag is on.                      */ 
 /*     Very useful to see how the parse tree gets simplified.      */
 /*******************************************************************/ 
-void Print_tree(Pntr)
-struct unexp_tnode  *Pntr;
+void Print_tree(struct unexp_tnode *Pntr)
 {
-    void Print_opr_prod_tree();
-    void Print_art_word();
-
     if (Pntr != NULL) {
         if ((Pntr->operator != SMALL_LETTER) && (Pntr->operator != SCALAR) &&
             (Pntr->operator != OPERATOR_PROD) && (Pntr->operator != ARTIFICIAL_WORD)) {
@@ -289,8 +281,7 @@ struct unexp_tnode  *Pntr;
 /* NOTE:                                                           */
 /*     Called only by Print_tree(). i.e Called only for debugging. */
 /*******************************************************************/ 
-void Print_opr_prod_tree(Pntr)
-struct unexp_tnode  *Pntr;
+void Print_opr_prod_tree(struct unexp_tnode *Pntr)
 {
     while (Pntr != NULL) {
         printf(",");
@@ -312,8 +303,7 @@ struct unexp_tnode  *Pntr;
 /* NOTE:                                                           */
 /*     Called only by Print_tree(). i.e Called only for debugging. */
 /*******************************************************************/ 
-void Print_art_word(Pntr)
-struct unexp_tnode  *Pntr;
+void Print_art_word(struct unexp_tnode *Pntr)
 {
     while (Pntr != NULL) {
         printf(",");
@@ -343,13 +333,8 @@ struct unexp_tnode  *Pntr;
 /*     Thus string grows varies dynamically to accommodate large   */
 /*     polynomials.                                                */
 /*******************************************************************/ 
-void Create_exp_str(Pntr,Str_ptr,Maxsize_str_ptr)
-struct unexp_tnode  *Pntr;
-char **Str_ptr;
-int  *Maxsize_str_ptr;
+void Create_exp_str(struct unexp_tnode *Pntr, char **Str_ptr, int  *Maxsize_str_ptr)
 {
-    int Found_minus();
-
     char Temp_str[10];
 
     if (Pntr != NULL) {
@@ -413,8 +398,7 @@ int  *Maxsize_str_ptr;
 /*     something like x+-4y. i.e + needs to be suppressed in case  */
 /*     of scalars less than 0, thus correctly prints x-4y.         */ 
 /*******************************************************************/ 
-int Found_minus(Pntr)
-struct unexp_tnode *Pntr;
+int Found_minus(struct unexp_tnode *Pntr)
 {
     if (Pntr == NULL)
         return(0);
@@ -442,11 +426,9 @@ struct unexp_tnode *Pntr;
  * Function: free the memory space by going to each leaf node. 
  *
  */
-void Free_tnode_tree(Pntr)
-struct unexp_tnode  *Pntr;
+void Free_tnode_tree(struct unexp_tnode *Pntr)
 {
     static int i = 1;
-    void Free_tnode();
 
     if (Pntr != NULL) {
         if ((Pntr->operand1 == NULL) && (Pntr->operand2 == NULL) &&

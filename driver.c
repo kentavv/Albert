@@ -41,6 +41,7 @@
 #include "initGlobals.h"
 #include "Memory_routines.h"
 #include "Po_parse_exptext.h"
+#include "Po_routines.h"
 #include "Id_routines.h"
 #include "Get_Command.h"
 #include "Basis_table.h"
@@ -79,17 +80,12 @@ int main(int argc, char *argv[])
     void usage();			/* TW - argument handling */
 
     struct polynomial *Create_poly();  /* Po_create_poly.c */
-    int DestroyPoly();                 /* Po_routines.c */
-    void Print_poly();                 /* Po_routines.c */
-    int Homogeneous();                 /* Po_routines.c */
-    int IsIdentity();                  /* Po_routines.c */
 
     int Parse_generator_word();        /* Generators.c */
 
     int ReadDotAlbert();               /* Get_command.c */
     int Substr();                      /* Get_Command.c */
 
-    int AssignNumbersToLetters();      /* Po_routines.c */
     int AssignBasisNumbersToLetters(); /* Generators.c */
 
     int Build();                       /* Build.c */

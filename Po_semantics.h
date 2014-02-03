@@ -27,8 +27,7 @@
 #define	    RIGHT_MULT           16
 #define	    ARTIFICIAL_WORD      17
 
-void reduce_semantics();
-void store_semantics();
-void print_sem_stack();
+void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr);
+void Store_semantics(struct unexp_tnode *Sem_stack[], int Sem_sp, int Token, char Current_letter, int Current_int);
 
 #endif

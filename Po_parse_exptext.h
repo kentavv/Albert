@@ -61,15 +61,6 @@ typedef struct P_type {
  * structure (internal form for polynomial).
  *
  */ 
-struct polynomial *parse_exptext(); 
-
-/*
- * Takes a ponter to polynomial structure (internal form) as input and prints
- * the polynomial.
- *
- */ 
-void   print_poly();
-
-/*char   *malloc();  TW 9/21/93 - invalid redeclaration of void *malloc() */
+struct polynomial *Parse_exptext(char Poly_str[]);
 
 #endif

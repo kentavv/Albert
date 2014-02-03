@@ -17,14 +17,24 @@
 /*******************************************************************/
 
 
-#include	<string.h>
-#include	<stdio.h>
-#include	<ctype.h>
-#include	"Po_parse_poly.h"
-#include	"Po_syn_stack.h"
-#include	"Po_semantics.h"
-#include	"Po_prod_bst.h"
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
+#include "Po_parse_poly.h"
+#include "Po_parse_poly_pri.h"
+#include "Po_syn_stack.h"
+#include "Po_semantics.h"
+#include "Po_prod_bst.h"
+
+static void Init_prod_tree(PROD_TREEPTR *Prod_bst_root_ptr);
+static void Handle_char_pair_error(int *Syntax_error);
+static void Handle_reducibility_error(int *Syntax_error);
+static void Handle_stackability_error(int *Syntax_error);
+static int Reduce(int Syn_stack[], int *Sp_ptr, PROD_TREEPTR Prod_bst_root, struct unexp_tnode *Sem_stack[]);
+static int Get_next_token(char Poly_str[], int *Poly_str_indx_ptr, char *Current_letter_ptr, int  *Current_int_ptr);
+static int Out_of_int_bounds(int i);
+static void Itoa(int N, char S[]);
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -41,8 +51,7 @@
 /*     Parsing action can be observed by changing  DEBUG_PARSE     */
 /*     flag to 1 in Po_parse_poly.h.                               */
 /*******************************************************************/ 
-struct unexp_tnode *Create_parse_tree(Poly_str)
-char Poly_str[]; 
+struct unexp_tnode *Create_parse_tree(char Poly_str[])
 {
 
     int  Syn_stack[STACK_SIZE];           /* stack used while parsing */
@@ -61,7 +70,6 @@ char Poly_str[];
 
     int Reduce();
     void Print_syn_stack();
-    void Store_semantics();
 
     int  Syntax_error = FALSE;
     void Handle_char_pair_error();
@@ -140,8 +148,7 @@ char Poly_str[];
 /* NOTE:                                                           */
 /*     This routine is called only once when system comes up.      */ 
 /*******************************************************************/ 
-void Init_prod_tree(Prod_bst_root_ptr)
-PROD_TREEPTR *Prod_bst_root_ptr;
+void Init_prod_tree(PROD_TREEPTR *Prod_bst_root_ptr)
 {
     PROD_TREEPTR Prod_insert();	   /* insert a production in tree */
 
@@ -159,8 +166,7 @@ PROD_TREEPTR *Prod_bst_root_ptr;
 /* FUNCTION:                                                       */
 /*     Issue an error message.                                     */
 /*******************************************************************/ 
-void Handle_char_pair_error(Syntax_error)
-int *Syntax_error;
+void Handle_char_pair_error(int *Syntax_error)
 {
 
 #if DEBUG_PARSE
@@ -172,8 +178,7 @@ int *Syntax_error;
     *Syntax_error = TRUE;
 }
 
-void Handle_reducibility_error(Syntax_error)
-int *Syntax_error;
+void Handle_reducibility_error(int *Syntax_error)
 {
 
 #if DEBUG_PARSE
@@ -185,8 +190,7 @@ int *Syntax_error;
     *Syntax_error = TRUE;
 }
 
-void Handle_stackability_error(Syntax_error)
-int *Syntax_error;
+void Handle_stackability_error(int *Syntax_error)
 {
 
 #if DEBUG_PARSE
@@ -226,13 +230,8 @@ int *Syntax_error;
  *           returns FALSE if there is an error while trying to reduce.
  *        
  */
-int Reduce(Syn_stack,Sp_ptr,Prod_bst_root,Sem_stack)
-int Syn_stack[];
-int *Sp_ptr;
-PROD_TREEPTR Prod_bst_root;
-struct unexp_tnode *Sem_stack[];
+int Reduce(int Syn_stack[], int *Sp_ptr, PROD_TREEPTR Prod_bst_root, struct unexp_tnode *Sem_stack[])
 {
-
     PROD_TREEPTR Prod_member();
     PROD_TREEPTR  prod_index;
 
@@ -301,11 +300,7 @@ struct unexp_tnode *Sem_stack[];
 /*     If the token is an integer, stores it in Current_int and if */
 /*     the token is a small letter, stores it in Current_letter.   */
 /*******************************************************************/ 
-int Get_next_token(Poly_str,Poly_str_indx_ptr,Current_letter_ptr,Current_int_ptr)
-char Poly_str[];
-int  *Poly_str_indx_ptr;
-char *Current_letter_ptr;
-int  *Current_int_ptr;
+int Get_next_token(char Poly_str[], int *Poly_str_indx_ptr, char *Current_letter_ptr, int  *Current_int_ptr)
 {
     int Out_of_int_bounds();
 
@@ -451,8 +446,7 @@ int  *Current_int_ptr;
 /*     Check if "i" is greater than MAX_INT. If yes, then return 1 */
 /*     else return 0.                                              */
 /*******************************************************************/ 
-int Out_of_int_bounds(i)
-int i;
+int Out_of_int_bounds(int i)
 {
     if ((i>=MAX_INT) || (i<=0)) {
         printf("Scalar is out of bounds.\n");
@@ -461,9 +455,8 @@ int i;
     else
         return(0);
 }
-void Itoa(N, S)
-int N;
-char S[];
+
+void Itoa(int N, char S[])
 {
     sprintf(S, "%d", N);
 }

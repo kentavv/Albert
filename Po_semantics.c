@@ -14,11 +14,15 @@
 /***      These routines are called from Po_parse_poly.c         ***/
 /*******************************************************************/
 
-#include	<stdio.h>
-#include	"Po_parse_poly.h"
-#include	"Po_syn_stack.h"
-#include	"Po_semantics.h"
+#include <stdio.h>
 
+#include "Po_parse_poly.h"
+#include "Po_syn_stack.h"
+#include "Po_semantics.h"
+
+static void Push_tnode_ptr(struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr, struct unexp_tnode *Temp_tnode_ptr);
+static struct unexp_tnode *Pop_tnode_ptr(struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr);
+static void Print_Sem_stack(struct unexp_tnode *Sem_stack[], int Sem_sp);
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -36,10 +40,7 @@
 /*     There is a 1-1 correspondence between syntax and semantic   */
 /*     stack.                                                      */
 /*******************************************************************/ 
-void Reduce_semantics(Reduction_num,Sem_stack,Sem_sp_ptr)
-int  Reduction_num;
-struct unexp_tnode *Sem_stack[];
-int *Sem_sp_ptr;
+void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr)
 {
     int i;
     struct unexp_tnode *Temp_tnode_ptr;	
@@ -289,12 +290,7 @@ int *Sem_sp_ptr;
 /*     an integer.                                                 */
 /* NOTE:                                                           */
 /*******************************************************************/ 
-void Store_semantics(Sem_stack,Sem_sp,Token,Current_letter,Current_int)
-struct unexp_tnode *Sem_stack[];
-int Sem_sp;
-int Token;
-char Current_letter;
-int Current_int;
+void Store_semantics(struct unexp_tnode *Sem_stack[], int Sem_sp, int Token, char Current_letter, int Current_int)
 {
     struct unexp_tnode *Unexp_tnode_alloc();
 
@@ -319,10 +315,7 @@ int Current_int;
 /*     Temp_tnode_ptr -- Pointer to tnode which is to be pushed.   */ 
 /* RETURNS: None.                                                  */
 /*******************************************************************/ 
-void Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr)
-struct unexp_tnode *Sem_stack[];
-int *Sem_sp_ptr;
-struct unexp_tnode *Temp_tnode_ptr;
+void Push_tnode_ptr(struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr, struct unexp_tnode *Temp_tnode_ptr)
 {
      if (*Sem_sp_ptr < STACK_SIZE - 1)
          Sem_stack[++(*Sem_sp_ptr)] = Temp_tnode_ptr;
@@ -338,9 +331,7 @@ struct unexp_tnode *Temp_tnode_ptr;
 /* RETURNS:                                                        */
 /*     Pointer to the tnode stored at the top of the stack.        */
 /*******************************************************************/ 
-struct unexp_tnode *Pop_tnode_ptr(Sem_stack,Sem_sp_ptr)
-struct unexp_tnode *Sem_stack[];
-int *Sem_sp_ptr;
+struct unexp_tnode *Pop_tnode_ptr(struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr)
 {
      if ((*Sem_sp_ptr > 0) && (*Sem_sp_ptr < STACK_SIZE))
          return(Sem_stack[(*Sem_sp_ptr)--]);
@@ -357,9 +348,7 @@ int *Sem_sp_ptr;
 /* NOTE:                                                           */
 /*     Called only when DEBUG_PARSE flag is on.                    */
 /*******************************************************************/ 
-void Print_Sem_stack(Sem_stack,Sem_sp)
-struct unexp_tnode *Sem_stack[];
-int Sem_sp;
+void Print_Sem_stack(struct unexp_tnode *Sem_stack[], int Sem_sp)
 {
     int i;
     for (i=0;i<=Sem_sp;i++) 

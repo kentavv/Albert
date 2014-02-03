@@ -15,9 +15,16 @@
 
 
 #include <stdio.h>
+
+#include "Po_expand_poly.h"
+#include "Memory_routines.h"
 #include "Po_parse_poly.h"	
 #include "Po_semantics.h"	
 #include "Ty_routines.h"
+
+static struct unexp_tnode *Simplify_art_word(int T, struct unexp_tnode *Pntr);
+static int Get_degree(struct unexp_tnode *Pntr);
+static void Assert_scalar_bounds(int i);
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -33,12 +40,8 @@
 /*     i.e Scalar multiplication,Juxtaposed product, Addition and  */
 /*     Subtraction.                                                */
 /*******************************************************************/ 
-struct unexp_tnode *Expand_parse_tree(Unexp_tree)
-struct unexp_tnode *Unexp_tree;
+struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 {
-    struct unexp_tnode *Unexp_tnode_alloc();
-    struct unexp_tnode *Simplify_art_word();
-
     struct unexp_tnode *temp_tnode_ptr;	
     struct unexp_tnode *temp1;  /* Temporary nodes used during expansion */	
     struct unexp_tnode *temp2;	
@@ -294,14 +297,8 @@ struct unexp_tnode *Unexp_tree;
 /*     A special algorithm to create a tree given the type and a   */
 /*     list of operators is used.                                  */ 
 /*******************************************************************/ 
-struct unexp_tnode *Simplify_art_word(T,Pntr)
-int T;
-struct unexp_tnode *Pntr;
+struct unexp_tnode *Simplify_art_word(int T, struct unexp_tnode *Pntr)
 {
-    struct unexp_tnode *Unexp_tnode_alloc();
-
-    int Get_degree();
-
     struct unexp_tnode *temp,*temp1,*temp2,*left_tree,*right_tree;	
     int deg,j,offset,sum,deg1,deg2,t1,t2;
 
@@ -391,8 +388,7 @@ struct unexp_tnode *Pntr;
 /* NOTE:                                                           */
 /*     is called only from the routine Simplify_art_word().        */
 /*******************************************************************/ 
-int Get_degree(Pntr)
-struct unexp_tnode *Pntr;
+int Get_degree(struct unexp_tnode *Pntr)
 {
     int i = 0;
     struct unexp_tnode *temp;
@@ -428,13 +424,8 @@ struct unexp_tnode *Pntr;
 /*     This routine is called until there is no change in the      */
 /*     tree due to the previous call.                              */
 /*******************************************************************/ 
-struct unexp_tnode *Simplify_parse_tree(Unsimp_tree,Modified_ptr)
-struct unexp_tnode *Unsimp_tree;
-int *Modified_ptr;
+struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Modified_ptr)
 {
-    struct unexp_tnode *Unexp_tnode_alloc();
-    void Assert_scalar_bounds(); 
-
     int i;
     struct unexp_tnode *temp1;	
     struct unexp_tnode *temp2;	
@@ -694,13 +685,8 @@ int *Modified_ptr;
 /*     This routine is called until there is no change in the      */
 /*     tree due to the previous call.                              */
 /*******************************************************************/ 
-struct unexp_tnode *Elim_subtraction(Unsimp_tree,Modified_ptr)
-struct unexp_tnode *Unsimp_tree;
-int *Modified_ptr;
+struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modified_ptr)
 {
-    struct unexp_tnode *Unexp_tnode_alloc();
-    void Assert_scalar_bounds();
-
     struct unexp_tnode *temp_tnode_ptr;	
     struct unexp_tnode *temp1;	
     struct unexp_tnode *temp2;	
@@ -801,8 +787,7 @@ int *Modified_ptr;
       }
 }
 
-void Assert_scalar_bounds(i)
-int i;
+void Assert_scalar_bounds(int i)
 {
    if ((i>SCALAR_U_BOUND) || (i<SCALAR_L_BOUND))
        printf("Scalar out of bounds. May cause overflow.\n");

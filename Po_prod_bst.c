@@ -15,11 +15,17 @@
 /***      search tree of productions.                            ***/
 /*******************************************************************/
 
-#include	<string.h>
-#include	<stdio.h>
-#include	<ctype.h>
-#include	"Po_prod_bst.h"
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
+#include "Po_prod_bst.h"
+#include "Memory_routines.h"
+
+static void Prt_prod_inorder(PROD_TREEPTR Node);
+static int LT(char X[], char Y[]);
+static int GT(char X[], char Y[]);
+static int EQUAL(char X[], char Y[]);
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -40,13 +46,8 @@
 /*     part of initialization. Called from Init_prod_tree() in     */
 /*     the module Po_parse_poly.c                                  */
 /*******************************************************************/ 
-PROD_TREEPTR  Prod_insert (X, Left, Pnum, Node_ptr)
-char  X[] ;
-int   Left, Pnum;
-PROD_TREEPTR  *Node_ptr ;
+PROD_TREEPTR Prod_insert(char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr)
 {
-    PROD_TREEPTR  prod_talloc ();
-
     if (*Node_ptr == NULL) { 
         (*Node_ptr) = prod_talloc();
         strcpy((*Node_ptr)->rhs_str, X) ;
@@ -80,9 +81,7 @@ PROD_TREEPTR  *Node_ptr ;
 /*     This routine is called from Reduce() in the file            */
 /*     Po_parse_poly.c, while doing the parsing of identity.       */ 
 /*******************************************************************/ 
-PROD_TREEPTR  Prod_member (X, Node_ptr)
-char   X[];
-PROD_TREEPTR  Node_ptr;
+PROD_TREEPTR Prod_member(char X[], PROD_TREEPTR Node_ptr)
 {
     if (Node_ptr == NULL) 
         return(NULL) ;
@@ -105,8 +104,7 @@ PROD_TREEPTR  Node_ptr;
 /* NOTE:                                                           */
 /*     called only when flag to Debug Parsing is ON.               */
 /*******************************************************************/ 
-void Prt_prod_inorder(Node)
-PROD_TREEPTR  Node ;
+void Prt_prod_inorder(PROD_TREEPTR Node)
 {
     if (Node != NULL) {
         if (Node->left == NULL) {
@@ -133,8 +131,7 @@ PROD_TREEPTR  Node ;
 /*     1 if string X is less than string Y.                        */ 
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int  LT(X, Y)
-char  X[], Y[];
+int LT(char X[], char Y[])
 {
     if (strcmp(X, Y) < 0)
         return(1) ;
@@ -152,8 +149,7 @@ char  X[], Y[];
 /*     1 if string X is greater than string Y.                     */ 
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int  GT(X, Y)
-char  X[], Y[];
+int GT(char X[], char Y[])
 {
     if (strcmp(X, Y) > 0)
         return(1) ;
@@ -171,8 +167,7 @@ char  X[], Y[];
 /*     1 if string X is equal to string Y.                         */ 
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int EQUAL(X, Y)
-char  X[], Y[];
+int EQUAL(char X[], char Y[])
 {
     if (strcmp(X, Y) == 0)
         return(1) ;

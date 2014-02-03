@@ -21,7 +21,10 @@
 #include <ctype.h>
 
 #include "Po_parse_exptext.h"
+#include "Memory_routines.h"
 
+static void Parse_term(struct term_node *Root, char String[], int *Strptr);
+static void CreateLR(struct term_node *Root);
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -38,15 +41,8 @@
 /*     created by calling Parse_term() which creates the tree for  */
 /*     the term string.                                            */ 
 /*******************************************************************/ 
-struct polynomial *Parse_exptext(Poly_str)
-char  Poly_str[];
+struct polynomial *Parse_exptext(char Poly_str[])
 {
-    char *Mymalloc();
-    struct term_head *Term_head_alloc();
-    struct term_node *Term_node_alloc();
-    struct polynomial *Poly_alloc();
-    void   Parse_term();
-
     struct polynomial *poly;         /* pointer that will be returned */
     struct term_head  *cur_head_ptr;
 
@@ -139,13 +135,8 @@ char  Poly_str[];
 /*     The tree is built recursively by bulding left and right sub */
 /*     trees.                                                      */
 /*******************************************************************/ 
-void Parse_term(Root,String,Strptr)
-struct term_node  *Root;
-char   String[];
-int    *Strptr;
+void Parse_term(struct term_node *Root, char String[], int *Strptr)
 {
-    void CreateLR(); /* create two children left and right */
-
     if (*Strptr < strlen(String)) {
         if (String[*Strptr] == '(') {
              (*Strptr)++;
@@ -169,11 +160,8 @@ int    *Strptr;
 /* FUNCTION:                                                       */
 /*     Allocate space for the left child and the right child.      */ 
 /*******************************************************************/ 
-void CreateLR(Root)
-struct term_node *Root;
+void CreateLR(struct term_node *Root)
 {
-    struct term_node *Term_node_alloc(); 
-
 	Root->left = Term_node_alloc();
 	Root->right = Term_node_alloc();
 }

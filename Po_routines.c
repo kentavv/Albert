@@ -25,11 +25,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "Po_routines.h"
 #include "Build_defs.h"
 #include "Generators.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 #include "Alg_elements.h"
+#include "Memory_routines.h"
+
+static int Absolute(int Num);
+static int Get_len(int Num);
+static int Get_max_coef(struct term_head *Pntr);
+static void Create_term_str(struct term_node *Pntr, char Term_str[]);
+static void Store_type(struct term_node *term, struct P_type *type);
+static int Same_type(struct P_type type1, struct P_type type2);
+static void AssignNumbersToTerm(struct term_node *Pntr, int Cln[]);
+static void DestroyTerms(struct term_head *Term_head);
+static void FreeNodes(struct term_node *Term_node);
+static void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status);
 
 #undef getchar
 
@@ -44,17 +57,8 @@
 /* NOTE:                                                           */
 /*     This routine is called when a command "d" is issued.        */
 /*******************************************************************/
-void Print_poly(Poly,Poly_len)
-struct polynomial *Poly;
-int Poly_len;
+void Print_poly(struct polynomial *Poly, int Poly_len)
 {
-    char *Mymalloc();
-    void Create_term_str();
-
-    int Get_max_coef();
-    int Get_len();
-    int Absolute();
-
     struct term_head  *temp_head;
     char *Term_str;
     int term_len;
@@ -148,8 +152,7 @@ int Poly_len;
 /*     Absolute value of Num.                                      */
 /* FUNCTION:                                                       */
 /*******************************************************************/
-int Absolute(Num)
-int Num;
+int Absolute(int Num)
 {
     if (Num < 0)
        return(-Num);
@@ -165,8 +168,7 @@ int Num;
 /* RETURNS:                                                        */
 /*     Number of digits in the integer Num.                        */
 /*******************************************************************/
-int Get_len(Num)
-int Num;
+int Get_len(int Num)
 {
     int i = 1;
     int temp;
@@ -186,10 +188,8 @@ int Num;
 /*     Number of digits in the largest coefficient of all terms in */
 /*     a  polynomial.                                              */
 /*******************************************************************/
-int Get_max_coef(Pntr)
-struct term_head *Pntr;
+int Get_max_coef(struct term_head *Pntr)
 {
-    int Absolute();
     struct term_head *temp;
     int max = 0;
 
@@ -218,14 +218,9 @@ struct term_head *Pntr;
 /*     characters (i.e small letters or '(' or ')') to the         */
 /*     Term_str.                                                   */
 /*******************************************************************/
-void Create_term_str(Pntr,Term_str)
-struct term_node    *Pntr;
-char Term_str[];
+void Create_term_str(struct term_node *Pntr, char Term_str[])
 {
-    void Short_string_panic();
-
     char temp_str[2];
-
 	
     if (((Pntr->left) == NULL) && ((Pntr->right) == NULL)) {
         sprintf(temp_str,"%c",Pntr->letter);
@@ -265,8 +260,7 @@ char Term_str[];
 /*     If the Polynomial is homogeneous, its type will be stored   */
 /*     in the Polynomial.                                          */
 /*******************************************************************/
-int Homogeneous(Poly)
-struct polynomial *Poly;
+int Homogeneous(struct polynomial *Poly)
 {
     void Store_type();
     int Same_type();
@@ -324,9 +318,7 @@ struct polynomial *Poly;
 /*     Increment the degree of small letters traversing the tree   */
 /*     pointed to by term recursively.                             */
 /*******************************************************************/
-void Store_type(term,type)
-struct term_node *term;
-struct P_type *type;
+void Store_type(struct term_node *term, struct P_type *type)
 {
     if ((term->left == NULL) && (term->right == NULL)) {
         type->degrees[term->letter - 'a'] += 1;
@@ -348,9 +340,7 @@ struct P_type *type;
 /*     1 if type1 and type2 have same degree in each small letter. */
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int Same_type(type1,type2)
-struct P_type type1;
-struct P_type type2;
+int Same_type(struct P_type type1, struct P_type type2)
 {
     int i;
     int is_sametype = TRUE;
@@ -375,11 +365,8 @@ struct P_type type2;
 /* RETURNS: None.                                                  */
 /* FUNCTION:                                                       */
 /*******************************************************************/
-AssignNumbersToLetters(Poly)
-struct polynomial *Poly;
+void AssignNumbersToLetters(struct polynomial *Poly)
 {
-    void AssignNumbersToTerm();
-
     struct term_head  *temp_head;
 
     int Current_letter_numbers[NUM_LETTERS];
@@ -398,9 +385,7 @@ struct polynomial *Poly;
     }
 }
 
-void AssignNumbersToTerm(Pntr,Cln)
-struct term_node *Pntr;
-int Cln[];
+void AssignNumbersToTerm(struct term_node *Pntr, int Cln[])
 {
     if (((Pntr->left) == NULL) && ((Pntr->right) == NULL))
         Pntr->number = Cln[Pntr->letter - 'a']++;
@@ -411,20 +396,18 @@ int Cln[];
 }
 
 
-DestroyPoly(Poly)
-struct polynomial *Poly;
+void DestroyPoly(struct polynomial *Poly)
 {
-    assert_not_null(Poly);
+    assert_not_null_nv(Poly);
 
     DestroyTerms(Poly->terms);
     free(Poly);
 }
 
 
-DestroyTerms(Term_head)
-struct term_head *Term_head;
+void DestroyTerms(struct term_head *Term_head)
 {
-    assert_not_null(Term_head);
+    assert_not_null_nv(Term_head);
 
     if (Term_head->next == NULL) {
         FreeNodes(Term_head->term);
@@ -437,10 +420,9 @@ struct term_head *Term_head;
     }
 }
 
-FreeNodes(Term_node)
-struct term_node *Term_node;
+void FreeNodes(struct term_node *Term_node)
 {
-    assert_not_null(Term_node);
+    assert_not_null_nv(Term_node);
 
     if ((Term_node->left == NULL) && (Term_node->right == NULL))
         free(Term_node);
@@ -457,13 +439,8 @@ struct term_node *Term_node;
  * If the expansion collapses to 0, that means Poly is an identity.
  */
 
-int IsIdentity(Poly)
-struct polynomial *Poly;
+int IsIdentity(struct polynomial *Poly)
 {
-    Alg_element *AllocAE();		/* TW 9/22/93 - change ae to *ae & result to
-*result */
-    int DestroyAE();                    /* TW 9/23/93 - need to free memory */
-
     struct term_head *temp_head;
     Scalar ConvertToScalar();
 
@@ -511,23 +488,16 @@ to *ae */
 }
 
 
-ExpandTerm(Ans,W,status)
-Alg_element *Ans;
-struct term_node *W;
-int *status;
+void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status)
 {
-    Alg_element *AllocAE();		/* TW 9/22/93 - change left to *left & right
-to *right */
-    int DestroyAE();                    /* TW 9/23/93 - need to free memory */
-
     Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
     Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
     Basis b;
 
-    assert_not_null(W);
-    assert_not_null(Ans);
-    assert_not_null(left);		/* TW 9/22/93 - change left to *left */
-    assert_not_null(right);		/* TW 9/22/93 - change right to *right */
+    assert_not_null_nv(W);
+    assert_not_null_nv(Ans);
+    assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
+    assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
 
     if(*status != OK){
       DestroyAE(left);                     /* TW 9/23/93 - Can we free this? */
