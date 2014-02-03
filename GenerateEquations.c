@@ -74,10 +74,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "GenerateEquations.h"
 #include "Build_defs.h"
 #include "CreateMatrix.h"
+#include "Memory_routines.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
+
+static void InitSeqSubtypes(void);
+static int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight);
+static void PrintSeqSubtypes(void);
+static void PrintEqns(Eqn_list_node *L);
+static void PrintEqn(Basis_pair *Temp_eqn);
 
 Type Target_type;
 int Target_type_len;
@@ -93,12 +101,8 @@ int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
-int GenerateEquations(F,N,L)
-struct polynomial *F;
-Name N;
-Eqn_list_node *L;
+int GenerateEquations(struct polynomial *F, Name N, Eqn_list_node *L)
 {
-    char *Mymalloc();
     Type GetNewType();
 
     int i,j;
@@ -154,7 +158,7 @@ Eqn_list_node *L;
 }
 
 
-InitSeqSubtypes()
+void InitSeqSubtypes(void)
 {
     int i,j;
 
@@ -169,10 +173,7 @@ InitSeqSubtypes()
 }
 
 
-GenerateSeqSubtypes(Cur_row,Cur_col,Weight)
-int Cur_row;
-int Cur_col;
-int Weight;
+int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
 {
     int whatsave;
     int tsave,csave;
@@ -249,8 +250,7 @@ int Weight;
 }
 
 
-GetVarNumber(Letter)
-char Letter;
+int GetVarNumber(char Letter)
 {
     int var_num = 1;
     int i;
@@ -265,10 +265,8 @@ char Letter;
 
 
 
-Eqn_list_node *GetNewEqnListNode()
+Eqn_list_node *GetNewEqnListNode(void)
 {
-    char *Mymalloc();
-
     Eqn_list_node *temp_node;
 
     temp_node = NULL;
@@ -280,10 +278,9 @@ Eqn_list_node *GetNewEqnListNode()
 }
 
 
-int FreeEqns(L)
-Eqn_list_node *L;
+void FreeEqns(Eqn_list_node *L)
 {
-    assert_not_null(L);
+    assert_not_null_nv(L);
 
     if (L->next == NULL) {
         if (L->basis_pairs != NULL)
@@ -298,7 +295,7 @@ Eqn_list_node *L;
 }
 
 
-PrintSeqSubtypes()
+void PrintSeqSubtypes(void)
 {
     static int count = 1;
 
@@ -313,14 +310,13 @@ PrintSeqSubtypes()
     }
 }
 
-PrintEqns(L)
-Eqn_list_node *L;
+void PrintEqns(Eqn_list_node *L)
 {
     Eqn_list_node *temp;
     int i,j = 0;
     int count = 1;
 
-    assert_not_null(L);
+    assert_not_null_nv(L);
 
     temp = L;
 
@@ -333,13 +329,12 @@ Eqn_list_node *L;
 } 
 
 
-PrintEqn(Temp_eqn)
-Basis_pair *Temp_eqn;
+void PrintEqn(Basis_pair *Temp_eqn)
 {
     int i,j;
     int len;
 
-    assert_not_null(Temp_eqn);
+    assert_not_null_nv(Temp_eqn);
 
     i = j = 0;
     while (Temp_eqn[i].coef != 0) {

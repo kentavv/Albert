@@ -45,6 +45,7 @@
 #include "Build_defs.h"
 #include "Alg_elements.h"
 #include "CreateMatrix.h"
+#include "GenerateEquations.h"
 #include "Po_parse_exptext.h"
 #include "PerformSub.h"
 #include "Debug.h"
