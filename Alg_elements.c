@@ -31,12 +31,11 @@
 
 #include "Build_defs.h"
 #include "Alg_elements.h"
+#include "Memory_routines.h"
 
 #define assert_not_null(p)  if (p == NULL) return(NULL_PTR_ERR)
 
 int Mult2basis();
-
-char *Mymalloc();
 
 Scalar S_add();
 Scalar S_zero();
@@ -62,7 +61,7 @@ static int PrintAE(Alg_element *p);
 /*     Allocate space for Alg_element.                             */
 /*     Initialize the basis_coef's to 0.                           */
 /*******************************************************************/ 
-static Alg_element *CreateAE()
+Alg_element *CreateAE()
 {
     Alg_element *p;
 
@@ -215,7 +214,7 @@ int ScalarMultAE(Scalar x, Alg_element *p)
 /*     Add Alg_element's *p1 and *p2 and put the result in *p3.    */
 /*     *p3 = *p1 + *p2.                                            */
 /*******************************************************************/ 
-static int AssignAddAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3)
+int AssignAddAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3)
 {
     Scalar S_add();
     Scalar S_zero();
@@ -255,7 +254,7 @@ static int AssignAddAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. 
     }
 }    
 
-static int AssignSubAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3)
+int AssignSubAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3)
 {
     Alg_element *ae; 
 
@@ -271,7 +270,7 @@ static int AssignSubAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. 
     return(OK);
 }    
 
-static int AssignNegAE(Alg_element *p1, /* pointers for speed. */ Alg_element *p2)
+int AssignNegAE(Alg_element *p1, /* pointers for speed. */ Alg_element *p2)
 {
     Scalar zero;
     int i;
@@ -397,7 +396,7 @@ int AssignLast(Alg_element *p)
 /*     Copy Alg_element *p1 into Alg_element *p2.                  */
 /*     *p2 = *p1.                                                  */
 /*******************************************************************/ 
-static int CopyAE(Alg_element *p1, /* pointer for speed. */ Alg_element *p2)
+int CopyAE(Alg_element *p1, /* pointer for speed. */ Alg_element *p2)
 {
     Basis i;
 
@@ -427,7 +426,7 @@ static int CopyAE(Alg_element *p1, /* pointer for speed. */ Alg_element *p2)
 /*     Multiply term with Alg_element *p1 and add to *p2.          */
 /*         *p2 = xb.(*p1) + *p2                                    */
 /*******************************************************************/ 
-static int LeftTapAE(Scalar x, Basis b, Alg_element *p1, /* pointer for speed. */ Alg_element *p2)
+int LeftTapAE(Scalar x, Basis b, Alg_element *p1, /* pointer for speed. */ Alg_element *p2)
 {
     Basis i;
     Scalar zero;
@@ -496,7 +495,7 @@ int MultAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_eleme
     return(status);
 }
 
-static Basis Min(Basis x, Basis y)
+Basis Min(Basis x, Basis y)
 {
     if (x<y)
         return(x);
@@ -504,7 +503,7 @@ static Basis Min(Basis x, Basis y)
         return(y);
 }
 
-static Basis Max(Basis x, Basis y)
+Basis Max(Basis x, Basis y)
 {
     if (x>y)
         return(x);
@@ -546,7 +545,7 @@ Alg_element *AllocAE()
 /* FUNCTION:                                                       */
 /*     Print the Algebraic element *p.                             */
 /*******************************************************************/ 
-static int PrintAE(Alg_element *p)
+int PrintAE(Alg_element *p)
 {
     int i;
     int k = 0;
