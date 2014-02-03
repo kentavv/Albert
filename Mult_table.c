@@ -283,8 +283,7 @@ int DestroyMultTable(void)
 
     int i,j;
 
-    assert_not_null(Mt_block_index);	/* TW 9/27/93 - forgot to free this up */
-
+  if(Mt_block_index) {
     for (i=0;i<MTB_INDEX_SIZE;i++)
        for (j=0;j<MTB_INDEX_SIZE;j++) {
 /*          if (Mt_block_index[i][j] != NULL) {
@@ -298,6 +297,8 @@ int DestroyMultTable(void)
               setMtBlock(i, j, NULL);		/*     V      */
           }
        }
+    Mt_block_index = NULL;
+  }
 
 /*    for(i = 0; i < MTB_INDEX_SIZE; ++i){*//* TW 9/27/93 - forgot to free this up */
 /*      assert_not_null(Mt_block_index[i]);
@@ -305,10 +306,11 @@ int DestroyMultTable(void)
     }
 
     free(Mt_block_index);*/		/* TW 9/27/93 - forgot to free this up */
-   
-    assert_not_null(First_terms_block);
-
-    FreeTermsBlocks(First_terms_block,&TB_count);
+  
+    if(First_terms_block) { 
+      FreeTermsBlocks(First_terms_block, &TB_count);
+      First_terms_block = NULL;
+    }
 
 #if DEBUG_DESTROY_MT
     i = DIMENSION_LIMIT + 4;
