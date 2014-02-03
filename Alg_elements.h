@@ -16,17 +16,17 @@ typedef struct {
 
     /* TW 9/22/93 - changed basis_coef from array to pointer */
     Scalar *basis_coef; /* 0th cell is not used. i.e 1<=Basis. */
-} Alg_element,*Alg_element_ptr; 
+} Alg_element, *Alg_element_ptr; 
 
 int DestroyAE(Alg_element *p);
 int InitAE(Alg_element *p);
 int ZeroOutAE(Alg_element *p);
-int IsZeroAE(Alg_element *p /* pointer for speed. */);
+int IsZeroAE(const Alg_element *p);
 int ScalarMultAE(Scalar x, Alg_element *p);
-int AddAE(Alg_element *p1, /* pointer for speed. */ Alg_element *p2);
+int AddAE(const Alg_element *p1, Alg_element *p2);
 int AssignFirst(Alg_element *p);
 int AssignLast(Alg_element *p);
-int MultAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3);
+int MultAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
 Alg_element *AllocAE();
 
 #endif
