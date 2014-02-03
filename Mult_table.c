@@ -27,10 +27,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "Mult_table.h"
 #include "Build_defs.h"
 #include "Alg_elements.h"
 #include "Help.h"
-#include "Mult_table.h"
+#include "Memory_routines.h"
+
+Alg_element *AllocAE();	/* TW 9/22/93 - change prod[] to *prod */
+int DestroyAE();              /* TW 9/23/93 - need to free up memory */
+Scalar S_add();
+Scalar S_mul();
+
+static int TermsListLength(Term Tl[]);
+static Term *RetrieveProduct(Basis B1, Basis B2);
+static int FreeTermsBlocks(Terms_block *P, int *X);
+static int TransAETL(Alg_element *P, Term *Q);
+static int TransTLAE(Term *P, Alg_element *Q);
+static int PrintMT(void);
+static int PrintMTBlock(Mt_block *P);
+static int PrintTL(Term *P);
+static Mt_block *Alloc_Mt_block();
+static Terms_block *Alloc_Terms_block(void);
+static int Print_AE(Alg_element *ae, FILE *filePtr, int outputType);
+static Mt_block *getMtBlock(int row, int col);
+static int setMtBlock(int row, int col, Mt_block *val);
+
 
 #define  DEBUG_DESTROY_MT  0
 
@@ -71,11 +92,8 @@ int lineCnt;
 /* NOTE:                                                           */
 /*     Called only once, at the time System initialization.        */
 /*******************************************************************/ 
-int CreateMultTable()
+int CreateMultTable(void)
 {
-    int setMtBlock();		/* TW 9/23/93 */
-    Terms_block *Alloc_Terms_block();
-
     int i,j;
 
 /* There are Mt_blocks initially. */
@@ -112,17 +130,8 @@ int CreateMultTable()
 /*     Enter the product of Basis B1 and B2 in the Multiplication  */
 /*     table as Terms_list.                                        */
 /*******************************************************************/ 
-int EnterProduct(B1,B2,Tl)
-Basis B1;
-Basis B2;
-Term Tl[];
+int EnterProduct(Basis B1, Basis B2, Term Tl[])
 {
-    Mt_block *getMtBlock();	/* TW 9/23/93 */
-    int setMtBlock();		/* TW 9/23/93 */
-    Mt_block *Alloc_Mt_block();
-    Terms_block *Alloc_Terms_block();
-    int TermsListLength();
-
     Terms_block  *new_terms_block;
 
     Mt_block *cur_mt_block;
@@ -185,8 +194,7 @@ Term Tl[];
 /* RETURNS:                                                        */
 /*     Number of Terms in the Terms_list Tl.                       */
 /*******************************************************************/ 
-int TermsListLength(Tl)
-Term Tl[];
+int TermsListLength(Term Tl[])
 {
     int length = 1;
     int i = 0;
@@ -208,12 +216,8 @@ Term Tl[];
 /* RETURNS:                                                        */
 /*     Pointer to Terms_list, product of B1 and B2.                */ 
 /*******************************************************************/ 
-Term *RetrieveProduct(B1,B2)
-Basis B1;
-Basis B2;
+Term *RetrieveProduct(Basis B1, Basis B2)
 {
-    Mt_block *getMtBlock();	/* TW 9/23/93 */
-
     int mtbi_row,mtbi_col;
     int mtb_row,mtb_col;
     Mt_block *MTBlock;
@@ -244,15 +248,8 @@ Basis B2;
 /* RETURNS:                                                        */
 /*     Pointer to Terms_list, product of B1 and B2.                */ 
 /*******************************************************************/ 
-int Mult2basis(B1,B2,x,P)
-Basis B1;
-Basis B2;
-Scalar x;
-Alg_element *P;
+int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
 {
-    Scalar S_add();
-    Scalar S_mul();
-
     Term *tl;
     Basis w;
 
@@ -283,11 +280,8 @@ Alg_element *P;
 /*     Free the memory occupaid by Multiplication table and        */
 /*     all the Terms_blocks.                                       */
 /*******************************************************************/ 
-int DestroyMultTable()
+int DestroyMultTable(void)
 {
-    Mt_block *getMtBlock();	/* TW 9/23/93 */
-    int setMtBlock();		/* TW 9/23/93 */
-    int FreeTermsBlocks();
     int TB_count = 1; /* Num. of Terms_block's allocated. For Stats. */
     int MT_count = 1; /* Num. of MT_block's allocated. For Stats. */
 
@@ -339,9 +333,7 @@ int DestroyMultTable()
 /* FUNCTION:                                                       */
 /*     Recursively Free the memory occupaid by all the Terms_blocks*/
 /*******************************************************************/ 
-int FreeTermsBlocks(P,X)
-Terms_block *P;
-int *X; /* For Stats. */
+int FreeTermsBlocks(Terms_block *P, int *X /* For Stats. */)
 {
     assert_not_null(P);
 
@@ -374,9 +366,7 @@ int *X; /* For Stats. */
 /* FUNCTION:                                                       */
 /*     Translate Algabraic element *P into Terms_list *Q.          */
 /*******************************************************************/ 
-int TransAETL(P,Q)
-Alg_element *P;
-Term *Q;
+int TransAETL(Alg_element *P, Term *Q)
 {
     int i;
 
@@ -406,12 +396,8 @@ Term *Q;
 /* FUNCTION:                                                       */
 /*     Translate Terms_list *Q into Algabraic element *P.          */
 /*******************************************************************/ 
-int TransTLAE(P,Q)
-Term *P;
-Alg_element *Q;
+int TransTLAE(Term *P, Alg_element *Q)
 {
-    Mt_block *getMtBlock();	/* TW 9/23/93 */
-
     int i = 0;
 
     assert_not_null(P);
@@ -430,9 +416,8 @@ Alg_element *Q;
     return(OK);
 }
 
-int PrintMT()
+int PrintMT(void)
 {
-    Mt_block *getMtBlock();	/* TW 9/23/93 */
     int i,j;
 
     for (i=0;i<MTB_INDEX_SIZE;i++)
@@ -440,7 +425,7 @@ int PrintMT()
             printf("Mtbi[%d][%d]\n",i,j);
 /*            if (Mt_block_index[i][j] != NULL)
                 PrintMTBlock(Mt_block_index[i][j]); TW 9/23/93 */
-	    if(getMtBlock(i, j, NULL)){		/* TW 9/23/93 */
+	    if(getMtBlock(i, j)){		/* TW 9/23/93 */
 	      PrintMTBlock(getMtBlock(i, j));	/* TW 9/23/93 */
 	    }
         }
@@ -448,8 +433,7 @@ int PrintMT()
 }
 
 
-int PrintMTBlock(P)
-Mt_block *P;
+int PrintMTBlock(Mt_block *P)
 {
     int i,j;
 
@@ -475,8 +459,7 @@ Mt_block *P;
 /* FUNCTION:                                                       */
 /*     Print the Terms_list P.                                     */
 /*******************************************************************/ 
-int PrintTL(P)
-Term *P;
+int PrintTL(Term *P)
 {
     int i = 0;
     int j;
@@ -513,8 +496,6 @@ Term *P;
 /*******************************************************************/ 
 Mt_block *Alloc_Mt_block()
 {
-    char *Mymalloc();
-
     Mt_block *new_mt_block = NULL;
     int i,j;
     
@@ -538,10 +519,8 @@ Mt_block *Alloc_Mt_block()
 /* FUNCTION:                                                       */
 /*     Allocate space for a new Terms_list			   */
 /*******************************************************************/
-Term *Alloc_Terms_list()
+Term *Alloc_Terms_list(void)
 {
-    char *Mymalloc();
-
     Term *new_terms_list = NULL;
 
     new_terms_list = ((Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT));
@@ -549,8 +528,6 @@ Term *Alloc_Terms_list()
 
     return(new_terms_list);
 }
-
-
 
 
 /*******************************************************************/
@@ -561,10 +538,8 @@ Term *Alloc_Terms_list()
 /* FUNCTION:                                                       */
 /*     Allocate space for a new Terms_block and initialize it.     */
 /*******************************************************************/ 
-Terms_block *Alloc_Terms_block()
+Terms_block *Alloc_Terms_block(void)
 {
-    char *Mymalloc();
-
     Terms_block *new_terms_block = NULL;
     int i;
 
@@ -596,13 +571,8 @@ Terms_block *Alloc_Terms_block()
 /* FUNCTION:                                                       */
 /*     Print the table.                                            */
 /*******************************************************************/
-int Print_MultTable(filePtr, outputType)
-FILE *filePtr;	/* TW 9/19/93 - added 2 params to support view, save, & output */
-int outputType;
+int Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
-  Alg_element *AllocAE();	/* TW 9/22/93 - change prod[] to *prod */
-  int DestroyAE();              /* TW 9/23/93 - need to free up memory */
-
   int i, j, dim;
   Alg_element *prod = AllocAE();/* TW 9/22/93 - change prod[] to *prod */
 
@@ -645,10 +615,7 @@ int outputType;
   DestroyAE(prod);      /* TW 9/23/93 - Shouldn't we free this up? */
 }
  
-int Print_AE(ae, filePtr, outputType)
-Alg_element *ae;
-FILE *filePtr;	/* TW 9/19/93 - add 2 params to support view, save, & output */
-int outputType;
+int Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
 {
   int x,i;
   int trmcnt = 0;		/* How many terms have been printed */
@@ -679,9 +646,7 @@ int outputType;
 
 /* TW 9/23/93 - added in order to dynamically allocate Mt_block_index */
 
-Mt_block *getMtBlock(row, col)
-int row;
-int col;
+Mt_block *getMtBlock(int row, int col)
 {
   Mt_block **rowPtr = Mt_block_index[row];
 
@@ -690,10 +655,7 @@ int col;
 }
 
 
-int setMtBlock(row, col, val)
-int row;
-int col;
-Mt_block *val;
+int setMtBlock(int row, int col, Mt_block *val)
 {
   Mt_block **rowPtr = Mt_block_index[row];
 

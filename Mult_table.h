@@ -9,6 +9,10 @@
 /***                        changed Terms_list and terms from    ***/
 /***                        arrays to pointers                   ***/
 /*******************************************************************/
+
+#include "Build_defs.h"
+#include "Alg_elements.h"
+
 #ifndef MTB_SIZE
 #define MTB_SIZE 100
 #endif
@@ -28,5 +32,12 @@ typedef struct terms_block {
     Term *terms;		/* TW 9/22/93 - changed terms from array to ptr */
     struct terms_block *next;
 } Terms_block;
+
+int CreateMultTable(void);
+int EnterProduct(Basis B1, Basis B2, Term Tl[]);
+int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P);
+int DestroyMultTable(void);
+Term *Alloc_Terms_list(void);
+int Print_MultTable(FILE *filePtr, int outputType);
 
 #endif
