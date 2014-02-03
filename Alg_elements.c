@@ -65,22 +65,13 @@ static int PrintAE(Alg_element *p);
 static Alg_element *CreateAE()
 {
     Alg_element *p;
-    Basis i;
-    Scalar zero;
 
     p = AllocAE(); 
 
     if (p == NULL)
         return(NULL);
 
-    zero = S_zero();
-
-/* Zero out *p initially. */
-
-    p->first = p->last = 0;
-
-    for (i=0;i<=DIMENSION_LIMIT;i++)
-        p->basis_coef[i] = zero; 
+    InitAE(p);
 
     return(p);
 }
