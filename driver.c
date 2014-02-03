@@ -34,6 +34,7 @@
 #include <signal.h>
 
 #include "Build_defs.h"
+#include "Field.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
 #include "Get_Command.h"
@@ -80,7 +81,6 @@ char *argv[];
 
     int Parse_generator_word();        /* Generators.c */
     int Assoc_number();                /* Ty_routines.c */
-    int Change_field();                /* Field.c */
 
     int ReadDotAlbert();               /* Get_command.c */
     int Substr();                      /* Get_Command.c */

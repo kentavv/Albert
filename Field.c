@@ -10,8 +10,18 @@
 /***      scalar.                                                 ***/
 /********************************************************************/
 #include <stdio.h>
+
 #include "Field.h"
 #include "Build_defs.h"
+
+static int Is_prime(int Num);
+
+#define    BOUND    256    /* field has to be less than BOUND */
+
+static int Prime[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,
+    61,67,71, 73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,
+    151,157,163,167, 173,179,181,191,193,197,199,211,223,227,229,233,
+    239,241,251,0};
 
 /********************************************************************/
 /* MODIFIES:                                                        */
@@ -29,9 +39,7 @@
 /* NOTE:                                                            */
 /*     This routine is called when a command "f number" is issued.  */
 /********************************************************************/
-int Change_field(Number,Pntr)
-int Number;
-Scalar *Pntr;
+int Change_field(int Number, Scalar *Pntr)
 {
    int Is_prime();
 
@@ -56,8 +64,7 @@ Scalar *Pntr;
 /*     1 if  Num is a prime number less than BOUND.                 */
 /*     0 otherwise.                                                 */
 /********************************************************************/
-int Is_prime(Num)
-int Num;
+int Is_prime(int Num)
 {
    int i = 0;
    int found = 0;
