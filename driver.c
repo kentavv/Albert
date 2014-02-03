@@ -35,6 +35,7 @@
 
 #include "Build_defs.h"
 #include "Field.h"
+#include "Generators.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
 #include "Get_Command.h"

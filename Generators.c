@@ -11,6 +11,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#include "Generators.h"
 #include "Build_defs.h"
 #include "Po_parse_exptext.h"
 
@@ -36,9 +38,7 @@ static Basis BasisNumber_letters[NUM_LETTERS];	/* letter -> basis  */
 /*     positive integers.                                           */
 /*     The total degree of the word has to be at least 2.           */
 /********************************************************************/
-int Parse_generator_word(Str,Pntr)
-char Str[];
-struct P_type *Pntr;
+int Parse_generator_word(char Str[], struct P_type *Pntr)
 {
    int i = 0; 
    int cur_deg = 0;  /* keep the integer equivalent of series of digits. */  
@@ -77,8 +77,7 @@ struct P_type *Pntr;
 }
 
 
-AssignBasisNumberstoLetters(ptype)
-struct P_type ptype;
+void AssignBasisNumberstoLetters(struct P_type ptype)
 {
      int i;
      Basis cur_basis_num = 1;
@@ -97,15 +96,13 @@ struct P_type ptype;
 }
 
 /* Take a degree 1 basis element and translate back to a letter. */
-char GetLetterofBasis(b)
-Basis b;
+char GetLetterofBasis(Basis b)
 {
    return (Letter_BasisNumbers[b - 1]);
 }
 
 
-Basis GetBasisNumberofLetter(c)
-char c;
+Basis GetBasisNumberofLetter(char c)
 {
     return(BasisNumber_letters[c - 'a']);
 } 

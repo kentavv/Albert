@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "Build_defs.h"
+#include "Generators.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 #include "Alg_elements.h"
@@ -515,7 +516,6 @@ Alg_element *Ans;
 struct term_node *W;
 int *status;
 {
-    Basis GetBasisNumberofLetter();
     Alg_element *AllocAE();		/* TW 9/22/93 - change left to *left & right
 to *right */
     int DestroyAE();                    /* TW 9/23/93 - need to free memory */
