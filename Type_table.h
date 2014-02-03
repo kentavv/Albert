@@ -7,6 +7,8 @@
 /***  DATE WRITTEN: May 1990                                     ***/
 /*******************************************************************/
 
+#include "Build_defs.h"
+
 typedef struct tt_node {
     Basis begin_basis;
     Basis end_basis;            /* indices into Base table. */

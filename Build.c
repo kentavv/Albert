@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#include "Build.h"
 #include "Build_defs.h"
 #include "Mult_table.h"
 #include "CreateMatrix.h"
@@ -36,6 +37,13 @@
 #include "Sparse_defs.h"
 #include "Debug.h"
 
+static int InitializeStructures(void);
+static void DestroyStructures(void);
+static void PrintProgress(int i);
+static int ProcessDegree(int i);
+static void InstallDegree1(void);
+static int ProcessType(Name n);
+static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n);
 
 /*****************************
  These variables are for the sparse implementation
@@ -69,9 +77,7 @@ Basis Current_dimension;
 /*     For each degree, New Basis are created and New Products are */
 /*     entered.                                                    */ 
 /*******************************************************************/
-int Build(Idq_node,Ttype)
-struct id_queue_node *Idq_node;
-Type Ttype;
+int Build(struct id_queue_node *Idq_node, Type Ttype)
 {
     int GetDegreeName();
 
@@ -163,7 +169,7 @@ Type Ttype;
 /*      Type_table -- Type Table for the Given Target Type.        */
 /*      Basis_table -- to 0's.                                     */
 /*******************************************************************/
-int InitializeStructures()
+int InitializeStructures(void)
 {
     int CreateMultTable();
     int CreateTypeTable();
@@ -185,14 +191,13 @@ int InitializeStructures()
 }
 
 
-DestroyStructures()
+void DestroyStructures(void)
 {
      DestroyTypeTable();
 }
 
 
-PrintProgress(i)
-int i;
+void PrintProgress(int i)
 {
     time(&Current_time);
 
@@ -207,8 +212,7 @@ int i;
 /* FUNCTION:                                                       */
 /*     Process all Types of degree i.                              */
 /*******************************************************************/
-ProcessDegree(i)
-int i;
+int ProcessDegree(int i)
 {
    Name FirstTypeDegree();
    Name NextTypeSameDegree();
@@ -247,7 +251,7 @@ int i;
 /*     All Degree 1 Basis i.e Generators are entered into Basis    */
 /*     Table.                                                      */ 
 /*******************************************************************/
-InstallDegree1()
+void InstallDegree1(void)
 {
     Type GetNewType();
 
@@ -286,8 +290,7 @@ InstallDegree1()
 /*     other basis pairs in terms of existing basis.               */ 
 /*******************************************************************/
 /* Process type t for degree i */
-ProcessType(n)
-Name n;
+int ProcessType(Name n)
 {
     Eqn_list_node *GetNewEqnListNode();
 
@@ -341,9 +344,7 @@ Name n;
 /*     and enter them into Basis Table. Then write Dependent Basis */
 /*     pairs into Basis by entering products into Mult_table.      */ 
 /*******************************************************************/
-SolveEquations(L,n)
-Eqn_list_node *L;             /* Linked list of pair lists */
-Name n;
+int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
 {
     int rows = 0;              /* Size of matrix */
     int cols = 0;              /* Size of matrix */
