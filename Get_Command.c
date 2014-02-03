@@ -407,22 +407,7 @@ message to display path */
 
 int Substr(char Str1[], char Str2[])
 {
-    int len_str1,len_str2;
-    int i = 0;
-
-    len_str1 = strlen(Str1);
-    len_str2 = strlen(Str2);
-
-    while ((i<len_str1) && (i<len_str2)) {
-        if (Str1[i] != Str2[i])
-            return(0);
-        else
-            i++;
-    }
-    if (i < len_str1)
-        return(0);
-    else
-        return(1);
+  return strncmp(Str1, Str2, strlen(Str1)) == 0;
 }
 
 
