@@ -48,11 +48,7 @@
 #include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
-
-Degree GetDegreeName();
-Basis BasisStart();
-Basis BasisEnd();
-NODE_PTR Locate_Node();
+#include "SparseReduceMatrix.h"
 
 static void ZeroOutPairPresent(void);
 static void FillPairPresent(void);

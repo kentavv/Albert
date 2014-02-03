@@ -34,17 +34,18 @@
 #include <signal.h>
 
 #include "driver.h"
+#include "Basis_table.h"
 #include "Build_defs.h"
 #include "Field.h"
 #include "Generators.h"
+#include "Get_Command.h"
 #include "Help.h"
+#include "Id_routines.h"
 #include "initGlobals.h"
 #include "Memory_routines.h"
+#include "Po_create_poly.h"
 #include "Po_parse_exptext.h"
 #include "Po_routines.h"
-#include "Id_routines.h"
-#include "Get_Command.h"
-#include "Basis_table.h"
 #include "Scalar_arithmetic.h"
 #include "Ty_routines.h"
 
@@ -72,27 +73,6 @@ jmp_buf env;
 
 int main(int argc, char *argv[])
 {
-
-    Type CreateTargetType();
-
-    void Print_title();
-    int Compatible();
-    void usage();			/* TW - argument handling */
-
-    struct polynomial *Create_poly();  /* Po_create_poly.c */
-
-    int Parse_generator_word();        /* Generators.c */
-
-    int ReadDotAlbert();               /* Get_command.c */
-    int Substr();                      /* Get_Command.c */
-
-    int AssignBasisNumbersToLetters(); /* Generators.c */
-
-    int Build();                       /* Build.c */
-
-    int DestroyTypeTable();            /* Type_table.c */
-    int DestroyMultTable();            /* Mult_table.c */
-
 /* TW 9/18/93 - code to support save, view, & output commands */
     char tableFileName[100];
     char cmd[100];
@@ -102,8 +82,6 @@ int main(int argc, char *argv[])
     FILE *tableFilePtr = NULL;
 
 /* TW 9/18/93 - end of code to support save, view, & output commands */
-
-    void sigCatch();	/* TW 10/3/93 - Ctrl-C sig handler */
 
     char *Command;
     char *Operand;

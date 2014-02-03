@@ -19,6 +19,7 @@
 #include "Po_parse_poly.h"
 #include "Po_syn_stack.h"
 #include "Po_semantics.h"
+#include "Memory_routines.h"
 
 static void Push_tnode_ptr(struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr, struct unexp_tnode *Temp_tnode_ptr);
 static struct unexp_tnode *Pop_tnode_ptr(struct unexp_tnode *Sem_stack[], int *Sem_sp_ptr);
@@ -47,9 +48,6 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
     struct unexp_tnode *temp_tnode_ptr1;	
     struct unexp_tnode *temp_tnode_ptr2;	
     struct unexp_tnode *trash;	
-    struct unexp_tnode *Unexp_tnode_alloc();
-    struct unexp_tnode *Pop_tnode_ptr();
-    void   Push_tnode_ptr();
 
     switch (Reduction_num) {
 
@@ -292,8 +290,6 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 /*******************************************************************/ 
 void Store_semantics(struct unexp_tnode *Sem_stack[], int Sem_sp, int Token, char Current_letter, int Current_int)
 {
-    struct unexp_tnode *Unexp_tnode_alloc();
-
     if (Token == LETTER) {
         Sem_stack[Sem_sp] = Unexp_tnode_alloc(); 
         Sem_stack[Sem_sp]->operator = SMALL_LETTER;

@@ -26,11 +26,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 #include "node_mgt.h"
+
+static void SparseMultRow(int Row, Scalar Factor);
+static void SparseAddRow(Scalar Factor, int Row1, int Row2);
+static void SparseInterchange(int Row1, int Row2);
+static void SparseKnockOut(int row, int col);
+static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
+static void Print_Rows(int Row1, int Row2);
+static void Print_SLList(Node *SLHead_Ptr);
+static void Print_Node(NODE_PTR Prt_Node);
+static void Insert_Node(MAT_PTR Sparse_Matrix, int matrow, NODE_PTR New_Node, NODE_PTR Prev_Ptr);
+static void Delete_Node(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr);
+static NODE_PTR Locate_Element(NODE_PTR Tmp_Ptr, int row, int col);
 
 /* These external variables are for measuring density of last generated matrix*/
 
@@ -43,16 +56,11 @@ static int Num_rows;
 static int Num_cols;
 
 
-int SparseReduceMatrix(Matrix_BPtr,Rows,Cols,Rank)
-MAT_PTR *Matrix_BPtr;
-int Rows,Cols;
-int *Rank;
+int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int Rows, int Cols, int *Rank)
 {
     int i,j;
     int nextstairrow = 0;
     Scalar x;
-    // Scalar Get_Matrix_Element();
-    Scalar Get_Matrix_Element(MAT_PTR, int, int);
 
     Matrix_Base_Ptr = *Matrix_BPtr;
     Num_rows = Rows;
@@ -95,9 +103,7 @@ int *Rank;
 }
 
 
-SparseMultRow(Row,Factor)
-int     Row;
-Scalar  Factor;
+void SparseMultRow(int Row, Scalar Factor)
 {
    NODE_PTR PMR_Ptr;
         
@@ -112,8 +118,6 @@ Scalar  Factor;
       PMR_Ptr->element=S_mul(PMR_Ptr->element,Factor);
       PMR_Ptr=PMR_Ptr->Next_Node;
    }
-
-   return;
 }
 
 /*********************************************************************/
@@ -128,9 +132,7 @@ Scalar  Factor;
       the node.
 */
 /*********************************************************************/
-SparseAddRow(Factor,Row1,Row2)
-Scalar  Factor;
-int     Row1,Row2;
+void SparseAddRow(Scalar Factor, int Row1, int Row2)
 {
     Scalar TmpRow1_S_Product;
     Scalar TmpRow2_S_Sum;
@@ -139,7 +141,6 @@ int     Row1,Row2;
     NODE_PTR Prev_Ptr;
     NODE_PTR Temp_Ptr;
     NODE_PTR Look_Ahead_Ptr;
-    NODE_PTR Locate_Element();
 
     /* check for zero factor */
 
@@ -281,37 +282,28 @@ int     Row1,Row2;
       Row1_Ptr=Row1_Ptr->Next_Node;
 
    }
-return;
 }
 
 
-SparseInterchange(Row1,Row2)
-int Row1;
-int Row2;
+void SparseInterchange(int Row1, int Row2)
 {
         NODE_PTR Temp_Row_Ptr;
-
 
         /* switch the two row pointers */
 
         Temp_Row_Ptr = Matrix_Base_Ptr[Row1];
         Matrix_Base_Ptr[Row1] = Matrix_Base_Ptr[Row2];
         Matrix_Base_Ptr[Row2] = Temp_Row_Ptr;
-
-        return;
 }
 
 
-SparseKnockOut(row,col)
-int row,col;
+void SparseKnockOut(int row, int col)
 {
     Scalar x;
-    Scalar Get_Matrix_Element(MAT_PTR, int, int);
 
     int j;
     int i;
     Scalar one = S_one();
-
 
     if ((x=Get_Matrix_Element(Matrix_Base_Ptr,row,col)) !=one)
     {
@@ -333,16 +325,12 @@ int row,col;
     {
         SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr,j,col)),row,j);
     }
-
-    return;
 }
 
-Print_Matrix(Sparse_Matrix,r,c)
-MAT_PTR Sparse_Matrix;
+void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c)
 {
     int i,row,col;
     Node *Row_Head_Ptr,*Row_Element_Ptr;
-
 
     if (Sparse_Matrix==NULL)
     {
@@ -395,18 +383,14 @@ MAT_PTR Sparse_Matrix;
         printf("\n");
     }
     printf("\n");
-    return;
 }
 
 
-Print_Rows(Row1,Row2)
-int Row1;
-int Row2;
+void Print_Rows(int Row1, int Row2)
 {
     int i,row,col;
     NODE_PTR Row1_Ptr;
     NODE_PTR Row2_Ptr;
-
 
     Row1_Ptr = Matrix_Base_Ptr[Row1];
     Row2_Ptr = Matrix_Base_Ptr[Row2];
@@ -452,12 +436,9 @@ int Row2;
         }
     }
     printf("\n");
-    return;
 }
 
-Scalar Get_Matrix_Element(Sparse_Matrix,i,j)
-MAT_PTR Sparse_Matrix;
-int i,j;
+Scalar Get_Matrix_Element(MAT_PTR Sparse_Matrix, int i, int j)
 {
     NODE_PTR Tmp_Ptr;
     MAT_PTR Srch_Matrix;
@@ -485,8 +466,7 @@ int i,j;
 
 
 
-Print_SLList(SLHead_Ptr)
-Node *SLHead_Ptr;
+void Print_SLList(Node *SLHead_Ptr)
 {
     Node *Prt_Ptr;
 
@@ -510,17 +490,9 @@ Node *SLHead_Ptr;
     }
     printf("\n");
     printf("\n");
-
-    return;
-
 }
 
-Insert_Element(Sparse_Matrix,matrow,element,column,Prev_Ptr)
-MAT_PTR Sparse_Matrix;
-int matrow;
-Scalar element;
-int column;
-NODE_PTR Prev_Ptr;
+void Insert_Element(MAT_PTR Sparse_Matrix, int matrow, Scalar element, int column, NODE_PTR Prev_Ptr)
 {
     NODE_PTR New_Node;
         
@@ -536,36 +508,25 @@ NODE_PTR Prev_Ptr;
     /* insert it into the correct spot in the matrix */
 
     Insert_Node(Sparse_Matrix,matrow,New_Node,Prev_Ptr);
-
-    return;
 }
 
-Delete_Element(Sparse_Matrix,RowId,Prev_Ptr)
-MAT_PTR Sparse_Matrix;
-int RowId;
-NODE_PTR Prev_Ptr;
+void Delete_Element(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr)
 {
     /* Call primitive to delete element */
 
     Delete_Node(Sparse_Matrix,RowId,Prev_Ptr);
-    return;
 }
 
 
-Change_Element(Element_Ptr,value)
-NODE_PTR Element_Ptr;
-Scalar value;
+void Change_Element(NODE_PTR Element_Ptr, Scalar value)
 {       
-
    /* change the value in the node */
 
     Element_Ptr->element = value;
-    return;
 }
                                         
 
-Print_Node(Prt_Node)
-NODE_PTR Prt_Node;
+void Print_Node(NODE_PTR Prt_Node)
 {
     if (Prt_Node == NULL)
     {
@@ -574,15 +535,10 @@ NODE_PTR Prt_Node;
     }
     printf("Node element:%d\tcolumn:%d\n",Prt_Node->element,
             Prt_Node->column);
-    return;
 }
 
 
-Insert_Node(Sparse_Matrix,matrow,New_Node,Prev_Ptr)
-MAT_PTR Sparse_Matrix;
-int matrow;
-NODE_PTR New_Node;
-NODE_PTR Prev_Ptr;
+void Insert_Node(MAT_PTR Sparse_Matrix, int matrow, NODE_PTR New_Node, NODE_PTR Prev_Ptr)
 {
     NODE_PTR temp_node;
 
@@ -602,18 +558,12 @@ NODE_PTR Prev_Ptr;
         Prev_Ptr->Next_Node = New_Node;
         New_Node->Next_Node = temp_node;
     }
-
-    return;
 };
 
 
-Delete_Node(Sparse_Matrix,RowId,Prev_Ptr)
-MAT_PTR Sparse_Matrix;
-int RowId;
-NODE_PTR Prev_Ptr;
+void Delete_Node(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr)
 {
     NODE_PTR Bad_Node;
-
    
     /* It is the first element node in the row */     
 
@@ -647,13 +597,9 @@ NODE_PTR Prev_Ptr;
     /* send the node back to the memory management system */
 
     PutRecord(Bad_Node);
-
-    return;
 };
 
-int Row_empty(Sparse_Matrix,row)
-MAT_PTR Sparse_Matrix;
-int row;
+int Row_empty(MAT_PTR Sparse_Matrix, int row)
 {
     if (Sparse_Matrix[row]==NULL)
     {               
@@ -680,10 +626,7 @@ int row;
 */
 /**************************************************************************/
 
-NODE_PTR Locate_Node(Sparse_Matrix,row,col)
-MAT_PTR Sparse_Matrix;
-int row;
-int col;
+NODE_PTR Locate_Node(MAT_PTR Sparse_Matrix, int row, int col)
 {
     NODE_PTR Prev_Ptr;
     NODE_PTR Curr_Ptr;
@@ -704,10 +647,7 @@ int col;
     return(Prev_Ptr);
 };
 
-NODE_PTR Locate_Element(Tmp_Ptr,row,col)
-NODE_PTR Tmp_Ptr;
-int row;
-int col;
+NODE_PTR Locate_Element(NODE_PTR Tmp_Ptr, int row, int col)
 {
     NODE_PTR Prev_Ptr;
     NODE_PTR Curr_Ptr;

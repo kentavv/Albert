@@ -53,28 +53,16 @@ static void Itoa(int N, char S[]);
 /*******************************************************************/ 
 struct unexp_tnode *Create_parse_tree(char Poly_str[])
 {
-
     int  Syn_stack[STACK_SIZE];           /* stack used while parsing */
     struct unexp_tnode *Sem_stack[STACK_SIZE];  
     static PROD_TREEPTR Prod_bst_root = NULL;
     void Init_prod_tree();
     int  sp = -1;				
 
-    int Get_next_token();
     int  token;                            /* token number returned */
     int  Poly_str_indx = 0;
 
-    void Push_token();
-    int Get_top_token();
-    int Get_next_to_top_token();
-
-    int Reduce();
-    void Print_syn_stack();
-
     int  Syntax_error = FALSE;
-    void Handle_char_pair_error();
-    void Handle_reducibility_error();
-    void Handle_stackability_error();
 
     int  Current_int=0;                    /* hold the integer when lex finds */
     char Current_letter = ' ';             /* hold the letter when lex finds */
@@ -150,8 +138,6 @@ struct unexp_tnode *Create_parse_tree(char Poly_str[])
 /*******************************************************************/ 
 void Init_prod_tree(PROD_TREEPTR *Prod_bst_root_ptr)
 {
-    PROD_TREEPTR Prod_insert();	   /* insert a production in tree */
-
     int  i;
     for (i=0; i<NUM_PRODS; i++)
         Prod_insert(Prod_nodes[i].rhs,Prod_nodes[i].lhs,i+1,Prod_bst_root_ptr);
@@ -232,20 +218,9 @@ void Handle_stackability_error(int *Syntax_error)
  */
 int Reduce(int Syn_stack[], int *Sp_ptr, PROD_TREEPTR Prod_bst_root, struct unexp_tnode *Sem_stack[])
 {
-    PROD_TREEPTR Prod_member();
     PROD_TREEPTR  prod_index;
 
     int  sem_sp;
-    void Push_token();
-    int  Get_top_token();
-    int  Pop_token();
-
-    void Print_syn_stack();
-    void Print_tree();
-
-    void Reduce_semantics();
-
-    void Itoa();
 
     int  temp_token;
     char temp_str[HANDLE_LEN];			/* Hold the handle until reduction */
@@ -302,8 +277,6 @@ int Reduce(int Syn_stack[], int *Sp_ptr, PROD_TREEPTR Prod_bst_root, struct unex
 /*******************************************************************/ 
 int Get_next_token(char Poly_str[], int *Poly_str_indx_ptr, char *Current_letter_ptr, int  *Current_int_ptr)
 {
-    int Out_of_int_bounds();
-
     int i;
 
     if (*Poly_str_indx_ptr < strlen(Poly_str)) {

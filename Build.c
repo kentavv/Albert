@@ -83,9 +83,7 @@ Basis Current_dimension;
 /*******************************************************************/
 int Build(struct id_queue_node *Idq_node, Type Ttype)
 {
-    int GetDegreeName();
-
-    char *convtime, *ctime();
+    char *convtime;
 
     int Target_degree;
 
@@ -175,10 +173,6 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
 /*******************************************************************/
 int InitializeStructures(void)
 {
-    int CreateMultTable();
-    int CreateTypeTable();
-    int CreateBasisTable();
-
     int status = OK; 
 
     int Target_degree;
@@ -255,8 +249,6 @@ int ProcessDegree(int i)
 /*******************************************************************/
 void InstallDegree1(void)
 {
-    Type GetNewType();
-
     int i,j;
     int len;
     Name n;
@@ -294,8 +286,6 @@ void InstallDegree1(void)
 /* Process type t for degree i */
 int ProcessType(Name n)
 {
-    Eqn_list_node *GetNewEqnListNode();
-
     int status = OK;
     Eqn_list_node *L;               /* Header record of linked list */
     struct polynomial *f;

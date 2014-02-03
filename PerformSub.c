@@ -54,10 +54,6 @@
 
 typedef int *Perm;
 
-Scalar ConvertToScalar();
-Alg_element *AllocAE();		/* TW 9/22/93 - change left to *left & right to *right */
-int DestroyAE();                    /* TW 9/23/93 - need to free up memory */
-
 static void PrintPermutationList(void);
 static void PrintPermutation(int Var_num, Perm P);
 static void FreePermutationList(Perm *Pl);
@@ -187,8 +183,6 @@ void DoPermutation(int row)
         
 int AppendLocalListToTheList(void)
 {
-    Eqn_list_node *GetNewEqnListNode();
-
     Eqn_list_node *Temp_list;
     Basis_pair_node *temp_ll;
     int ll_length = 1;
@@ -248,7 +242,6 @@ int GetIndex(void)
     int index_changed = TRUE;
     int index = 0;
 
-
     while ((index < Permutation_length) && (index_changed)) {
         index_changed = FALSE;
         for (i=index;i<Permutation_length-1;i++) {
@@ -283,9 +276,6 @@ Perm GetNextPermutation(Perm P, int Pl)
     SortPermutation(index1+1);
     return(Permutation);
 } 
-
-
-
 
 int GetOtherIndexToSwap(int index1)
 {
@@ -387,11 +377,6 @@ void AppendToLocalList(Basis_pair_node *Rl)
 
 int SubstituteWord(struct term_node *W)
 {
-    Alg_element *AllocAE();		/* TW 9/22/93 - change ae1 to *ae1 & ae2 to *ae2 */
-    int DestroyAE();                    /* TW 9/23/93 - need to free memory */
-
-    Basis_pair_node *GetNewBPNode();
-
     Alg_element *ae1 = AllocAE();	/* TW 9/22/93 - change ae1 to *ae1 */
     Alg_element *ae2 = AllocAE();	/* TW 9/22/93 - change ae2 to *ae2 */
 

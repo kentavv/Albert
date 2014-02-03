@@ -106,7 +106,6 @@ Node *GetRecord(void)
 
 void PutRecord(Node *freed_node)
 {
-
   /* Null out information in the node to be safe */
 
   freed_node->element= -1;
@@ -117,8 +116,6 @@ void PutRecord(Node *freed_node)
 
   freed_node->Next_Node=node_list_head;
   node_list_head=freed_node;
-
-  return;
 }
 
 void DestroySparseMatrix(MAT_PTR Sparse_Matrix)
@@ -128,7 +125,7 @@ void DestroySparseMatrix(MAT_PTR Sparse_Matrix)
     /* if no blocks allocated then there is no matrix to destroy */
 
     if (block_list_head==NULL)
-    return;
+      return;
     block_ptr = block_list_head;
     prev_block_ptr = block_list_head;
 
@@ -155,6 +152,5 @@ void DestroySparseMatrix(MAT_PTR Sparse_Matrix)
 #ifdef DEBUGMM
      blocknum=0;
 #endif
-    return; 
 }
 

@@ -27,6 +27,7 @@
 #include "Get_Command.h"
 #include "Memory_routines.h"
 #include "Strings.h"
+#include "Type_table.h"
 
 #undef getchar           /* Use unbuffered getchar(). */
 
@@ -43,11 +44,7 @@ static int DotalbertPresent;
  * and do dynamic string expansion by calling Str_cat().
  */
 
-GetCommand(Command_ptr,Operand_ptr,Command_len_ptr,Operand_len_ptr)
-char **Command_ptr;
-char **Operand_ptr;
-int *Command_len_ptr;
-int *Operand_len_ptr;
+void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, int *Operand_len_ptr)
 {
     char temp_line[MAX_LINE];
     char temp_line2[MAX_LINE];
@@ -119,7 +116,7 @@ int *Operand_len_ptr;
  * Looks like the bug is hardware dependent.
  */
 
-int getchar()
+int getchar(void)
 {
    char c;
 	fflush(stdout);
@@ -131,9 +128,7 @@ int getchar()
  * length. Code copied from KR C book.
  */
 
-my_getline(s,lim)
-char s[];
-int lim;
+int my_getline(char s[], int lim)
 {
     int c,i;
     for (i=0; (i<lim-1) && ((c=getchar()) != EOF) && (c != '\n'); i++)
@@ -151,7 +146,7 @@ int lim;
  * then it is replaced with corresponding right hand side.
  */
 
-DoSubstitution()
+int DoSubstitution(void)
 {
     char *str1;
     char *str2;
@@ -238,11 +233,8 @@ DoSubstitution()
  * file or by getting rid of it completely.
  */
 
-int ReadDotAlbert(dalbert_node_ptr, albertFileLoc)
-Dalbert_node *dalbert_node_ptr;
-char *albertFileLoc;			/* TW - location of the .albert file */
+int ReadDotAlbert(Dalbert_node *dalbert_node_ptr, char *albertFileLoc) /* TW - location of the .albert file */
 {
-    FILE *fopen();
     FILE *albert_fp;
     char temp_line[MAX_LINE];
     char temp_line2[MAX_LINE];
@@ -413,9 +405,7 @@ message to display path */
  * which is a prefix of Str2.
  */
 
-int Substr(Str1,Str2)
-char Str1[];
-char Str2[];
+int Substr(char Str1[], char Str2[])
 {
     int len_str1,len_str2;
     int i = 0;

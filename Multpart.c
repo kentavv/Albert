@@ -73,9 +73,6 @@
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-Name TypeToName();
-Type GetNewType();
-
 static void SplitJthType(int j);
 static void Gen(Name n, int d, int j);
 static void AddSetPartition(Name n, int j);

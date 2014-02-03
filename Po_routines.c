@@ -262,9 +262,6 @@ void Create_term_str(struct term_node *Pntr, char Term_str[])
 /*******************************************************************/
 int Homogeneous(struct polynomial *Poly)
 {
-    void Store_type();
-    int Same_type();
-
     struct term_head  *temp_head;
     struct P_type first_term_type,temp_type;
     int is_homogeneous = TRUE;
@@ -367,7 +364,7 @@ int Same_type(struct P_type type1, struct P_type type2)
 /*******************************************************************/
 void AssignNumbersToLetters(struct polynomial *Poly)
 {
-    struct term_head  *temp_head;
+    struct term_head *temp_head;
 
     int Current_letter_numbers[NUM_LETTERS];
     int i;
@@ -442,7 +439,6 @@ void FreeNodes(struct term_node *Term_node)
 int IsIdentity(struct polynomial *Poly)
 {
     struct term_head *temp_head;
-    Scalar ConvertToScalar();
 
     Scalar alpha;
 

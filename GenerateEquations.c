@@ -81,6 +81,7 @@
 #include "Multpart.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
+#include "Type_table.h"
 
 static void InitSeqSubtypes(void);
 static int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight);
@@ -104,8 +105,6 @@ extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 int GenerateEquations(struct polynomial *F, Name N, Eqn_list_node *L)
 {
-    Type GetNewType();
-
     int i,j;
 
     if (L == NULL)

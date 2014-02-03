@@ -48,6 +48,7 @@
 #include "Build_defs.h"
 #include "Type_table.h"
 #include "CreateMatrix.h"
+#include "Memory_routines.h"
 #include "PerformSub.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
@@ -66,8 +67,6 @@ static int status = OK;
 
 int CreateSubs(Eqn_list_node *L, struct polynomial *F, int Nv, int Mdv, Name *Type_lists, int *Deg_var_types)
 {
-    char *Mymalloc();
-
     The_list = L;
     The_ident = F;
     Num_vars = Nv;

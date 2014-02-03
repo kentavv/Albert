@@ -41,8 +41,6 @@ static int Prime[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,
 /********************************************************************/
 int Change_field(int Number, Scalar *Pntr)
 {
-   int Is_prime();
-
    int i = BOUND;
 
    if ((Number <= 1) || (!Is_prime(Number))) {
