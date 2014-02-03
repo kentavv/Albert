@@ -22,8 +22,8 @@
 #include <stdlib.h>
 #include <setjmp.h>
 
-#include "Build_defs.h"
 #include "Basis_table.h"
+#include "Build_defs.h"
 #include "Generators.h"
 #include "Help.h"
 #include "Memory_routines.h"

@@ -9,6 +9,8 @@
 /***                    changed Basis_table from array to ptr    ***/
 /*******************************************************************/
 
+#include "Build_defs.h"
+
 typedef struct {
     Basis left_factor;
     Basis right_factor;

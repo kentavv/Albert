@@ -88,9 +88,6 @@ int CreateSubs(Eqn_list_node *L, struct polynomial *F, int Nv, int Mdv, Name *Ty
 
 void DoCreateSubs(int row, int col)
 {
-    Basis FirstBasis();
-    Basis NextBasisSameType();
-
     Basis b;
 
     if (status != OK)

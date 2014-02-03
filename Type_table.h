@@ -15,4 +15,23 @@ typedef struct tt_node {
     Type type;
 } TT_node; 
 
+int CreateTypeTable(Type Cur_type);
+int GetTargetLen(void);
+Type GetNewType(void);
+void NameToType(Name N, Type T);
+void SubtractTypeName(Name n1, Name n2, Name *res_name);
+int GetDegree(Type Pntr);
+int GetDegreeName(Name n);
+Name TypeToName(Type T);
+int IsSubtype(Name n1, Name n2);
+void EnterEndBasis(int TTindex, Basis basis);
+void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis);
+void DestroyTypeTable(void);
+Name FirstTypeDegree(Degree D);
+Name NextTypeSameDegree(Name n);
+Basis FirstBasis(Name N);
+Basis NextBasisSameType(Basis B);
+Basis BeginBasis(Name n);
+Basis EndBasis(Name n);
+
 #endif

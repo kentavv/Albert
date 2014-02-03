@@ -1,4 +1,3 @@
-/*******************************************************************/
 /***  FILE :        Type_table.c                                 ***/
 /***  AUTHOR:       David P Jacobs                               ***/
 /***  PROGRAMMER:   Sekhar Muddana                               ***/
@@ -31,8 +30,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Build_defs.h"
 #include "Type_table.h"
+#include "Basis_table.h"
+#include "Build_defs.h"
+#include "Memory_routines.h"
+
+static void EnterBeginBasis(int TTindex, Basis basis);
+static int SameType(Type T1, Type T2);
+static int InitStoreblocksizes(void);
+static int FillTypecount(int Cur_scan_pos);
+static int InitTypetable(void);
+static int FillTypetable(int Cur_scan_pos);
+static int GetIndex(Type Pntr);
+static int NumberOfBasis(Name n);
+static void PrintTypecount(void);
+static PrintType(Type Pntr, FILE *filePtr);
+void PrintTypeName(Name n, FILE *filePtr);
+static void PrintTypetable(void);
+static void PrintTypetableindex(void);
+/*static void PrintSbsizes(void);*/
 
 static Type Target_type;  /* Input from higher level module. */
 static int Target_type_len;  /* Computed from Target_type.      */
@@ -66,13 +82,8 @@ static int *Store_block_sizes; /* To find offset into Type_table. */
 /*     Initialize Type_table_index[] -- Type to Type_table.        */ 
 /*     Initialize Deg_to_type_table_index[] -- Degree to Type.     */ 
 /*******************************************************************/ 
-int CreateTypeTable(Cur_type)
-Type Cur_type;
+int CreateTypeTable(Type Cur_type)
 {
-    char *Mymalloc();
-
-    Type GetNewType();
-
     int i = 0;
     
     Target_type_len = 0;
@@ -106,16 +117,14 @@ Type Cur_type;
     return(OK);
 }
 
-GetTargetLen()
+int GetTargetLen(void)
 {
     return(Target_type_len);
 }
 
 
-Type GetNewType()
+Type GetNewType(void)
 {
-    char *Mymalloc();
-
     Type temp_type;
     int i;
 
@@ -128,29 +137,24 @@ Type GetNewType()
 }
 
 
-NameToType(N,T)
-Name N;
-Type T;
+void NameToType(Name N, Type T)
 {
     int i;
 
-    assert_not_null(T);
+    assert_not_null_nv(T);
 
     for (i=0;i<Target_type_len;i++)
         T[i] = Type_table[N].type[i];
 }
 
 
-SubtractTypeName(n1,n2,res_name)
-Name n1;
-Name n2;
-Name *res_name;
+void SubtractTypeName(Name n1, Name n2, Name *res_name)
 {
     Type temp_type;
     int i;
 
     temp_type = GetNewType();
-    assert_not_null(temp_type);
+    assert_not_null_nv(temp_type);
     for (i=0;i<Target_type_len;i++)
         temp_type[i] = Type_table[n1].type[i] - Type_table[n2].type[i];
     *res_name = TypeToName(temp_type);
@@ -158,8 +162,7 @@ Name *res_name;
 }
 
 
-int GetDegree(Pntr)
-Type Pntr;
+int GetDegree(Type Pntr)
 {
     int i,deg;
 
@@ -174,23 +177,19 @@ Type Pntr;
 }
 
 
-int GetDegreeName(n)
-Name n;
+int GetDegreeName(Name n)
 {
     return(GetDegree(Type_table[n].type));
 }
 
 
-Name TypeToName(T)
-Type T;
+Name TypeToName(Type T)
 {
     return(Type_table_index[GetIndex(T)]);
 }
 
 
-int IsSubtype(n1,n2)
-Name n1;
-Name n2;
+int IsSubtype(Name n1, Name n2)
 {
     int is_sub_type = TRUE;
     int i;
@@ -202,32 +201,24 @@ Name n2;
 }
 
 
-EnterBeginBasis(TTindex,basis)
-int TTindex;
-Basis basis;
+void EnterBeginBasis(int TTindex, Basis basis)
 {
     Type_table[TTindex].begin_basis = basis;
 }
 
 
-EnterEndBasis(TTindex,basis)
-int TTindex;
-Basis basis;
+void EnterEndBasis(int TTindex, Basis basis)
 {
     Type_table[TTindex].end_basis = basis;
 }
 
-UpdateTypeTable(n,Begin_basis,End_basis)
-Name n;
-Basis Begin_basis;
-Basis End_basis;
+void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis)
 {
     EnterBeginBasis(n,Begin_basis);
     EnterEndBasis(n,End_basis);
 }
 
-SameType(T1,T2)
-Type T1,T2;
+int SameType(Type T1, Type T2)
 {
     int i;
 
@@ -250,10 +241,8 @@ Type T1,T2;
 /* FUNCTION:                                                       */
 /*     Fill the Store_block_sizes[].                               */ 
 /*******************************************************************/ 
-int InitStoreblocksizes()
+int InitStoreblocksizes(void)
 {
-    char *Mymalloc();
-
     int i;
 
     Store_block_sizes = NULL;
@@ -281,8 +270,7 @@ int InitStoreblocksizes()
 /* FUNCTION:                                                       */
 /*     Count all subtypes of the given Target_type.                */
 /*******************************************************************/ 
-int FillTypecount(Cur_scan_pos)
-int Cur_scan_pos;
+int FillTypecount(int Cur_scan_pos)
 {
     int save;
     int i = 0;
@@ -322,12 +310,8 @@ int Cur_scan_pos;
 /*     Initialize Type_table_index[] -- Type to Type_table.        */ 
 /*     Initialize Deg_to_type_table_index[] -- Degree to Type.     */ 
 /*******************************************************************/ 
-int InitTypetable()
+int InitTypetable(void)
 {
-    char *Mymalloc();
-
-    Type GetNewType();
-
     int i;
 
     Tot_subtypes = 0;
@@ -369,7 +353,7 @@ int InitTypetable()
 }
 
 
-DestroyTypeTable()
+void DestroyTypeTable(void)
 {
     free(Type_table);
     free(Deg_to_type_table_index);
@@ -395,8 +379,7 @@ DestroyTypeTable()
 /* FUNCTION:                                                       */
 /*     Fill the Type_table.                                        */ 
 /*******************************************************************/ 
-int FillTypetable(Cur_scan_pos)
-int Cur_scan_pos;
+int FillTypetable(int Cur_scan_pos)
 {
     int save;
     int i = 0;
@@ -431,8 +414,7 @@ int Cur_scan_pos;
 /* RETURNS:                                                        */
 /*     Index into the Type_table.                                  */
 /*******************************************************************/ 
-int GetIndex(Pntr)
-Type Pntr;
+int GetIndex(Type Pntr)
 {
     int i;
     int result = 0;
@@ -453,8 +435,7 @@ Type Pntr;
 /* RETURNS:                                                        */
 /*     pointer to first subtype in Type_table[].                   */ 
 /*******************************************************************/ 
-Name FirstTypeDegree(D)
-Degree D;
+Name FirstTypeDegree(Degree D)
 {
     if ((D >= 0) && (D <= Target_type_deg))
         return(Deg_to_type_table_index[D]);
@@ -470,8 +451,7 @@ Degree D;
 /* RETURNS:                                                        */
 /*     pointer to next subtype in TT_node in Type_table[].         */ 
 /*******************************************************************/ 
-Name NextTypeSameDegree(n)
-Name n;
+Name NextTypeSameDegree(Name n)
 {
     if (n >= (Tot_subtypes - 1))
         return(-1);
@@ -483,21 +463,14 @@ Name n;
 }
 
 
-Basis FirstBasis(N)
-Name N;
+Basis FirstBasis(Name N)
 {
-    Basis BeginBasis();
-
     return(BeginBasis(N));
 }
 
 
-Basis NextBasisSameType(B)
-Basis B;
+Basis NextBasisSameType(Basis B)
 {
-    Name GetType();
-    int GetNextBasisTobeFilled();
-
     int Nextbasistobefilled;
 
     Nextbasistobefilled = GetNextBasisTobeFilled();
@@ -519,8 +492,7 @@ Basis B;
 /* RETURNS:                                                        */
 /*     First Basis element with the given type.                    */ 
 /*******************************************************************/ 
-Basis BeginBasis(n)
-Name n;
+Basis BeginBasis(Name n)
 {
     return(Type_table[n].begin_basis);
 }
@@ -533,20 +505,18 @@ Name n;
 /* RETURNS:                                                        */
 /*     Last Basis element with the given type.                     */ 
 /*******************************************************************/ 
-Basis EndBasis(n)
-Name n;
+Basis EndBasis(Name n)
 {
     return(Type_table[n].end_basis);
 }
 
 
-int NumberOfBasis(n)
-Name n;
+int NumberOfBasis(Name n)
 {
     return(Type_table[n].end_basis - Type_table[n].begin_basis + 1);
 }
 
-PrintTypecount()
+void PrintTypecount(void)
 {
     int i;
 
@@ -555,9 +525,7 @@ PrintTypecount()
 }
 
 
-PrintType(Pntr, filePtr)
-Type Pntr;
-FILE *filePtr;
+PrintType(Type Pntr, FILE *filePtr)
 {
     int i;
 
@@ -568,14 +536,12 @@ FILE *filePtr;
 }
 
 
-PrintTypeName(n, filePtr)
-Name n;
-FILE *filePtr;
+void PrintTypeName(Name n, FILE *filePtr)
 {
     PrintType(Type_table[n].type, filePtr);
 }
 
-PrintTypetable()
+void PrintTypetable(void)
 {
     int i,j;
 
@@ -590,7 +556,7 @@ PrintTypetable()
 }
 
 
-PrintTypetableindex()
+void PrintTypetableindex(void)
 {
     int i,j;
 
@@ -600,7 +566,7 @@ PrintTypetableindex()
 }
 
 /*
-PrintSbsizes()
+void PrintSbsizes(void)
 {
     int i;
 
