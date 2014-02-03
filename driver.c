@@ -797,6 +797,8 @@ type to show */
    free(Command);
    free(Operand);
    freeGlobals();	/* TW 9/27/93 - forgot to free these up */
+
+   return 0;
 }
 
 void Print_title(void)
