@@ -25,7 +25,7 @@
 
 /* TW - used in dimension limit cmd line parameters */
 #define DIM_LIM_MIN     500
-#define DIM_LIM_MAX     10000
+#define DIM_LIM_MAX     50000
 #define DIM_LIM_INCR	500
 
 /* number of rows and columns in Mt_block. */
