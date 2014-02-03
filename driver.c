@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
       DIMENSION_LIMIT = DIM_LIM_MIN;
     }
 
+    initHelp();
     if(!initGlobals()){
       printf("Failure in initializing global variables.\n");
     }
