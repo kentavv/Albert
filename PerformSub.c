@@ -42,16 +42,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "PerformSub.h"
 #include "Build_defs.h"
 #include "Alg_elements.h"
 #include "CreateMatrix.h"
 #include "GenerateEquations.h"
+#include "Memory_routines.h"
 #include "Po_parse_exptext.h"
-#include "PerformSub.h"
 #include "Debug.h"
 
-
 typedef int *Perm;
+
+Scalar ConvertToScalar();
+Scalar S_mul();
+Alg_element *AllocAE();		/* TW 9/22/93 - change left to *left & right to *right */
+int DestroyAE();                    /* TW 9/23/93 - need to free up memory */
+
+static void PrintPermutationList(void);
+static void PrintPermutation(int Var_num, Perm P);
+static void FreePermutationList(Perm *Pl);
+static void DoPermutation(int row);
+static int AppendLocalListToTheList(void);
+static Perm GetFirstPermutation(int Permutation_length);
+static int GetIndex(void);
+static Perm GetNextPermutation(Perm P, int Pl);
+static int GetOtherIndexToSwap(int index1);
+static void SortPermutation(int begin_index);
+static int Expand(void);
+static void FreeLocalList(Basis_pair_node *Ll);
+static void AppendToLocalList(Basis_pair_node *Rl);
+static int SubstituteWord(struct term_node *W);
+static int Sub(Alg_element *Ans, struct term_node *W);
+static Basis_pair_node *GetNewBPNode(void);
+
 
 Basis *Substitution;
 struct polynomial *The_ident;
@@ -70,16 +93,8 @@ Basis_pair_node *running_list;
 
 static int status = OK;
 
-PerformSubs(S,F,L,Nv,Mdv,Dv)
-Basis *S;
-struct polynomial *F;
-Eqn_list_node *L;
-int Nv;
-int Mdv;
-int *Dv;
+int PerformSubs(Basis *S, struct polynomial *F, Eqn_list_node *L, int Nv, int Mdv, int *Dv)
 {
-    char *Mymalloc();
-
     Substitution = S;
     The_ident = F;
     The_list = L;
@@ -107,11 +122,11 @@ int *Dv;
 
 
 
-PrintPermutationList()
+void PrintPermutationList(void)
 {
     int i;
 
-    assert_not_null(Permutation_list);
+    assert_not_null_nv(Permutation_list);
 
     printf("Permuatation List is :\n");
     for (i=0;i<Num_vars;i++) {
@@ -120,9 +135,7 @@ PrintPermutationList()
     }
 }
 
-PrintPermutation(Var_num,P)
-int Var_num;
-Perm P;
+void PrintPermutation(int Var_num, Perm P)
 {
     int i;
 
@@ -131,24 +144,19 @@ Perm P;
 }
 
 
-FreePermutationList(Pl)
-Perm *Pl;
+void FreePermutationList(Perm *Pl)
 {
     int i;
 
-    assert_not_null(Pl);
+    assert_not_null_nv(Pl);
 
     for (i=0;i<Num_vars;i++)
         free(Pl[i]);
 }
 
 
-DoPermutation(row)
-int row;
+void DoPermutation(int row)
 {
-    Perm GetFirstPermutation();
-    Perm GetNextPermutation();
-
     Perm pi;
 
     if (status != OK)
@@ -177,10 +185,9 @@ int row;
 }
         
         
-AppendLocalListToTheList()
+int AppendLocalListToTheList(void)
 {
     Eqn_list_node *GetNewEqnListNode();
-    char *Mymalloc();
 
     Eqn_list_node *Temp_list;
     Basis_pair_node *temp_ll;
@@ -218,11 +225,8 @@ AppendLocalListToTheList()
 }
 
 
-Perm GetFirstPermutation(Permutation_length)
-int Permutation_length;
+Perm GetFirstPermutation(int Permutation_length)
 {
-    char *Mymalloc();
-
     Perm temp_perm = NULL;
 
     int i;
@@ -238,7 +242,7 @@ int Permutation_length;
     return(temp_perm);
 } 
 
-static int GetIndex()
+int GetIndex(void)
 {
     int i;
     int index_changed = TRUE;
@@ -258,13 +262,10 @@ static int GetIndex()
     return(index);
 }
 
-Perm GetNextPermutation(P,Pl)
-Perm P;
-int Pl;
+Perm GetNextPermutation(Perm P, int Pl)
 {
     int i,j,index1,index2;
     int temp;
-
 
     Permutation = P;
     Permutation_length = Pl;
@@ -286,8 +287,7 @@ int Pl;
 
 
 
-GetOtherIndexToSwap(index1)
-int index1;
+int GetOtherIndexToSwap(int index1)
 {
     int i;
 
@@ -297,8 +297,7 @@ int index1;
 } 
 
 /* Selection Sort */
-SortPermutation(begin_index)
-int begin_index;
+void SortPermutation(int begin_index)
 {
     int i,j,min_index,temp;
 
@@ -319,11 +318,9 @@ int begin_index;
  * We are getting to the core of the internals.
  */
 
-Expand()
+int Expand(void)
 {
     struct term_head *temp_head;
-    Scalar ConvertToScalar();
-    Scalar S_mul();
 
     int alpha;
     Scalar salpha;
@@ -351,10 +348,9 @@ Expand()
 }
 
 
-FreeLocalList(Ll)
-Basis_pair_node *Ll;
+void FreeLocalList(Basis_pair_node *Ll)
 {
-    assert_not_null(Ll);
+    assert_not_null_nv(Ll);
 
     if (Ll->next == NULL)
         free(Ll);
@@ -365,12 +361,11 @@ Basis_pair_node *Ll;
 }
 
 
-AppendToLocalList(Rl)
-Basis_pair_node *Rl;
+void AppendToLocalList(Basis_pair_node *Rl)
 {
     Basis_pair_node *temp_ll;
 
-    assert_not_null(Rl);
+    assert_not_null_nv(Rl);
 
     if (Local_list == NULL)
         Local_list = Rl; 
@@ -390,8 +385,7 @@ Basis_pair_node *Rl;
  * identity. 
  */
 
-SubstituteWord(W)
-struct term_node *W;
+int SubstituteWord(struct term_node *W)
 {
     Scalar S_zero();
     Scalar S_mul();
@@ -455,13 +449,8 @@ struct term_node *W;
 }
                         
 
-int Sub(Ans,W)
-Alg_element *Ans;
-struct term_node *W;
+int Sub(Alg_element *Ans, struct term_node *W)
 {
-    Alg_element *AllocAE();		/* TW 9/22/93 - change left to *left & right to *right */
-    int DestroyAE();                    /* TW 9/23/93 - need to free up memory */
-
     Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
     Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
     
@@ -499,10 +488,8 @@ struct term_node *W;
 }
 
 
-Basis_pair_node *GetNewBPNode()
+Basis_pair_node *GetNewBPNode(void)
 {
-    char *Mymalloc();
-
     Basis_pair_node *temp_node;
 
     temp_node = (Basis_pair_node *) (Mymalloc(sizeof(Basis_pair_node)));
@@ -514,3 +501,4 @@ Basis_pair_node *GetNewBPNode()
     }
     return(temp_node);
 }
+

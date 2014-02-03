@@ -48,6 +48,7 @@
 #include "Build_defs.h"
 #include "Type_table.h"
 #include "CreateMatrix.h"
+#include "PerformSub.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
