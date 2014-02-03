@@ -24,6 +24,14 @@
 
 #include "Build_defs.h"
 #include "Basis_table.h"
+#include "Memory_routines.h"
+
+static int InitializeDegtoBasisTable(int Target_degree);
+static void UpdateDegToBasisTable(int Deg, Basis Cur_basis);
+static Basis LeftFactor(Basis B);
+static Basis RightFacto(Basis B);
+static int GetDeg(Basis B);
+static void PrintBasis(Basis b, FILE *filePtr);
 
 static int Nextbasistobefilled;
 static int Deg_of_last_basis;
@@ -48,8 +56,7 @@ int lineCnt;
 /* FUNCTION:                                                       */
 /*     Initialize the Basis Table and Nextbasistobefilled.         */
 /*******************************************************************/ 
-int CreateBasisTable(Target_degree)
-int Target_degree;
+int CreateBasisTable(int Target_degree)
 {
     int i;
 
@@ -70,11 +77,9 @@ int Target_degree;
 }
     
 
-int InitializeDegtoBasisTable(Target_degree)
-int Target_degree;
+int InitializeDegtoBasisTable(int Target_degree)
 {
     int i;
-    char *Mymalloc();
 
     Deg_to_basis_table = (Deg_to_basis_rec *) (Mymalloc(Target_degree *
                                           sizeof(Deg_to_basis_rec)));
@@ -108,10 +113,7 @@ int Target_degree;
 /* FUNCTION:                                                       */
 /*     Enter a New Basis into Basis Table.                         */
 /*******************************************************************/ 
-Basis EnterBasis(Left_factor,Right_factor,Cur_type)
-Basis Left_factor;
-Basis Right_factor;
-Name Cur_type;
+Basis EnterBasis(Basis Left_factor, Basis Right_factor, Name Cur_type)
 {
     int i = Nextbasistobefilled;
 
@@ -127,9 +129,7 @@ Name Cur_type;
 }
 
 
-UpdateDegToBasisTable(Deg,Cur_basis)
-int Deg;
-Basis Cur_basis;
+void UpdateDegToBasisTable(int Deg, Basis Cur_basis)
 {
     if (Deg > Deg_of_last_basis) {
         Deg_to_basis_table[Deg-1].first_basis = Cur_basis;
@@ -147,7 +147,7 @@ Basis Cur_basis;
 /* RETURNS:                                                        */
 /*     Nextbasistobefilled --                                      */
 /*******************************************************************/ 
-Basis GetNextBasisTobeFilled()
+Basis GetNextBasisTobeFilled(void)
 {
     return(Nextbasistobefilled);
 }
@@ -159,8 +159,7 @@ Basis GetNextBasisTobeFilled()
 /* RETURNS:                                                        */
 /*     Left factor of the Basis element.                           */ 
 /*******************************************************************/ 
-Basis LeftFactor(B)
-Basis B;
+Basis LeftFactor(Basis B)
 {
     return(Basis_table[B].left_factor);
 }
@@ -173,8 +172,7 @@ Basis B;
 /* RETURNS:                                                        */
 /*     Right factor of the Basis element.                          */ 
 /*******************************************************************/ 
-Basis RightFactor(B)
-Basis B;
+Basis RightFacto(Basis B)
 {
     return(Basis_table[B].right_factor);
 }
@@ -187,22 +185,19 @@ Basis B;
 /* RETURNS:                                                        */
 /*     Degree of the Basis element.                                */ 
 /*******************************************************************/ 
-int GetDeg(B)
-Basis B;
+int GetDeg(Basis B)
 {
     return(GetDegreeName(Basis_table[B].type));
 }
 
 
-Basis BasisStart(Deg)
-Degree Deg;
+Basis BasisStart(Degree Deg)
 {
     return(Deg_to_basis_table[Deg-1].first_basis);
 }
 
 
-Basis BasisEnd(Deg)
-Degree Deg;
+Basis BasisEnd(Degree Deg)
 {
     return(Deg_to_basis_table[Deg-1].last_basis);
 }
@@ -215,8 +210,7 @@ Degree Deg;
 /* RETURNS:                                                        */
 /*     Type of the Basis B.                                        */
 /*******************************************************************/ 
-Name GetType(B)
-Basis B;
+Name GetType(Basis B)
 {
     return(Basis_table[B].type);
 }
@@ -230,9 +224,7 @@ Basis B;
 /* RETURNS:                                                        */
 /*     Type of the Basis B.                                        */
 /*******************************************************************/ 
-PrintBasisTable(filePtr, outputType)
-FILE *filePtr;	/* TW 9/19/93 - added 2 params to support view, save, & output */
-int outputType;
+void PrintBasisTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
     int i;
 
@@ -262,9 +254,7 @@ int outputType;
 /* RETURNS:                                                        */
 /*     Type of the Basis B.                                        */
 /*******************************************************************/ 
-PrintBasis(b, filePtr)
-Basis b;
-FILE *filePtr;	/* TW 9/19/93 - added param to support view, save, & output */
+void PrintBasis(Basis b, FILE *filePtr) /* TW 9/19/93 - added param to support view, save, & output */
 {
 
     if ( (Basis_table[b].left_factor == 0) && 

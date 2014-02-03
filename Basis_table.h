@@ -22,4 +22,12 @@ typedef struct {
     Basis last_basis;
 } Deg_to_basis_rec; 
 
+int CreateBasisTable(int Target_degree);
+Basis EnterBasis(Basis Left_factor, Basis Right_factor, Name Cur_type);
+Basis GetNextBasisTobeFilled(void);
+Basis BasisStart(Degree Deg);
+Basis BasisEnd(Degree Deg);
+Name GetType(Basis B);
+void PrintBasisTable(FILE *filePtr, int outputType);
+
 #endif
