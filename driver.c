@@ -37,6 +37,7 @@
 #include "Field.h"
 #include "Generators.h"
 #include "Help.h"
+#include "initGlobals.h"
 #include "Memory_routines.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
@@ -98,8 +99,6 @@ char *argv[];
     extern Deg_to_basis_rec *Deg_to_basis_table;
     FILE *tableFilePtr = NULL;
 
-    int  initGlobals();
-    int  freeGlobals();
 /* TW 9/18/93 - end of code to support save, view, & output commands */
 
     void sigCatch();	/* TW 10/3/93 - Ctrl-C sig handler */

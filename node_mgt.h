@@ -19,6 +19,9 @@
 /***      perform better.                                       ***/
 /******************************************************************/
 
+#include "Sparse_structs.h"
+#include "Sparse_defs.h"
+
 #define RECORDS_PER_BLOCK   8190
 
 typedef struct block {
@@ -28,5 +31,9 @@ typedef struct block {
                             short int id;
 #endif
 } mem_block;
+
+Node *GetRecord(void);
+void PutRecord(Node *freed_node);
+void DestroySparseMatrix(MAT_PTR Sparse_Matrix);
 
 #endif

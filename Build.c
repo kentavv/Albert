@@ -32,6 +32,7 @@
 #include "ExtractMatrix.h"
 #include "GenerateEquations.h"
 #include "Mult_table.h"
+#include "node_mgt.h"
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"

@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "initGlobals.h"
 #include "Build_defs.h"
 #include "Basis_table.h"
+#include "Memory_routines.h"
 #include "Mult_table.h"
 
+extern char **Pair_present;
+extern Mt_block ***Mt_block_index;
 
-int initGlobals()
+int initGlobals(void)
 {
-  char *Mymalloc();
-  extern char **Pair_present;
-  extern Mt_block ***Mt_block_index;
-
   int i;
 
   Basis_table = (BT_rec *)Mymalloc(sizeof(BT_rec) * (DIMENSION_LIMIT + 1));
@@ -33,23 +33,21 @@ int initGlobals()
     assert_not_null(Mt_block_index[i]);
   }
 
-
   return(1);
 }
 
 
 /* TW 9/27/93 - forgot to free these up */
-int freeGlobals()
+void freeGlobals(void)
 {
   int i;
-  extern char **Pair_present;
 
-  assert_not_null(Basis_table);
+  assert_not_null_nv(Basis_table);
   free(Basis_table);
 
-  assert_not_null(Pair_present);
+  assert_not_null_nv(Pair_present);
   for(i = 0; i < DIMENSION_LIMIT; ++i){
-    assert_not_null(Pair_present[i]);
+    assert_not_null_nv(Pair_present[i]);
     free(Pair_present[i]);
   }
   free(Pair_present);

@@ -29,11 +29,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "node_mgt.h"
+#include "Memory_routines.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 #include "Debug.h"
-#include "node_mgt.h"
 
+Node *GetRecord(void);
+void PutRecord(Node *freed_node);
+void DestroySparseMatrix(MAT_PTR Sparse_Matrix);
 
 static mem_block *block_list_head=NULL;
 static mem_block *current_block=NULL;
@@ -43,10 +47,8 @@ static Node *node_list_head=NULL;
 static short int blocknum=0;
 #endif
 
-Node *GetRecord() 
+Node *GetRecord(void) 
 {
-    char *Mymalloc();
-
     Node *return_value = NULL;
     mem_block *new_block;
     int i;
@@ -102,8 +104,7 @@ Node *GetRecord()
 }
 
 
-void PutRecord(freed_node)
-Node *freed_node;
+void PutRecord(Node *freed_node)
 {
 
   /* Null out information in the node to be safe */
@@ -120,10 +121,8 @@ Node *freed_node;
   return;
 }
 
-DestroySparseMatrix(Sparse_Matrix)
-MAT_PTR Sparse_Matrix;
+void DestroySparseMatrix(MAT_PTR Sparse_Matrix)
 {
-
     mem_block *block_ptr,*prev_block_ptr;
 
     /* if no blocks allocated then there is no matrix to destroy */

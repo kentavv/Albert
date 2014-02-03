@@ -30,6 +30,7 @@
 #include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
+#include "node_mgt.h"
 
 /* These external variables are for measuring density of last generated matrix*/
 
@@ -521,8 +522,6 @@ Scalar element;
 int column;
 NODE_PTR Prev_Ptr;
 {
-    Node *GetRecord();
-
     NODE_PTR New_Node;
         
     /* get a new node structure from the memory management system */
