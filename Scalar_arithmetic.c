@@ -20,9 +20,18 @@
 /***      Arithmatic.                                            ***/
 /*******************************************************************/
 
-#include "Build_defs.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "Scalar_arithmetic.h"
+#include "Build_defs.h"
+
+Scalar GetField();
+
+static Scalar S_minus1(void);
+static Scalar S_sub(Scalar x, Scalar y);
+static Scalar S_div(Scalar x, Scalar y);
+static void Print_inv_table(void);
 
 #define  PRIME_BOUND  256
 
@@ -35,10 +44,8 @@
 static Scalar Prime;
 static Scalar Inverse_table[PRIME_BOUND];
 
-int S_init()
+int S_init(void)
 {
-    Scalar GetField();
-
     Scalar i,j;
 
     Prime = GetField();    /* Initialize the global variable Prime. */
@@ -56,11 +63,8 @@ int S_init()
 }
 
 
-Scalar ConvertToScalar(i)
-int i;
+Scalar ConvertToScalar(int i)
 {
-   Scalar S_minus();
-
    if (i > 0)
        return(i%Prime);
    else 
@@ -68,31 +72,29 @@ int i;
 }
 
 
-Scalar S_zero()
+Scalar S_zero(void)
 {
     return(0);
 }
 
-Scalar S_one()
+Scalar S_one(void)
 {
     return(1);
 }
 
-Scalar S_minus1()
+Scalar S_minus1(void)
 {
     return(Prime - 1);
 }
 
-Scalar S_minus(x)
-Scalar x;
+Scalar S_minus(Scalar x)
 {
     Scalar_assert(x);
 
     return((Prime - x) % Prime);
 }
 
-Scalar S_add(x,y)
-Scalar x,y;
+Scalar S_add(Scalar x, Scalar y)
 {
     Scalar_assert(x);
     Scalar_assert(y);
@@ -100,8 +102,7 @@ Scalar x,y;
     return((x + y) % Prime);
 }
 
-Scalar S_sub(x,y)
-Scalar x,y;
+Scalar S_sub(Scalar x, Scalar y)
 {
     Scalar_assert(x);
     Scalar_assert(y);
@@ -109,20 +110,15 @@ Scalar x,y;
     return((Prime + (x - y)) % Prime);
 }
 
-Scalar S_div(x,y)
-Scalar x,y;
+Scalar S_div(Scalar x, Scalar y)
 {
-    Scalar S_mul();
-    Scalar S_inv();
-
     Scalar_assert(x);
     Scalar_assert(y);
 
     return(S_mul(x, S_inv(y)));   
 }
 
-Scalar S_mul(x,y)
-Scalar x,y;
+Scalar S_mul(Scalar x, Scalar y)
 {
     Scalar_assert(x);
     Scalar_assert(y);
@@ -130,8 +126,7 @@ Scalar x,y;
     return((x * y) % Prime);
 }
 
-Scalar S_inv(x)
-Scalar x;
+Scalar S_inv(Scalar x)
 {
     Scalar_assert(x);
 
@@ -143,7 +138,7 @@ Scalar x;
         return(Inverse_table[x]);
 }
 
-void Print_inv_table()
+void Print_inv_table(void)
 {
     int i,j;
   

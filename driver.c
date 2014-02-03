@@ -42,6 +42,7 @@
 #include "Id_routines.h"
 #include "Get_Command.h"
 #include "Basis_table.h"
+#include "Scalar_arithmetic.h"
 
 #define  NOT_PRESENT  0
 #define  PRESENT     1
@@ -64,8 +65,6 @@ char *argv[];
 {
 
     Type CreateTargetType();
-
-    int S_init();                      /* Scalar_arithmetic.c */
 
     void Print_title();
     int Compatible();

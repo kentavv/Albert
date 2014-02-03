@@ -50,11 +50,11 @@
 #include "Memory_routines.h"
 #include "Po_parse_exptext.h"
 #include "Debug.h"
+#include "Scalar_arithmetic.h"
 
 typedef int *Perm;
 
 Scalar ConvertToScalar();
-Scalar S_mul();
 Alg_element *AllocAE();		/* TW 9/22/93 - change left to *left & right to *right */
 int DestroyAE();                    /* TW 9/23/93 - need to free up memory */
 
@@ -387,8 +387,6 @@ void AppendToLocalList(Basis_pair_node *Rl)
 
 int SubstituteWord(struct term_node *W)
 {
-    Scalar S_zero();
-    Scalar S_mul();
     Alg_element *AllocAE();		/* TW 9/22/93 - change ae1 to *ae1 & ae2 to *ae2 */
     int DestroyAE();                    /* TW 9/23/93 - need to free memory */
 

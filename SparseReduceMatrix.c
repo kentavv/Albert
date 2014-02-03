@@ -27,6 +27,7 @@
 #include <stdlib.h>
 
 #include "Build_defs.h"
+#include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
@@ -49,7 +50,6 @@ int *Rank;
     int i,j;
     int nextstairrow = 0;
     Scalar x;
-    Scalar S_zero();
     // Scalar Get_Matrix_Element();
     Scalar Get_Matrix_Element(MAT_PTR, int, int);
 
@@ -99,8 +99,6 @@ int     Row;
 Scalar  Factor;
 {
    NODE_PTR PMR_Ptr;
-   Scalar S_mul();
-
         
    /* Get the first node in the row */
 
@@ -133,9 +131,6 @@ SparseAddRow(Factor,Row1,Row2)
 Scalar  Factor;
 int     Row1,Row2;
 {
-    Scalar S_zero();
-    Scalar S_add();
-    Scalar S_mul();
     Scalar TmpRow1_S_Product;
     Scalar TmpRow2_S_Sum;
     NODE_PTR Row1_Ptr;
@@ -310,9 +305,6 @@ SparseKnockOut(row,col)
 int row,col;
 {
     Scalar x;
-    Scalar S_one();
-    Scalar S_inv();
-    Scalar S_minus();
     Scalar Get_Matrix_Element(MAT_PTR, int, int);
 
     int j;
@@ -468,7 +460,6 @@ int i,j;
 {
     NODE_PTR Tmp_Ptr;
     MAT_PTR Srch_Matrix;
-    Scalar S_zero();
 
     /* either return the element at location i,j or return a zero */
 

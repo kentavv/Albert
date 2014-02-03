@@ -32,13 +32,9 @@
 #include "Build_defs.h"
 #include "Alg_elements.h"
 #include "Memory_routines.h"
+#include "Scalar_arithmetic.h"
 
 int Mult2basis();
-
-Scalar S_add();
-Scalar S_zero();
-Scalar S_one();
-Scalar S_mul();
 
 static Alg_element *CreateAE();
 static int AssignAddAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3);
@@ -214,9 +210,6 @@ int ScalarMultAE(Scalar x, Alg_element *p)
 /*******************************************************************/ 
 int AssignAddAE(Alg_element *p1, Alg_element *p2, /* pointers for speed. */ Alg_element *p3)
 {
-    Scalar S_add();
-    Scalar S_zero();
-
     Basis i,left,right;
     Scalar x,zero;
     Boolean left_found = FALSE;

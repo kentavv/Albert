@@ -16,14 +16,7 @@
 #include "ReduceMatrix.h"
 #include "Build_defs.h"
 #include "CreateMatrix.h"
-
-    void S_init();
-    Scalar S_one();
-    Scalar S_inv();
-    Scalar S_minus();
-    Scalar S_zero();
-    Scalar S_add();
-    Scalar S_mul();
+#include "Scalar_arithmetic.h"
 
 static void Interchange(int Row1, int Row2);
 static void Knockout(int Row, int Col);

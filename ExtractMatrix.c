@@ -25,10 +25,10 @@
 #include "CreateMatrix.h"
 #include "Memory_routines.h"
 #include "Mult_table.h"
+#include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
-Scalar S_minus();
 Term *Alloc_Terms_list();
 
 static void SparseFillDependent(void);

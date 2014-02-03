@@ -32,11 +32,10 @@
 #include "Alg_elements.h"
 #include "Help.h"
 #include "Memory_routines.h"
+#include "Scalar_arithmetic.h"
 
 Alg_element *AllocAE();	/* TW 9/22/93 - change prod[] to *prod */
 int DestroyAE();              /* TW 9/23/93 - need to free up memory */
-Scalar S_add();
-Scalar S_mul();
 
 static int TermsListLength(Term Tl[]);
 static Term *RetrieveProduct(Basis B1, Basis B2);

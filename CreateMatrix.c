@@ -45,6 +45,7 @@
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 #include "Memory_routines.h"
+#include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
@@ -52,7 +53,6 @@ Degree GetDegreeName();
 Basis BasisStart();
 Basis BasisEnd();
 NODE_PTR Locate_Node();
-Scalar S_add();
 
 static void ZeroOutPairPresent(void);
 static void FillPairPresent(void);
