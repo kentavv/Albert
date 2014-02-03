@@ -14,8 +14,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "Po_parse_exptext.h"
+
 #include "Ty_routines.h"
+#include "Ty_routines_pri.h"
+#include "Po_parse_exptext.h"
+
+static int Degree_term(struct term_node *Pntr);
+
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -30,12 +35,8 @@
 /* NOTE:                                                           */
 /*     This routine is called when a command "t word" is issued.   */
 /*******************************************************************/ 
-int Assoc_number(Pntr)
-struct term_node *Pntr;
+int Assoc_number(struct term_node *Pntr)
 {
-    int Degree_term();
-    int Get_catalan();
-
     int deg,deg1,deg2,t,t1,t2,offset;
     int i,j;
 
@@ -78,8 +79,7 @@ struct term_node *Pntr;
 /* RETURNS:                                                        */
 /*     Degree of the word passed.                                  */ 
 /*******************************************************************/ 
-int Degree_term(Pntr)
-struct term_node *Pntr;
+int Degree_term(struct term_node *Pntr)
 {
     if (Pntr == NULL)
         return(0);
@@ -97,8 +97,7 @@ struct term_node *Pntr;
 /* RETURNS:                                                        */
 /*     value of entry i in Catalan table.                          */
 /*******************************************************************/ 
-int Get_catalan(i)
-int i;
+int Get_catalan(int i)
 {
     if (i <= MAX_DEGREE)
         return(Catalan[i]);

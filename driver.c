@@ -43,6 +43,7 @@
 #include "Get_Command.h"
 #include "Basis_table.h"
 #include "Scalar_arithmetic.h"
+#include "Ty_routines.h"
 
 #define  NOT_PRESENT  0
 #define  PRESENT     1
@@ -77,7 +78,6 @@ char *argv[];
     int IsIdentity();                  /* Po_routines.c */
 
     int Parse_generator_word();        /* Generators.c */
-    int Assoc_number();                /* Ty_routines.c */
 
     int ReadDotAlbert();               /* Get_command.c */
     int Substr();                      /* Get_Command.c */

@@ -14,9 +14,10 @@
 /*******************************************************************/
 
 
-#include	<stdio.h>
-#include    "Po_parse_poly.h"	
-#include    "Po_semantics.h"	
+#include <stdio.h>
+#include "Po_parse_poly.h"	
+#include "Po_semantics.h"	
+#include "Ty_routines.h"
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -299,7 +300,6 @@ struct unexp_tnode *Pntr;
 {
     struct unexp_tnode *Unexp_tnode_alloc();
 
-    int Get_catalan();
     int Get_degree();
 
     struct unexp_tnode *temp,*temp1,*temp2,*left_tree,*right_tree;	
