@@ -21,6 +21,7 @@
 #define NULL_PTR_ERR   0
 
 #define assert_not_null(p) if (p == NULL) return(NULL_PTR_ERR)
+#define assert_not_null_nv(p) if (p == NULL) return;
 
 /* TW - used in dimension limit cmd line parameters */
 #define DIM_LIM_MIN     500
