@@ -20,11 +20,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ExtractMatrix.h"
 #include "Build_defs.h"
 #include "CreateMatrix.h"
+#include "Memory_routines.h"
 #include "Mult_table.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
+
+Scalar S_minus();
+Term *Alloc_Terms_list();
+
+static void SparseFillDependent(void);
+static void FillDependent(void);
+static int DestroyDependent(void);
+static void PrintDependent(void);
+static void ProcessIndependentBasis(void);
+static void ProcessDependentBasis(void);
+static void SparseProcessDependentBasis(void);
+static void ProcessOtherIndependentBasis(int J);
 
 static Type Cur_type;
 static Type T1;
@@ -40,15 +54,8 @@ static Matrix TheMatrix;
 static MAT_PTR TheSparseMatrix;
 static Unique_basis_pair_list ColtoBP;
 
-ExtractFromTheMatrix(Mptr,Rows,Cols,Rank,N,BPCptr)
-Matrix Mptr;
-int Rows;
-int Cols;
-int Rank;
-Name N;
-Unique_basis_pair_list BPCptr;
+int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, Unique_basis_pair_list BPCptr)
 {
-    char *Mymalloc();
     int len;
     int i;
 
@@ -99,15 +106,8 @@ Unique_basis_pair_list BPCptr;
    Basis(). Operation are performed on a locally visible pointer to the 
    matrix and then that pointer is copied to the one passed in upon exit */
    
-SparseExtractFromMatrix(SMptr,Rows,Cols,Rank,N,BPCptr)
-MAT_PTR SMptr;
-int Rows;
-int Cols;
-int Rank;
-Name N;
-Unique_basis_pair_list BPCptr;
+int SparseExtractFromMatrix(MAT_PTR SMptr, int Rows, int Cols, int Rank, Name N, Unique_basis_pair_list BPCptr)
 {
-    char *Mymalloc();
     int len;
     int i;
 
@@ -153,13 +153,13 @@ Unique_basis_pair_list BPCptr;
 }
 
 
-SparseFillDependent()
+void SparseFillDependent(void)
 {
     int i=0;
 	 NODE_PTR Tmp_Ptr;
 
     if ((Num_rows == 0) || (Num_cols == 0))
-        return(0);
+        return;
 
          /* This routine is much simpler than its sister FillDependent()
             since the first node in the linked list of each row will contain
@@ -177,12 +177,12 @@ SparseFillDependent()
 
 }
 
-FillDependent()
+void FillDependent(void)
 {
     int i,j;
 
     if ((Num_rows == 0) || (Num_cols == 0))
-        return(0);
+        return;
 
     for (i=0;i<MatrixRank;i++) {
         for (j=0;j<Num_cols;j++) {
@@ -195,7 +195,7 @@ FillDependent()
 }
 
 
-int DestroyDependent()
+int DestroyDependent(void)
 {
     assert_not_null(Dependent);
     free(Dependent);
@@ -203,30 +203,29 @@ int DestroyDependent()
 }
 
 
-PrintDependent()
+void PrintDependent(void)
 {
     int j;
 
     if (Num_cols == 0)
-        return(0);
+        return;
+
     printf("The Dependent Array is : \n");
     for (j=0;j<Num_cols;j++)
         printf("%d",Dependent[j]);
     printf("\n");
 }
 
-ProcessIndependentBasis()
+void ProcessIndependentBasis(void)
 {
-    Term *Alloc_Terms_list();           /* TW 9/28/93 - forgot this */
-
     int j;
     Basis n,b1,b2;
     Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 
-    assert_not_null(tl);		/* TW 9/22/93 - Terms_list change */
+    assert_not_null_nv(tl);		/* TW 9/22/93 - Terms_list change */
     
     if (Num_cols == 0)
-        return(0);
+        return;
 
     for (j=0;j<Num_cols;j++) {
         if (!Dependent[j]) {
@@ -245,20 +244,17 @@ ProcessIndependentBasis()
 
              
 
-ProcessDependentBasis()
+void ProcessDependentBasis(void)
 {
-    Scalar S_minus();
-    Term *Alloc_Terms_list();            /* TW 9/28/93 - forgot this */
-
     int j,row,k;
     Basis n,b1,b2;
     int tl_index;
     Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 
-    assert_not_null(tl);		/* TW 9/22/93 - Terms_list change */
+    assert_not_null_nv(tl);		/* TW 9/22/93 - Terms_list change */
 
     if (Num_cols == 0)
-        return(0);
+        return;
 
     for (j=0;j<Num_cols;j++) {
         if (Dependent[j]) {
@@ -288,24 +284,22 @@ ProcessDependentBasis()
    since the first element is each linked list representing a row is
    a nonzero element*/
 
-SparseProcessDependentBasis()
+void SparseProcessDependentBasis(void)
 {
    Scalar S_temp;
    NODE_PTR Tmp_Ptr;
    NODE_PTR q;
    int rowid=0;
 
-   Scalar S_minus();
-   Term *Alloc_Terms_list();            /* TW 9/28/93 - forgot this */
    short int j ,Row,k;
    Basis n,b1,b2;
    int tl_index;
    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 
-   assert_not_null(tl);			/* TW 9/22/93 - Terms_list change */
+   assert_not_null_nv(tl);			/* TW 9/22/93 - Terms_list change */
 
     if (Num_cols == 0)
-        return(0);
+        return;
 
     while (rowid < MatrixRank)
     {
@@ -335,17 +329,14 @@ SparseProcessDependentBasis()
     }
     free(tl);				/* TW 9/27/93 - forgot to free it up */
 }
-             
-int ProcessOtherIndependentBasis(J)
-int J;
-{
-   Term *Alloc_Terms_list();		/* TW 9/28/93 - forgot this */
 
+void ProcessOtherIndependentBasis(int J)
+{
    int i,deg,save,num_bp,j;
    Basis m1,m2,n1,n2,n;
    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 
-   assert_not_null(tl);			/* TW 9/22/93 - Terms_list change */
+   assert_not_null_nv(tl);			/* TW 9/22/93 - Terms_list change */
 
     if (Cur_type_len == J) {
         deg = GetDegree(T1);

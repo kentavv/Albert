@@ -29,6 +29,7 @@
 
 #include "Build.h"
 #include "Build_defs.h"
+#include "ExtractMatrix.h"
 #include "Mult_table.h"
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
