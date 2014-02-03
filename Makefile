@@ -61,7 +61,7 @@ Po_syn_stack.o:		Po_syn_stack.h
 
 Po_prod_bst.o:		Po_prod_bst.h
 
-Memory_routines.o:	Po_parse_poly.h Po_prod_bst.h \
+Memory_routines.o:	Memory_routines.h Po_parse_poly.h Po_prod_bst.h \
 			Po_parse_exptext.h Id_routines.h
 
 Build.o:		Build_defs.h Mult_table.h CreateMatrix.h \
