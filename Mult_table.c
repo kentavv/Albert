@@ -297,7 +297,7 @@ int DestroyMultTable(void)
               setMtBlock(i, j, NULL);		/*     V      */
           }
        }
-    Mt_block_index = NULL;
+    /*Mt_block_index = NULL;*/
   }
 
 /*    for(i = 0; i < MTB_INDEX_SIZE; ++i){*//* TW 9/27/93 - forgot to free this up */
