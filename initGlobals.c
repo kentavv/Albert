@@ -42,22 +42,28 @@ void freeGlobals(void)
 {
   int i;
 
-  assert_not_null_nv(Basis_table);
-  free(Basis_table);
-
-  assert_not_null_nv(Pair_present);
-  for(i = 0; i < DIMENSION_LIMIT; ++i){
-    assert_not_null_nv(Pair_present[i]);
-    free(Pair_present[i]);
-    Pair_present[i] = NULL;
+  if(Basis_table) {
+    free(Basis_table);
+    Basis_table = NULL;
   }
-  free(Pair_present);
 
-  assert_not_null_nv(Mt_block_index);
-  for(i = 0; i < MTB_INDEX_SIZE; ++i){
-    assert_not_null_nv(Mt_block_index[i]);
-    free(Mt_block_index[i]);
-    Mt_block_index[i] = NULL;
+  if(Pair_present) {
+    for(i = 0; i < DIMENSION_LIMIT; ++i){
+      free(Pair_present[i]);
+      Pair_present[i] = NULL;
+    }
+    free(Pair_present);
+    Pair_present = NULL;
   }
-  free(Mt_block_index);
+
+  if(Mt_block_index) {
+    for(i = 0; i < MTB_INDEX_SIZE; ++i){
+      if(Mt_block_index[i]) {
+        free(Mt_block_index[i]);
+        Mt_block_index[i] = NULL;
+      }
+    }
+    free(Mt_block_index);
+    Mt_block_index = NULL;
+  }
 }
