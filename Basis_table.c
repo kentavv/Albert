@@ -25,6 +25,7 @@
 #include "Build_defs.h"
 #include "Basis_table.h"
 #include "Generators.h"
+#include "Help.h"
 #include "Memory_routines.h"
 
 static int InitializeDegtoBasisTable(int Target_degree);

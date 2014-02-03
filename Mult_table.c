@@ -29,6 +29,7 @@
 
 #include "Build_defs.h"
 #include "Alg_elements.h"
+#include "Help.h"
 #include "Mult_table.h"
 
 #define  DEBUG_DESTROY_MT  0
@@ -605,8 +606,6 @@ int outputType;
   int i, j, dim;
   Alg_element *prod = AllocAE();/* TW 9/22/93 - change prod[] to *prod */
 
-  void more();	/* TW 9/19/93 */
-
   assert_not_null(prod);	/* TW 9/22/93 - change prod[] to *prod */
 
   lineCnt = 0;			/* TW 9/19/93 - support for view */
@@ -651,8 +650,6 @@ Alg_element *ae;
 FILE *filePtr;	/* TW 9/19/93 - add 2 params to support view, save, & output */
 int outputType;
 {
-  void more();	/* TW 9/19/93 */
-
   int x,i;
   int trmcnt = 0;		/* How many terms have been printed */
   int lnecnt = 0;		/* How many have been printed on current line */

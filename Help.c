@@ -16,9 +16,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <curses.h>
-#include "Help.h"
 
-int initHelp()
+#include "Help.h"
+#include "Help_pri.h"
+
+static char *getHelp(char *helpRqst);
+static void displayHelp(char *helpPtr, int rows, int cols);
+static void scrollScreen(void);
+
+int initHelp(void)
 {
   initscr();                            /* initialize LINES and COLS */
   helpLines = LINES;
@@ -28,8 +34,7 @@ int initHelp()
   endwin();
 }
 
-int Help(topic)
-char topic[];
+int Help(char topic[])
 {
   char str[80], *helpPtr, *test;
 
@@ -65,8 +70,7 @@ char topic[];
 
 
 
-char * getHelp(helpRqst)
-char *helpRqst;
+char *getHelp(char *helpRqst)
 {
   int i;
 
@@ -81,17 +85,13 @@ char *helpRqst;
 
 
 
-void displayHelp(helpPtr, rows, cols)
-char *helpPtr;
-int rows;
-int cols;
+void displayHelp(char *helpPtr, int rows, int cols)
 {
   char line[500 + 1], *blank, *pos = helpPtr;
   int i, j, done, blankNdx;
 
   for(j = 0; *pos; ++j){
-    for(i = 0, done = FALSE, blankNdx = 0; i < cols && *pos && !done; ++i,
-++pos){
+    for(i = 0, done = FALSE, blankNdx = 0; i < cols && *pos && !done; ++i, ++pos){
       if(*pos == ' ' || *pos == '\t'){
         blank = pos;		/* set blank to point to most current white space */
         blankNdx = i;		/* save the index to the last white space */
@@ -114,8 +114,7 @@ int cols;
     printf("%s\n", line);	/* write the line */
     if(j >= rows-2){
       j += 3;			/* increment the row counter */
-      printf("\nHit Return to continue-->");	/* print more message at
-bottom left of screen */
+      printf("\nHit Return to continue-->");	/* print more message at bottom left of screen */
       fflush(stdout);
       getchar();
       printf("\n");
@@ -125,13 +124,11 @@ bottom left of screen */
 }
 
 
-void more(lines)
-int *lines;
+void more(int *lines)
 {
   if(*lines >= helpLines-2){
     *lines = 0;
-    printf("\nHit Return to continue-->");    /* print more message at
-bottom left of screen */
+    printf("\nHit Return to continue-->");    /* print more message at bottom left of screen */
     fflush(stdout);
     getchar();
     printf("\n");
@@ -140,7 +137,7 @@ bottom left of screen */
 
 
 
-void scrollScreen()
+void scrollScreen(void)
 {
   int i;
 

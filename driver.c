@@ -36,6 +36,8 @@
 #include "Build_defs.h"
 #include "Field.h"
 #include "Generators.h"
+#include "Help.h"
+#include "Memory_routines.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
 #include "Get_Command.h"
@@ -85,8 +87,6 @@ char *argv[];
 
     int ReadDotAlbert();               /* Get_command.c */
     int Substr();                      /* Get_Command.c */
-    int Help();                        /* Help.c */
-    char *Mymalloc();                  /* Memory_routines.c */
 
     int AssignNumbersToLetters();      /* Po_routines.c */
     int AssignBasisNumbersToLetters(); /* Generators.c */
@@ -104,7 +104,6 @@ char *argv[];
     extern Deg_to_basis_rec *Deg_to_basis_table;
     FILE *tableFilePtr = NULL;
 
-    void initHelp();
     int  initGlobals();
     int  freeGlobals();
 /* TW 9/18/93 - end of code to support save, view, & output commands */
@@ -222,7 +221,6 @@ char *argv[];
       DIMENSION_LIMIT = DIM_LIM_MIN;
     }
 
-    initHelp();
     if(!initGlobals()){
       printf("Failure in initializing global variables.\n");
     }
@@ -846,8 +844,6 @@ Scalar GetField()
 Type CreateTargetType(ptype)
 struct P_type ptype;
 {
-    char *Mymalloc();
-
     int ttype_len = 1;
     int i,cur_tt_index = 0;
     Type ttype;
