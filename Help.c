@@ -38,10 +38,6 @@ int Help(char topic[])
 {
   char str[80], *helpPtr, *test;
 
-  char * getHelp();
-  void displayHelp();
-  void scrollScreen();
-
   scrollScreen();
   str[0] = '\0';
   if(!strlen(topic)){
@@ -145,5 +141,4 @@ void scrollScreen(void)
     printf("\n");
   }
 }
-
 
