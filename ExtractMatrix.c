@@ -69,7 +69,7 @@ int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, Uniq
     Cur_type_len = len = GetTargetLen();
     Cur_type = (Type) (Mymalloc(len*sizeof(Degree)));
     assert_not_null(Cur_type);
-    T1 = (Type) (Mymalloc((len+1)*sizeof(Degree))); /* +1 to avoid buffer overflow */
+    T1 = (Type) (Mymalloc((len+2)*sizeof(Degree))); /* +2 to avoid buffer overflow */
     assert_not_null(T1);
     NameToType(N,T1);
     NameToType(N,Cur_type);
@@ -121,7 +121,7 @@ int SparseExtractFromMatrix(MAT_PTR SMptr, int Rows, int Cols, int Rank, Name N,
     Cur_type_len = len = GetTargetLen();
     Cur_type = (Type) (Mymalloc(len*sizeof(Degree)));    
     assert_not_null(Cur_type);
-    T1 = (Type) (Mymalloc((len+1)*sizeof(Degree))); /* +1 to avoid buffer overflow */
+    T1 = (Type) (Mymalloc((len+2)*sizeof(Degree))); /* +2 to avoid buffer overflow */
     assert_not_null(T1);
     NameToType(N,T1);
     NameToType(N,Cur_type);
