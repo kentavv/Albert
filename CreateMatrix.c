@@ -44,9 +44,29 @@
 
 #include "Build_defs.h"
 #include "CreateMatrix.h"
+#include "Memory_routines.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 
+Degree GetDegreeName();
+Basis BasisStart();
+Basis BasisEnd();
+NODE_PTR Locate_Node();
+Scalar S_add();
+
+static void ZeroOutPairPresent(void);
+static void FillPairPresent(void);
+static void EnterPair(Basis i, Basis j);
+static int CreateColtoBP(void);
+static int AreBasisElements(Degree d);
+static void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr);
+static int FillTheMatrix(void);
+static int SparseFillTheMatrix(void);
+static void PrintPairPresent(void);
+static void PrintColtoBP(void);
+static void PrintTheMatrix(void);
+static char getPairPresent(int row, int col);
+static void setPairPresent(int row, int col, char val);
 
 /* Added by DCL 8/92. These are variables used for gathering density stats */
 
@@ -67,13 +87,7 @@ static Name N;
 
 
 
-int CreateTheMatrix(Eq_list,Mptr,Rows,Cols,BPCptr,n)
-Eqn_list_node *Eq_list;
-Matrix *Mptr;
-int *Rows;
-int *Cols;
-Unique_basis_pair_list *BPCptr;
-Name n;
+int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
 {
     Num_unique_basis_pairs = 0;
     Num_equations = 0;
@@ -110,13 +124,7 @@ Name n;
    a pointer internal to this module to be altered and then copy it back
    before returning to SolveEquations() in Build.c */
 
-int SparseCreateTheMatrix(Eq_list,SMptr,Rows,Cols,BPCptr,n)
-Eqn_list_node *Eq_list;
-MAT_PTR *SMptr;
-int *Rows;
-int *Cols;
-Unique_basis_pair_list *BPCptr;
-Name n;
+int SparseCreateTheMatrix(Eqn_list_node *Eq_list, MAT_PTR *SMptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
 {
     Num_unique_basis_pairs = 0;
     Num_equations = 0;
@@ -152,25 +160,23 @@ Name n;
 }
 
 
-DestroyBPtoCol()
+void DestroyBPtoCol(void)
 {
-    assert_not_null(ColtoBP);
+    assert_not_null_nv(ColtoBP);
     free(ColtoBP);
 }
 
 
-DestroyTheMatrix()
+void DestroyTheMatrix(void)
 {
-    assert_not_null(TheMatrix);
+    assert_not_null_nv(TheMatrix);
     free(TheMatrix);
 }
 
 
-ZeroOutPairPresent()
+void ZeroOutPairPresent(void)
 {
     int i,j;
-
-    void setPairPresent();	/* 9/93 - TW */
 
     for (i=0;i<DIMENSION_LIMIT;i++)
         for (j=0;j<PP_COL_SIZE;j++)
@@ -179,7 +185,7 @@ ZeroOutPairPresent()
 }
 
 
-FillPairPresent()
+void FillPairPresent(void)
 {
     Eqn_list_node *temp;
     int i;
@@ -187,7 +193,7 @@ FillPairPresent()
     temp = First_eqn_list_node;
     while (temp != NULL) {
         i = 0;
-        assert_not_null(temp->basis_pairs);
+        assert_not_null_nv(temp->basis_pairs);
         while (temp->basis_pairs[i].coef != 0) {
             EnterPair(temp->basis_pairs[i].left_basis,
                       temp->basis_pairs[i].right_basis);
@@ -199,12 +205,8 @@ FillPairPresent()
 }
                 
 
-EnterPair(i,j)
-Basis i,j;
+void EnterPair(Basis i, Basis j)
 {
-    void setPairPresent();	/* 9/93 - TW */
-    char getPairPresent();	/* 9/93 - TW */
-
     int row_byte,col_byte,col_bit;
 
     row_byte = i-1;
@@ -221,12 +223,8 @@ Basis i,j;
 
 
 
-CreateColtoBP()
+int CreateColtoBP(void)
 {
-    char *Mymalloc();
-
-    Degree GetDegreeName();
-
     int col_to_bp_index = 0;
 
     int i;
@@ -256,10 +254,8 @@ Returns true if there are basis elements at degree d.
 Note: when the algebra is nilpotent it is possible
 that no new basis elements were entered at degree d.
 */
-AreBasisElements(d)
-Degree d;
+int AreBasisElements(Degree d)
 {
-   Basis BasisStart();
    if (BasisStart(d) == 0) 
        return FALSE;
    else
@@ -267,15 +263,8 @@ Degree d;
 }
 
 
-Process(d1,d2,col_to_bp_index_ptr)
-Degree d1;
-Degree d2;
-int *col_to_bp_index_ptr;
+void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr)
 {
-    Basis BasisStart();
-    Basis BasisEnd();
-    char getPairPresent();	/* 9/93 - TW */
-
     Basis b1,b2,b3,b4;
     Basis row,col;
     int col_bit;
@@ -302,11 +291,8 @@ int *col_to_bp_index_ptr;
 }
             
 
-FillTheMatrix()
+int FillTheMatrix(void)
 {
-
-    char *Mymalloc();
-    Scalar S_add();
     Eqn_list_node *temp;
     int i,j;
     int eq_number = 0;
@@ -357,12 +343,8 @@ FillTheMatrix()
     return(OK);
 }
 
-SparseFillTheMatrix()
+int SparseFillTheMatrix(void)
 {
-    NODE_PTR Locate_Node();
-    char *Mymalloc();
-    Scalar S_add();
-
     Eqn_list_node *temp;
     int i;
     int eq_number = 0;
@@ -524,8 +506,7 @@ SparseFillTheMatrix()
 }
 
 
-int GetCol(Left_basis,Right_basis)
-Basis Left_basis,Right_basis;
+int GetCol(Basis Left_basis, Basis Right_basis)
 {
     int low,high,middle;
 
@@ -554,13 +535,11 @@ Basis Left_basis,Right_basis;
 }
 
 
-PrintPairPresent()
+void PrintPairPresent(void)
 {
-    char getPairPresent();	/* 9/93 - TW */
-
     int i,j,k;
 
-    assert_not_null(Pair_present);
+    assert_not_null_nv(Pair_present);
 
     for(i=0;i<DIMENSION_LIMIT;i++){
         for(j=0;j<PP_COL_SIZE;j++){
@@ -579,11 +558,11 @@ PrintPairPresent()
 }
 
 
-PrintColtoBP()
+void PrintColtoBP(void)
 {
     int i,j=0;
 
-    assert_not_null(ColtoBP);
+    assert_not_null_nv(ColtoBP);
 
     printf("The ColtoBP is : \n");
 
@@ -597,12 +576,12 @@ PrintColtoBP()
 }
 
 
-PrintTheMatrix()
+void PrintTheMatrix(void)
 {
     int i,j,k=0;
     int thematrix_index;
 
-    assert_not_null(TheMatrix);
+    assert_not_null_nv(TheMatrix);
 
     printf("The Matrix to be solved is : \n");
 
@@ -628,9 +607,7 @@ PrintTheMatrix()
 /* RETURNS:  the value of Pair_present[row][col]                */
 /* FUNCTION: return the desired value from Pair_present         */
 /****************************************************************/
-char getPairPresent(row, col)
-int row;
-int col;
+char getPairPresent(int row, int col)
 {
   char *rowPtr = Pair_present[row];
 
@@ -646,12 +623,10 @@ int col;
 /* RETURNS:  None                                               */
 /* FUNCTION: set the desired value within Pair_present          */
 /****************************************************************/
-void setPairPresent(row, col, val)
-int row;
-int col;
-char val;
+void setPairPresent(int row, int col, char val)
 {
   char *rowPtr = Pair_present[row];
 
   rowPtr[col] = val;
 }
+
