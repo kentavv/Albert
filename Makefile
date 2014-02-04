@@ -5,8 +5,9 @@ BIN=../bin
 
 CC=gcc
 
-#CFLAGS=-g -O0
 #CFLAGS=-MMD
+#CFLAGS=-g -O0
+#CFLAGS=-g -O
 CFLAGS=-O2
 
 LDFLAGS=
@@ -29,6 +30,7 @@ install: albert
 
 clean:
 	- rm -f albert *.o *.d *~ *# *.core core
+	- rm -f cachegrind.out.* callgrind.out.*
 	- rm -rf doxygen
 
 #-include $(OBJFILES:.o=.d)
