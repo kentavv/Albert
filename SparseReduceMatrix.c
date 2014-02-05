@@ -49,9 +49,9 @@ static NODE_PTR Locate_Element(NODE_PTR Tmp_Ptr, int row, int col);
 
 /* These external variables are for measuring density of last generated matrix*/
 
-extern short int gather_density_flag;
-extern unsigned long int num_elements;
-extern unsigned long int max_num_elements;
+extern short gather_density_flag;
+extern long num_elements;
+extern long max_num_elements;
 
 static MAT_PTR Matrix_Base_Ptr;
 static int Num_rows;

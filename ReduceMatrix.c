@@ -32,9 +32,9 @@ static void CreateRandomMatrix(void);
 /*********************
 These are for density measurement on last matrix. 
 *********************/
-extern short int gather_density_flag;
-extern long unsigned int num_elements;
-extern long unsigned int max_num_elements;
+extern short gather_density_flag;
+extern long num_elements;
+extern long max_num_elements;
 
 static Matrix TheMatrix;
 static int Num_rows;

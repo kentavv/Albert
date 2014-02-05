@@ -54,11 +54,11 @@ static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name
 /*****************************
  These variables are for the sparse implementation
 ******************************/
-extern short int sparse;
+extern short sparse;
 short int gather_density_flag;
-unsigned long int num_elements;
-unsigned long int max_num_elements;
-unsigned long int matrix_size;
+long num_elements;
+long max_num_elements;
+static long matrix_size;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 

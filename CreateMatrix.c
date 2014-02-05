@@ -70,9 +70,9 @@ static void setPairPresent(int row, int col, char val);
 
 /* Added by DCL 8/92. These are variables used for gathering density stats */
 
-extern short int gather_density_flag;
-extern long int num_elements;
-extern long int max_num_elements;
+extern short gather_density_flag;
+extern long num_elements;
+extern long max_num_elements;
 
 char **Pair_present;
 static char BIT_VECTOR[8]={'\200','\100','\040','\020','\010','\004','\002','\001'};
