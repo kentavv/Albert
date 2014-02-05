@@ -13,10 +13,12 @@
 /***          Gives the structure of a node                     ***/
 /******************************************************************/
 
+#include "Build_defs.h"
+
  struct Node_struct {
 			struct Node_struct *Next_Node;
 			unsigned short int column;
-			unsigned char element;
+			Scalar element;
 		   } ;
 
 
