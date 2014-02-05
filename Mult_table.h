@@ -38,6 +38,6 @@ int EnterProduct(Basis B1, Basis B2, Term Tl[]);
 int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P);
 int DestroyMultTable(void);
 Term *Alloc_Terms_list(void);
-int Print_MultTable(FILE *filePtr, int outputType);
+void Print_MultTable(FILE *filePtr, int outputType);
 
 #endif

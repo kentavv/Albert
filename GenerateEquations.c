@@ -85,9 +85,13 @@
 
 static void InitSeqSubtypes(void);
 static int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight);
+#if DEBUG_SEQ_SUBTYPES
 static void PrintSeqSubtypes(void);
+#endif
+#if 0
 static void PrintEqns(Eqn_list_node *L);
 static void PrintEqn(Basis_pair *Temp_eqn);
+#endif
 
 Type Target_type;
 int Target_type_len;
@@ -179,11 +183,12 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
     int tsave,csave;
 
     int i;
+#if DEBUG_SEQ_SUBTYPES
     static int count = 1;
-
+#endif
 
     if (status != OK)
-        return;
+        return -1;
 
     if (Cur_col == Target_type_len) {
 #if DEBUG_SEQ_SUBTYPES
@@ -247,6 +252,8 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
             }
         }
     }
+
+    return 1;
 }
 
 
@@ -261,6 +268,8 @@ int GetVarNumber(char Letter)
         else if (The_ident->deg_letter[i] > 0)
             var_num++;
     }
+    printf("warning: GetVarNumber() fall through\n"); 
+    return -1;
 } 
 
 
@@ -297,7 +306,9 @@ void FreeEqns(Eqn_list_node *L)
 
 void PrintSeqSubtypes(void)
 {
+#if DEBUG_SEQ_SUBTYPES
     static int count = 1;
+#endif
 
     int i,j;
 
@@ -310,10 +321,10 @@ void PrintSeqSubtypes(void)
     }
 }
 
+#if 0
 void PrintEqns(Eqn_list_node *L)
 {
     Eqn_list_node *temp;
-    int i,j = 0;
     int count = 1;
 
     assert_not_null_nv(L);
@@ -332,7 +343,6 @@ void PrintEqns(Eqn_list_node *L)
 void PrintEqn(Basis_pair *Temp_eqn)
 {
     int i,j;
-    int len;
 
     assert_not_null_nv(Temp_eqn);
 
@@ -349,3 +359,4 @@ void PrintEqn(Basis_pair *Temp_eqn)
     j = 0;
     printf("\n");
 }
+#endif

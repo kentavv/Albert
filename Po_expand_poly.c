@@ -52,7 +52,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
     struct unexp_tnode *temp7;	
     struct unexp_tnode *temp;	
 
-    int i;
+    /*int i;*/
     
     if (Unexp_tree == NULL)
         return(NULL);
@@ -280,6 +280,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
                 printf("operator not defined\n");
        }
    }
+   return NULL;
 }
 
 /*******************************************************************/
@@ -420,13 +421,13 @@ int Get_degree(struct unexp_tnode *Pntr)
 /*     i.e Juxtaposed product bubbles down.                        */
 /*     In the Simplified tree, the operands for the operator       */
 /*     juxtaposed product will be letters, numbers or another      */
-/*     subtree for juxtaposed product.
+/*     subtree for juxtaposed product.                             */
 /*     This routine is called until there is no change in the      */
 /*     tree due to the previous call.                              */
 /*******************************************************************/ 
 struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Modified_ptr)
 {
-    int i;
+    /*int i;*/
     struct unexp_tnode *temp1;	
     struct unexp_tnode *temp2;	
     struct unexp_tnode *temp_tnode_ptr;	
@@ -669,6 +670,7 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
                 break;
            }
       }
+      return NULL;
 }
 
 /*******************************************************************/
@@ -691,7 +693,7 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
     struct unexp_tnode *temp1;	
     struct unexp_tnode *temp2;	
     
-    int i;
+    /*int i;*/
 
     if (Unsimp_tree == NULL)
         return(NULL);
@@ -785,6 +787,7 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
                 break;
            }
       }
+      return NULL;
 }
 
 void Assert_scalar_bounds(int i)

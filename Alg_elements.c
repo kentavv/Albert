@@ -32,18 +32,24 @@
 #include "Build_defs.h"
 #include "Alg_elements.h"
 #include "Memory_routines.h"
+#include "Mult_table.h"
 #include "Scalar_arithmetic.h"
 
+#if 0
 static Alg_element *CreateAE();
 static int AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
 static int AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
 static int AssignNegAE(const Alg_element *p1, Alg_element *p2);
 static int CopyAE(const Alg_element *p1, Alg_element *p2);
+#endif
 static int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2);
+#if 0
 static Basis Min(Basis x, Basis y);
 static Basis Max(Basis x, Basis y);
 static void PrintAE(const Alg_element *p);
+#endif
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES: None.                                                 */
@@ -66,6 +72,7 @@ Alg_element *CreateAE()
 
     return(p);
 }
+#endif
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -194,6 +201,7 @@ int ScalarMultAE(Scalar x, Alg_element *p)
     }
 }    
 
+#if 0
 /*******************************************************************/
 /* MODIFIES:                                                       */
 /*     *p3 -- Alg_element.                                         */ 
@@ -277,6 +285,7 @@ int AssignNegAE(const Alg_element *p1, Alg_element *p2)
     p2->last = p1->last;
     return(OK);
 }    
+#endif
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -295,12 +304,12 @@ int AssignNegAE(const Alg_element *p1, Alg_element *p2)
 int AddAE(const Alg_element *p1, Alg_element *p2)
 {
     Basis i;
-    Scalar zero;
+    /*Scalar zero;*/
     
     assert_not_null(p1);
     assert_not_null(p2);
 
-    zero = S_zero();
+    /*zero = S_zero();*/
 
     if (IsZeroAE(p1))
         return(OK);
@@ -373,6 +382,8 @@ int AssignLast(Alg_element *p)
     }
     return(OK);
 }
+
+#if 0
 /*******************************************************************/
 /* MODIFIES:                                                       */
 /*     *p2 -- Alg_element.                                         */ 
@@ -400,6 +411,7 @@ int CopyAE(const Alg_element *p1, Alg_element *p2)
 
     return(OK);
 }
+#endif
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -484,6 +496,8 @@ int MultAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
     return(status);
 }
 
+
+#if 0
 Basis Min(Basis x, Basis y)
 {
     if (x<y)
@@ -499,6 +513,7 @@ Basis Max(Basis x, Basis y)
     else
         return(y);
 }
+#endif
 
 
 /*******************************************************************/
@@ -524,6 +539,7 @@ Alg_element *AllocAE()
 }
 
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -549,10 +565,11 @@ void PrintAE(const Alg_element *p)
                  printf(" + %d b[%d]",p->basis_coef[i],i);
              else
                  printf(" - %d b[%d]",p->basis_coef[i],i);
-             k = (++k)%7;
+             k = (k + 1) % 7;
              if (k == 0)
                  printf("\n");
           }
     }
     printf("\n");
 } 
+#endif

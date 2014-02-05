@@ -22,9 +22,11 @@ static void Interchange(int Row1, int Row2);
 static void Knockout(int Row, int Col);
 static void MultRow(int Row, Scalar Factor);
 static void AddRow(Scalar Factor, int Row1, int Row2);
-//static int GetRank(void);
+#if 0
+static int GetRank(void);
 static void PrintTheRMatrix(void);
-//static void CreateRandomMatrix(void);
+static void CreateRandomMatrix(void);
+#endif
 
 
 /*********************
@@ -173,6 +175,7 @@ int GetRank(void)
 
 */
 
+#if 0
 void PrintTheRMatrix(void)
 {
     int i,j,k=0;
@@ -190,6 +193,7 @@ void PrintTheRMatrix(void)
     }
     printf("\n");
 }
+#endif
 
 /*
 int main(void)

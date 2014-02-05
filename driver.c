@@ -35,6 +35,7 @@
 
 #include "driver.h"
 #include "Basis_table.h"
+#include "Build.h"
 #include "Build_defs.h"
 #include "Field.h"
 #include "Generators.h"
@@ -48,6 +49,8 @@
 #include "Po_routines.h"
 #include "Scalar_arithmetic.h"
 #include "Ty_routines.h"
+#include "Type_table.h"
+#include "Mult_table.h"
 
 static void Print_title(void);
 static Type CreateTargetType(struct P_type ptype);
@@ -77,7 +80,7 @@ int main(int argc, char *argv[])
     char tableFileName[100];
     char cmd[100];
     char table;
-    char *myPtr;
+    /*char *myPtr;*/
     extern Deg_to_basis_rec *Deg_to_basis_table;
     FILE *tableFilePtr = NULL;
 
@@ -103,14 +106,14 @@ int main(int argc, char *argv[])
 
     int out_of_memory = FALSE;
 
-    int i,j;
+    int i; /*,j;*/
     int first_generator;
 
     /* TW 9/8/93 - BEGIN argument handling */
     char dir[100];
     char *str, *str2;
     int argPos;
-    FILE *fp;
+    /*FILE *fp;*/
 
     dir[0] = '\0';			/* initialize dir */
     if(argc > 5){
@@ -594,7 +597,8 @@ type to show */
                    case 'b':
 		     if(mtable_status == PRESENT && Basis_table && Deg_to_basis_table){
                        sprintf(tableFileName, "/tmp/Basis.table");
-                       if(tableFilePtr = fopen(tableFileName, "w")){
+                       tableFilePtr = fopen(tableFileName, "w");
+                       if(tableFilePtr){
                          PrintBasisTable(tableFilePtr, 0);
                          fclose(tableFilePtr);
 		         sprintf(cmd, "lpr %s", tableFileName);
@@ -615,7 +619,8 @@ tableFileName);
                    case 'm':
 		     if(mtable_status == PRESENT){
                        sprintf(tableFileName, "/tmp/Mult.table");
-                       if(tableFilePtr = fopen(tableFileName, "w")){
+                       tableFilePtr = fopen(tableFileName, "w");
+                       if(tableFilePtr) {
                          Print_MultTable(tableFilePtr, 0);
                          fclose(tableFilePtr);
 		         sprintf(cmd, "lpr %s", tableFileName);

@@ -42,13 +42,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "Build_defs.h"
 #include "CreateMatrix.h"
+#include "Basis_table.h"
+#include "Build_defs.h"
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
 #include "SparseReduceMatrix.h"
+#include "Type_table.h"
 
 static void ZeroOutPairPresent(void);
 static void FillPairPresent(void);
@@ -58,9 +60,11 @@ static int AreBasisElements(Degree d);
 static void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr);
 static int FillTheMatrix(void);
 static int SparseFillTheMatrix(void);
+#if 0
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
 static void PrintTheMatrix(void);
+#endif
 static char getPairPresent(int row, int col);
 static void setPairPresent(int row, int col, char val);
 
@@ -531,6 +535,7 @@ int GetCol(Basis Left_basis, Basis Right_basis)
 }
 
 
+#if 0
 void PrintPairPresent(void)
 {
     int i,j,k;
@@ -594,6 +599,7 @@ void PrintTheMatrix(void)
     }
     printf("\n");
 }
+#endif
 
 
 /****************************************************************/

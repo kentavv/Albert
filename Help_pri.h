@@ -22,6 +22,7 @@ typedef struct Help_struct {
 } Help_struct;
 
 static struct Help_struct Help_lines[NUM_COMMANDS] = {
+{
     "H",
 "\tHelp Topics\n\n\
     b -- build command\n\
@@ -46,7 +47,9 @@ static struct Help_struct Help_lines[NUM_COMMANDS] = {
     I -- Invoking Albert\n\
     N -- Nonassociative polynomial\n\
     S -- System definition file \".albert\"\n\
-    W -- Warnings to the user\n\n",
+    W -- Warnings to the user\n\n"
+},
+{
     "A",
 "\n\n\
 \t\tAlbert\n\n\
@@ -110,7 +113,9 @@ early design.  Subsequent features have been implemented by\n\
 David Lee and Trent Whiteley.  The idea of constructing free\n\
 nonassociative algebras was motivated by several papers of E.\n\
 Kleinfeld.  Irvin Hentzel has also assisted in the program's\n\
-development through helpful discussions.\n\n",
+development through helpful discussions.\n\n"
+},
+{
     "I",
 "\n\n\
 \t\tInvoking Albert\n\n\
@@ -131,7 +136,9 @@ large will cause albert to run extraordinarily slow, so some\n\
 care should be used.\n\n\
 Legitimate values for dimension limits are multiples of 500\n\
 up to 10,000.  If no dimension limit is given, the default\n\
-is 500.\n\n",
+is 500.\n\n"
+},
+{
     "b",
 "\n\n\
 \t\tbuild\n\n\
@@ -144,7 +151,9 @@ old multiplication table is destroyed.\n\n\
 A problem type must have been defined with the generators\n\
 command.  Likely reasons for this command to fail are\n\
 insufficient memory, insufficient time, or exceeding the\n\
-dimension limit.\n\n",
+dimension limit.\n\n"
+},
+{
     "c",
 "\n\n\
 \t\tchange\n\n\
@@ -178,13 +187,17 @@ A useful methodology is to begin a problem with the new\n\
 method.  But, if the problem is unable to finish due to lack\n\
 of memory, there is a chance the \"change\" toggle will\n\
 help, especially if the user feels that the matrix densities\n\
-are exceeding 12%.\n\n",
+are exceeding 12%.\n\n"
+},
+{
     "d",
 "\n\n\
 \t\tdisplay\n\n\
 Typing display causes Albert to display the current set of\n\
 defining identities, field, problem type and information\n\
 about the multiplication table, if present.\n\n",
+},
+{
     "f",
 "\n\n\
 \t\tfield [number]\n\n\
@@ -196,7 +209,9 @@ is destroyed.  For example,\n\n\
 will cause subsequent algebras to be constructed over the\n\
 field Z(17).  When Albert is first entered, the default field\n\
 Z(251) is selected.  This field remains in effect until the\n\
-field is changed.\n\n",
+field is changed.\n\n"
+},
+{
     "g",
 "\n\n\
 \t\tgenerators [problem type]\n\n\
@@ -221,7 +236,9 @@ have degree at least two.  this can also be entered in\n\
 abbreviated form as\n\n\
 \t2a1b2c\n\
 \t2ab2c\n\
-\tb2a2c\n\n",
+\tb2a2c\n\n"
+},
+{
     "i",
 "\n\n\
 \t\tidentity [polynomial]\n\n\
@@ -234,7 +251,9 @@ identity for future use.  Entering a new identity destroys\n\
 any existing multiplication table in memory.  Names defined\n\
 in the \".albert\" file can also be used to enter a\n\
 polynomial.  The entered polynomial must be homogeneous.\n\
-Albert linearizes all identities without telling the user.\n\n",
+Albert linearizes all identities without telling the user.\n\n"
+},
+{
     "o",
 "\n\n\
 \t\toutput [b | m]\n\n\
@@ -243,7 +262,9 @@ table to the printer, provided the table exists.  The\n\
 argument specifies the table to be output (b - basis table,\n\
 m - multiplication table).  For example, typing\n\n\
 \toutput b\n\n\
-will output the current basis table to the printer.\n\n",
+will output the current basis table to the printer.\n\n"
+},
+{
     "p",
 "\n\n\
 \t\tpolynomial [polynomial]\n\n\
@@ -257,12 +278,16 @@ might cause Albert to respond with:\n\n\
 \tPolynomial is not an identity.\n\n\
 A multiplication table must exist and the degree of each\n\
 generator (in the problem type) must be greater than or equal\n\
-to the degree of the polynomial in each letter.\n\n",
+to the degree of the polynomial in each letter.\n\n"
+},
+{
     "q",
 "\n\n\
 \t\tquit\n\n\
 This command exits the user from Albert.  Any multiplication\n\
-table or other information is lost.\n\n",
+table or other information is lost.\n\n"
+},
+{
     "r",
 "\n\n\
 \t\tremove [number | *]\n\n\
@@ -275,7 +300,9 @@ asterisk (*) can be used in place of number to remove all\n\
 existing identities:\n\n\
 \tr *\n\n\
 The remove command will destroy a resident multiplication\n\
-table, if present.\n\n",
+table, if present.\n\n"
+},
+{
     "s",
 "\n\n\
 \t\tsave [b | m]\n\n\
@@ -292,7 +319,9 @@ For example, typing\n\n\
 \tsave b\n\
 \tFile Name --> Mult.table\n\n\
 will save the current multiplication table in Mult.table in\n\
-the current directory.\n\n",
+the current directory.\n\n"
+},
+{
     "t",
 "\n\n\
 \t\ttype [word]\n\n\
@@ -312,7 +341,9 @@ association types of degree 5 are numbered.\n\n\
 \t-->type a((aa)a)\n\n\
 \tThe association type of the word = 4.\n\n\
 \t-->type a(a(aa))\n\n\
-\tThe association type of the word = 5.\n\n",
+\tThe association type of the word = 5.\n\n"
+},
+{
     "v",
 "\n\n\
 \t\tview [b | m]\n\n\
@@ -321,7 +352,9 @@ table to the screen, provided they exist.  The argument\n\
 specifies the table to be output (b - basis table, m -\n\
 multiplication table).  For example, typing\n\n\
 \tview b\n\n\
-will output the current basis table to the screen.\n\n",
+will output the current basis table to the screen.\n\n"
+},
+{
     "x",
 "\n\n\
 \t\txpand [polynomial]\n\n\
@@ -332,13 +365,17 @@ would cause Albert to respond with:\n\n\
 \t(xy)z - x(yz)\n\n\
 The command is used for information purposes only and does\n\
 not affect the current configuration.  The polynomial must be\n\
-homogeneous.\n\n",
+homogeneous.\n\n"
+},
+{
     "h",
 "\n\n\
 \t\thelp [topic | ]\n\n\
 This command provides detailed information about the topic\n\
 named as the parameter.  If no topic is given, a list of all\n\
-help topics is displayed.\n\n",
+help topics is displayed.\n\n"
+},
+{
     "N",
 "\n\n\
 \t\tNonassociative Polynomial Expressions\n\n\
@@ -402,7 +439,9 @@ and, therefore, 3(a,b,c) + (c,b,a) means (3(a,b,c)) +\n\
 presence of \"^\" or \"*\", juxtaposition has higher\n\
 precedence:\n\n\
 \txy^3 means ((xy)(xy))(xy), not x(y^{2}y)\n\n\
-\txy*x means (xy)*y\n\n",
+\txy*x means (xy)*y\n\n"
+},
+{
     "S",
 "\n\n\
 \t\tThe \".albert\" File\n\n\
@@ -447,7 +486,9 @@ RA.1           (y,z,xx) - (y,x,zx + xz)\n\
 RA.2           [xy,z] - x[y,z] - [x,z]y - 2(x,y,z) - (z, x,y)\n\
 RA.3           (z,x,wy) + (z,w,xy) - (z,x,y)w + (z,w,y)x\n\
 RA.4           ([x,y],w,z) - [x,(y,w,z)] + [y,(x,w,z)] \\\n\
-                           - (y,x,[w,z]) + (x,y,[w,z])\n\n",
+                           - (y,x,[w,z]) + (x,y,[w,z])\n\n"
+},
+{
     "W",
 "\n\n\
 \t\tWarnings\n\n\
@@ -482,7 +523,9 @@ adding additional identities of degree less than n may allow\n\
 Albert to finish.\n\n\
 4.  Like any large program, the possibility is high for\n\
 errors.  Please report any suspected bugs or general comments\n\
-to dpj@cs.clemson.edu.\n\n",
+to dpj@cs.clemson.edu.\n\n"
+},
+{
     "G",
 "\n\n\
 \t\tGlossary\n\n\
@@ -507,7 +550,9 @@ has the same degree for each terms.\n\n\
 A \"multilinear\" polynomial is a homogeneous polynomial\n\
 having 1 in all its generators.  Every polynomial can be\n\
 \"linearized\".  The resulting polynomial is equivalent, given\n\
-a high enough characteristic.\n\n",
+a high enough characteristic.\n\n"
+},
+{
     "B",
 "\n\n\
 \t\tBibliography\n\n\
@@ -538,6 +583,7 @@ construct its algebras:\n\n\
     \"A Dynamic Programming Method for Building Free Algebras,\n\
     Computers & Mathematics with Applications\",\n\
     22 (1991), 12, 61-66.\n\n"
+}
 };
 
 #endif

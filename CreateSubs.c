@@ -54,7 +54,9 @@
 #include "Debug.h"
 
 static void DoCreateSubs(int row, int col);
+#if DEBUG_SUBSTITUTION
 static void PrintSubstitution(void);
+#endif
 
 int *Deg_var;
 Basis *Substitution;

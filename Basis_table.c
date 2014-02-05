@@ -27,12 +27,15 @@
 #include "Generators.h"
 #include "Help.h"
 #include "Memory_routines.h"
+#include "Type_table.h"
 
 static int InitializeDegtoBasisTable(int Target_degree);
 static void UpdateDegToBasisTable(int Deg, Basis Cur_basis);
+#if 0
 static Basis LeftFactor(Basis B);
 static Basis RightFacto(Basis B);
 static int GetDeg(Basis B);
+#endif
 static void PrintBasis(Basis b, FILE *filePtr);
 
 static int Nextbasistobefilled;
@@ -151,6 +154,7 @@ Basis GetNextBasisTobeFilled(void)
     return(Nextbasistobefilled);
 }
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -188,6 +192,7 @@ int GetDeg(Basis B)
 {
     return(GetDegreeName(Basis_table[B].type));
 }
+#endif
 
 
 Basis BasisStart(Degree Deg)

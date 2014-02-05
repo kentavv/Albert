@@ -22,7 +22,9 @@
 #include "Po_prod_bst.h"
 #include "Memory_routines.h"
 
+#if 0
 static void Prt_prod_inorder(PROD_TREEPTR Node);
+#endif
 static int LT(char X[], char Y[]);
 static int GT(char X[], char Y[]);
 static int EQUAL(char X[], char Y[]);
@@ -63,6 +65,7 @@ PROD_TREEPTR Prod_insert(char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr)
          return (Prod_insert(X, Left, Pnum, &((*Node_ptr)->right))) ;
     else if (EQUAL(X, (*Node_ptr)->rhs_str)) 
         return (*Node_ptr) ;
+    return NULL;
 }
 
 /*******************************************************************/
@@ -91,9 +94,11 @@ PROD_TREEPTR Prod_member(char X[], PROD_TREEPTR Node_ptr)
         return (Prod_member(X, Node_ptr->left)) ;
     else  if (GT(X, Node_ptr->rhs_str))
         return (Prod_member(X, Node_ptr->right)) ;
+    return NULL;
 }
 
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -120,6 +125,7 @@ void Prt_prod_inorder(PROD_TREEPTR Node)
         }
     }
 }
+#endif
 
 
 /*******************************************************************/

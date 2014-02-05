@@ -36,17 +36,23 @@
 #include "Memory_routines.h"
 
 static void EnterBeginBasis(int TTindex, Basis basis);
+#if 0
 static int SameType(Type T1, Type T2);
+#endif
 static int InitStoreblocksizes(void);
 static int FillTypecount(int Cur_scan_pos);
 static int InitTypetable(void);
 static int FillTypetable(int Cur_scan_pos);
 static int GetIndex(Type Pntr);
+#if 0
 static int NumberOfBasis(Name n);
 static void PrintTypecount(void);
-static PrintType(Type Pntr, FILE *filePtr);
+#endif
+static void PrintType(Type Pntr, FILE *filePtr);
+#if 0
 static void PrintTypetable(void);
 static void PrintTypetableindex(void);
+#endif
 /*static void PrintSbsizes(void);*/
 
 static Type Target_type;                    /* Input from higher level module. */
@@ -223,6 +229,7 @@ void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis)
     EnterEndBasis(n,End_basis);
 }
 
+#if 0
 int SameType(Type T1, Type T2)
 {
     int i;
@@ -233,6 +240,7 @@ int SameType(Type T1, Type T2)
 
     return(1);
 }
+#endif
 
 
 /*******************************************************************/
@@ -452,7 +460,7 @@ int GetIndex(Type Pntr)
 Name FirstTypeDegree(Degree D)
 {
     if ((D >= 0) && (D <= Target_type_deg))
-        return(Deg_to_type_table_index[D]);
+        return(Deg_to_type_table_index[(int)D]);
     else
         return(-1);
 }
@@ -525,6 +533,7 @@ Basis EndBasis(Name n)
 }
 
 
+#if 0
 int NumberOfBasis(Name n)
 {
     return(Type_table[n].end_basis - Type_table[n].begin_basis + 1);
@@ -537,13 +546,14 @@ void PrintTypecount(void)
     for (i=0;i<=Target_type_deg;i++)
         printf("Degree %d subtypes = %d\n",i,Type_count[i]);
 }
+#endif
 
 
-PrintType(Type Pntr, FILE *filePtr)
+void PrintType(Type Pntr, FILE *filePtr)
 {
     int i;
 
-    assert_not_null(Pntr);
+    assert_not_null_nv(Pntr);
 
     for (i=0;i<Target_type_len;i++)
         fprintf(filePtr, "%d",Pntr[i]);
@@ -555,6 +565,8 @@ void PrintTypeName(Name n, FILE *filePtr)
     PrintType(Type_table[n].type, filePtr);
 }
 
+
+#if 0
 void PrintTypetable(void)
 {
     int i,j;
@@ -578,6 +590,7 @@ void PrintTypetableindex(void)
     for (i=0;i<Tot_subtypes;i++)
         printf("%d\n",Type_table_index[i]);
 }
+#endif
 
 /*
 void PrintSbsizes(void)

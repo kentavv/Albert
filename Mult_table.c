@@ -33,20 +33,23 @@
 #include "Help.h"
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
+#include "Basis_table.h"
 
 static int TermsListLength(Term Tl[]);
 static Term *RetrieveProduct(Basis B1, Basis B2);
 static int FreeTermsBlocks(Terms_block *P, int *X);
+#if 0
 static int TransAETL(Alg_element *P, Term *Q);
 static int TransTLAE(Term *P, Alg_element *Q);
 static int PrintMT(void);
 static int PrintMTBlock(Mt_block *P);
 static int PrintTL(Term *P);
+#endif
 static Mt_block *Alloc_Mt_block();
 static Terms_block *Alloc_Terms_block(void);
-static int Print_AE(Alg_element *ae, FILE *filePtr, int outputType);
+static void Print_AE(Alg_element *ae, FILE *filePtr, int outputType);
 static Mt_block *getMtBlock(int row, int col);
-static int setMtBlock(int row, int col, Mt_block *val);
+static void setMtBlock(int row, int col, Mt_block *val);
 
 
 #define  DEBUG_DESTROY_MT  0
@@ -353,6 +356,7 @@ int FreeTermsBlocks(Terms_block *P, int *X /* For Stats. */)
     return(OK);
 }
 
+#if 0
 /*******************************************************************/
 /* MODIFIES:                                                       */
 /*     *Q -- Terms_list.                                           */
@@ -413,6 +417,7 @@ int TransTLAE(Term *P, Alg_element *Q)
 
     return(OK);
 }
+
 
 int PrintMT(void)
 {
@@ -475,14 +480,15 @@ int PrintTL(Term *P)
     for (i=1;i<j;i++) {
          printf(" + %d b[%d]",P->coef,P->word);
          P++;
-         k = (++k)%7;
+         k = (k + 1) % 7;
          if (k == 0)
              printf("\n");
     }
     printf("\n");
     return(OK);
 }
-           
+#endif
+
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -569,12 +575,12 @@ Terms_block *Alloc_Terms_block(void)
 /* FUNCTION:                                                       */
 /*     Print the table.                                            */
 /*******************************************************************/
-int Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
+void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
   int i, j, dim;
   Alg_element *prod = AllocAE();/* TW 9/22/93 - change prod[] to *prod */
 
-  assert_not_null(prod);	/* TW 9/22/93 - change prod[] to *prod */
+  assert_not_null_nv(prod);	/* TW 9/22/93 - change prod[] to *prod */
 
   lineCnt = 0;			/* TW 9/19/93 - support for view */
   dim = GetNextBasisTobeFilled();
@@ -613,7 +619,7 @@ int Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 param
   DestroyAE(prod);      /* TW 9/23/93 - Shouldn't we free this up? */
 }
  
-int Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
+void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
 {
   int x,i;
   int trmcnt = 0;		/* How many terms have been printed */
@@ -653,10 +659,10 @@ Mt_block *getMtBlock(int row, int col)
 }
 
 
-int setMtBlock(int row, int col, Mt_block *val)
+void setMtBlock(int row, int col, Mt_block *val)
 {
   Mt_block **rowPtr = Mt_block_index[row];
 
-  assert_not_null(rowPtr);
+  assert_not_null_nv(rowPtr);
   rowPtr[col] = val;
 }

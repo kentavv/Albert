@@ -21,6 +21,7 @@
 #include <stdlib.h>
 
 #include "ExtractMatrix.h"
+#include "Basis_table.h"
 #include "Build_defs.h"
 #include "CreateMatrix.h"
 #include "Memory_routines.h"
@@ -28,11 +29,15 @@
 #include "Scalar_arithmetic.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
+#include "SparseReduceMatrix.h"
+#include "Type_table.h"
 
 static void SparseFillDependent(void);
 static void FillDependent(void);
 static int DestroyDependent(void);
+#if 0
 static void PrintDependent(void);
+#endif
 static void ProcessIndependentBasis(void);
 static void ProcessDependentBasis(void);
 static void SparseProcessDependentBasis(void);
@@ -201,6 +206,7 @@ int DestroyDependent(void)
 }
 
 
+#if 0
 void PrintDependent(void)
 {
     int j;
@@ -213,6 +219,8 @@ void PrintDependent(void)
         printf("%d",Dependent[j]);
     printf("\n");
 }
+#endif
+
 
 void ProcessIndependentBasis(void)
 {
@@ -245,7 +253,7 @@ void ProcessIndependentBasis(void)
 void ProcessDependentBasis(void)
 {
     int j,row,k;
-    Basis n,b1,b2;
+    Basis /*n,*/b1,b2;
     int tl_index;
     Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 
@@ -289,8 +297,8 @@ void SparseProcessDependentBasis(void)
    NODE_PTR q;
    int rowid=0;
 
-   short int j ,Row,k;
-   Basis n,b1,b2;
+   short int j/*,Row*/,k;
+   Basis /*n,*/b1,b2;
    int tl_index;
    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 
@@ -330,7 +338,7 @@ void SparseProcessDependentBasis(void)
 
 void ProcessOtherIndependentBasis(int J)
 {
-   int i,deg,save,num_bp,j;
+   int i,deg,save,/*num_bp,*/j;
    Basis m1,m2,n1,n2,n;
    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
 

@@ -17,8 +17,11 @@
 #include <stdio.h>
 
 #include "Po_syn_stack.h"	
+#include "Po_parse_poly.h"
 
+#if 0
 static void Print_syn_stack(int Stack[], int Sp);
+#endif
 
 
 /*******************************************************************/
@@ -78,11 +81,12 @@ int Pop_token(int Stack[], int *Sp_ptr)
 {
     if ((*Sp_ptr >= 0) && (*Sp_ptr < STACK_SIZE))
         return(Stack[(*Sp_ptr)--]);
-    else
-        printf(" Stack index out of bounds\n");
+    printf(" Stack index out of bounds\n");
+    return INVALID_TOKEN;
 }
 
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -98,3 +102,4 @@ void Print_syn_stack(int Stack[], int Sp)
     for (i=0;i<=Sp;i++)
         printf("Stack[%d] = %d\n",i,Stack[i]);
 }
+#endif

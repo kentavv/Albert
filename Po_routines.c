@@ -32,6 +32,8 @@
 #include "Debug.h"
 #include "Alg_elements.h"
 #include "Memory_routines.h"
+#include "Scalar_arithmetic.h"
+#include "getchar.h"
 
 static int Absolute(int Num);
 static int Get_len(int Num);
@@ -43,8 +45,6 @@ static void AssignNumbersToTerm(struct term_node *Pntr, int Cln[]);
 static void DestroyTerms(struct term_head *Term_head);
 static void FreeNodes(struct term_node *Term_node);
 static void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status);
-
-#undef getchar
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -269,7 +269,7 @@ int Homogeneous(struct polynomial *Poly)
     struct P_type first_term_type,temp_type;
     int is_homogeneous = TRUE;
     int i;
-    char c;
+    /*char c;*/
 
     for (i=0;i<NUM_LETTERS;i++) {
         first_term_type.degrees[i] = 0;

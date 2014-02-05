@@ -78,8 +78,10 @@ static void Gen(Name n, int d, int j);
 static void AddSetPartition(Name n, int j);
 static void DeleteSetPartition(Name j);
 static int OKSetPartitions(void);
+#if DEBUG_SET_PARTITIONS
 static void PrintVarTypes(void);
 static void PrintSetPartitions(void);
+#endif
 
 
 int Num_vars;
@@ -246,6 +248,7 @@ int OKSetPartitions(void)
 }
 
 
+#if DEBUG_SET_PARTITIONS
 void PrintVarTypes(void)
 {
     int i;
@@ -270,3 +273,4 @@ void PrintSetPartitions(void)
             printf("\n");
         }
 }
+#endif

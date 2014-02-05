@@ -17,4 +17,8 @@ typedef struct dalbert_node {
     struct dalbert_node *next;
 } Dalbert_node;
 
+void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, int *Operand_len_ptr);
+int ReadDotAlbert(Dalbert_node *dalbert_node_ptr, char *albertFileLoc);
+int Substr(const char Str1[], const char Str2[]);
+
 #endif

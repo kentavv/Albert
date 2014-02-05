@@ -23,13 +23,15 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "Get_Command.h"
 #include "Memory_routines.h"
 #include "Strings.h"
 #include "Type_table.h"
+#include "getchar.h"
 
-#undef getchar           /* Use unbuffered getchar(). */
+static int DoSubstitution(void);
 
 static char *total_line;
 static int total_len;
@@ -106,35 +108,6 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
     printf("operand = %s \n",*Operand_ptr);
 #endif
     free(total_line1);
-}
-
-/*
- * Called from two places. From my_getline() in this module and from
- * Po_routines.c. Its purpose is to fix the bug of cntl D which takes
- * Albert into infinite loop. Basically we replace standard bufferd
- * getchar() with unbuffered getchar(). Code is coppied from KR C book.
- * Looks like the bug is hardware dependent.
- */
-
-int getchar(void)
-{
-   char c;
-	fflush(stdout);
-   return ((read(0,&c,1) == 1) ? (unsigned char) c:EOF);
-}
-
-/*
- * Static function. reads a line from the terminal and returns line
- * length. Code copied from KR C book.
- */
-
-int my_getline(char s[], int lim)
-{
-    int c,i;
-    for (i=0; (i<lim-1) && ((c=getchar()) != EOF) && (c != '\n'); i++)
-        s[i] = c;
-    s[i] = '\0';
-    return(i);
 }
 
 /*
@@ -247,7 +220,7 @@ int ReadDotAlbert(Dalbert_node *dalbert_node_ptr, char *albertFileLoc) /* TW - l
     int alinelen;
     Dalbert_node *tnodeptr;
     int lhsstart;
-    int rhsstart;
+    /*int rhsstart;*/
     int blankfound = TRUE;
 
     char *albert_line;
@@ -405,7 +378,7 @@ message to display path */
  * which is a prefix of Str2.
  */
 
-int Substr(char Str1[], char Str2[])
+int Substr(const char Str1[], const char Str2[])
 {
   return strncmp(Str1, Str2, strlen(Str1)) == 0;
 }

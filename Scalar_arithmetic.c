@@ -27,10 +27,12 @@
 #include "Build_defs.h"
 #include "driver.h"
 
+#if 0
 static Scalar S_minus1(void);
 static Scalar S_sub(Scalar x, Scalar y);
 static Scalar S_div(Scalar x, Scalar y);
 static void Print_inv_table(void);
+#endif
 
 #define  PRIME_BOUND  256
 
@@ -81,10 +83,12 @@ Scalar S_one(void)
     return(1);
 }
 
+#if 0
 Scalar S_minus1(void)
 {
     return(Prime - 1);
 }
+#endif
 
 Scalar S_minus(Scalar x)
 {
@@ -101,6 +105,7 @@ Scalar S_add(Scalar x, Scalar y)
     return((x + y) % Prime);
 }
 
+#if 0
 Scalar S_sub(Scalar x, Scalar y)
 {
     Scalar_assert(x);
@@ -116,6 +121,7 @@ Scalar S_div(Scalar x, Scalar y)
 
     return(S_mul(x, S_inv(y)));   
 }
+#endif
 
 Scalar S_mul(Scalar x, Scalar y)
 {
@@ -137,6 +143,7 @@ Scalar S_inv(Scalar x)
         return(Inverse_table[x]);
 }
 
+#if 0
 void Print_inv_table(void)
 {
     int i,j;
@@ -153,3 +160,4 @@ void Print_inv_table(void)
     }
     printf("\n");
 }
+#endif

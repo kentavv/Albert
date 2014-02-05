@@ -29,6 +29,7 @@
 
 #include "Build.h"
 #include "Build_defs.h"
+#include "Basis_table.h"
 #include "ExtractMatrix.h"
 #include "GenerateEquations.h"
 #include "Mult_table.h"
@@ -39,6 +40,7 @@
 #include "ReduceMatrix.h"
 #include "Sparse_structs.h"
 #include "Sparse_defs.h"
+#include "SparseReduceMatrix.h"
 #include "Debug.h"
 
 static int InitializeStructures(void);
@@ -199,8 +201,8 @@ void PrintProgress(int i)
 {
     time(&Current_time);
 
-    printf("  %2d             %4d            %5d\n",i,Current_dimension,
-                                     Current_time - Start_time);
+    printf("  %2d             %4d            %5ld\n",
+           i, Current_dimension, Current_time - Start_time);
 }
 
 
@@ -215,7 +217,7 @@ int ProcessDegree(int i)
    Name n;
    int status = OK;
    Basis begin_basis;
-   Basis end_basis;
+   Basis end_basis = 0;
 
    if (i == 1)
        InstallDegree1();
@@ -253,7 +255,7 @@ void InstallDegree1(void)
     int len;
     Name n;
     Basis begin_basis;
-    Basis end_basis;
+    Basis end_basis = 0;
     Type temp_type;
 
     temp_type = GetNewType();

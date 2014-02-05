@@ -54,8 +54,10 @@
 
 typedef int *Perm;
 
+#if 0
 static void PrintPermutationList(void);
 static void PrintPermutation(int Var_num, Perm P);
+#endif
 static void FreePermutationList(Perm *Pl);
 static void DoPermutation(int row);
 static int AppendLocalListToTheList(void);
@@ -68,7 +70,7 @@ static int Expand(void);
 static void FreeLocalList(Basis_pair_node *Ll);
 static void AppendToLocalList(Basis_pair_node *Rl);
 static int SubstituteWord(struct term_node *W);
-static int Sub(Alg_element *Ans, struct term_node *W);
+static void Sub(Alg_element *Ans, struct term_node *W);
 static Basis_pair_node *GetNewBPNode(void);
 
 
@@ -117,7 +119,7 @@ int PerformSubs(Basis *S, struct polynomial *F, Eqn_list_node *L, int Nv, int Md
 }
 
 
-
+#if 0
 void PrintPermutationList(void)
 {
     int i;
@@ -131,6 +133,7 @@ void PrintPermutationList(void)
     }
 }
 
+
 void PrintPermutation(int Var_num, Perm P)
 {
     int i;
@@ -138,6 +141,7 @@ void PrintPermutation(int Var_num, Perm P)
     for (i=0;i<Deg_var[Var_num];i++)
         printf("%d",P[i]);
 }
+#endif
 
 
 void FreePermutationList(Perm *Pl)
@@ -257,7 +261,7 @@ int GetIndex(void)
 
 Perm GetNextPermutation(Perm P, int Pl)
 {
-    int i,j,index1,index2;
+    int /*i,*/j,index1,index2;
     int temp;
 
     Permutation = P;
@@ -284,6 +288,8 @@ int GetOtherIndexToSwap(int index1)
     for (i=Permutation_length-1;i>index1;i--)
         if (Permutation[i] > Permutation[index1])
             return(i);
+    printf("warning: GetOtherIndexToSwap() fall through\n");
+    return -1;
 } 
 
 /* Selection Sort */
@@ -383,7 +389,7 @@ int SubstituteWord(struct term_node *W)
     Scalar zero;
     int i,j;
     Scalar alpha,beta;
-    Basis_pair_node *temp_list;
+    Basis_pair_node *temp_list = NULL;
 
     assert_not_null(ae1);		/* TW 9/22/93 - change ae1 to *ae1 */
     assert_not_null(ae2);		/* TW 9/22/93 - change ae2 to *ae2 */
@@ -432,7 +438,7 @@ int SubstituteWord(struct term_node *W)
 }
                         
 
-int Sub(Alg_element *Ans, struct term_node *W)
+void Sub(Alg_element *Ans, struct term_node *W)
 {
     Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
     Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
@@ -442,10 +448,10 @@ int Sub(Alg_element *Ans, struct term_node *W)
     Basis b;
     int perm_number;
 
-    assert_not_null(W);
-    assert_not_null(Ans);
-    assert_not_null(left);		/* TW 9/22/93 - change left to *left */
-    assert_not_null(right);		/* TW 9/22/93 - change right to *right */
+    assert_not_null_nv(W);
+    assert_not_null_nv(Ans);
+    assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
+    assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
 
     if ((W->left == NULL) && (W->right == NULL)) {
         var_number = GetVarNumber(W->letter) - 1;

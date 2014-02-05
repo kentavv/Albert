@@ -10,7 +10,7 @@
 /***                                   messages                  ***/
 /*******************************************************************/
 
-int initHelp(void);
+void initHelp(void);
 int Help(char topic[]);
 void more(int *lines);
 

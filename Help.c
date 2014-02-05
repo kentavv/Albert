@@ -24,7 +24,7 @@ static char *getHelp(char *helpRqst);
 static void displayHelp(char *helpPtr, int rows, int cols);
 static void scrollScreen(void);
 
-int initHelp(void)
+void initHelp(void)
 {
   initscr();                            /* initialize LINES and COLS */
   helpLines = LINES;
@@ -36,7 +36,7 @@ int initHelp(void)
 
 int Help(char topic[])
 {
-  char str[80], *helpPtr, *test;
+  char str[80], *helpPtr; /*, *test;*/
 
   scrollScreen();
   str[0] = '\0';
@@ -57,7 +57,7 @@ int Help(char topic[])
     printf(" Type a letter for help, or carriage return to\n return\
 	to the Albert session.\n\n\nHELP--> ");
     fflush(stdout);
-    test = fgets(str, 80, stdin);
+    /*test =*/ fgets(str, 80, stdin);
     str[strlen(str)-1] = '\0';
   }
   return(TRUE);
@@ -83,7 +83,7 @@ char *getHelp(char *helpRqst)
 
 void displayHelp(char *helpPtr, int rows, int cols)
 {
-  char line[500 + 1], *blank, *pos = helpPtr;
+  char line[500 + 1], *blank = NULL, *pos = helpPtr;
   int i, j, done, blankNdx;
 
   for(j = 0; *pos; ++j){

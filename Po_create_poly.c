@@ -72,7 +72,7 @@ extern jmp_buf env;
 /*******************************************************************/ 
 struct polynomial *Create_poly(char In_str[], int *In_str_len, int *Out_of_memory)
 {
-    static struct unexp_tnode *temp;
+    /*static struct unexp_tnode *temp;*/
 
     struct unexp_tnode *Unexp_tree1;
     struct unexp_tnode *Unexp_tree2;
@@ -86,8 +86,10 @@ struct polynomial *Create_poly(char In_str[], int *In_str_len, int *Out_of_memor
     static char   **Exp_poly_str_ptr; /* Exp_poly_str may be expanded! */
     static int    Maxsize_exp_poly_str;
     int Modified = FALSE; /* Has tree been changed in this call? */
+#if DEBUG_EXP
     int count; /* Debugging information. No of calls to Simplify */
-    int i;
+#endif
+    /*int i;*/
     int first_time = TRUE;
 
 
@@ -322,7 +324,7 @@ void Print_art_word(struct unexp_tnode *Pntr)
 /* RETURNS: None.                                                  */
 /* FUNCTION:                                                       */
 /*     Build the string pointed by Str_ptr, for the given tree, by */
-/*     traversing it in inorder.
+/*     traversing it in inorder.                                   */
 /* NOTE:                                                           */
 /*     Str_cat() is used for string concatenation. This special    */
 /*     function is needed because when size of the string pointed  */
@@ -428,7 +430,7 @@ int Found_minus(struct unexp_tnode *Pntr)
  */
 void Free_tnode_tree(struct unexp_tnode *Pntr)
 {
-    static int i = 1;
+    /*static int i = 1;*/
 
     if (Pntr != NULL) {
         if ((Pntr->operand1 == NULL) && (Pntr->operand2 == NULL) &&
