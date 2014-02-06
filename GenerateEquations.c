@@ -73,6 +73,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "GenerateEquations.h"
 #include "Build_defs.h"
@@ -93,21 +94,21 @@ static void PrintEqns(Eqn_list_node *L);
 static void PrintEqn(Basis_pair *Temp_eqn);
 #endif
 
-Type Target_type;
-int Target_type_len;
-int Target_type_deg;
-int Num_vars;
-Type Seq_sub_types;
-int *Deg_vars;
-int *Cur_deg_vars;
-int Whatsleft;
-struct polynomial *The_ident;
-Eqn_list_node *The_list;
-int status = OK;
+static Type Target_type;
+static int Target_type_len;
+static int Target_type_deg;
+static int Num_vars;
+static Type Seq_sub_types;
+static int *Deg_vars;
+static int *Cur_deg_vars;
+static int Whatsleft;
+static const struct polynomial *The_ident;
+static Eqn_list_node *The_list;
+static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
-int GenerateEquations(struct polynomial *F, Name N, Eqn_list_node *L)
+int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
 {
     int i,j;
 
@@ -164,16 +165,10 @@ int GenerateEquations(struct polynomial *F, Name N, Eqn_list_node *L)
 
 void InitSeqSubtypes(void)
 {
-    int i,j;
-
     Whatsleft = Target_type_deg;
 
-    for (i=0;i<Num_vars;i++)
-        Cur_deg_vars[i] = 0; 
-
-    for (i=0;i<Num_vars;i++)
-        for (j=0;j<Target_type_len;j++)
-            Seq_sub_types[i*Target_type_len + j] = 0;
+    memset(Cur_deg_vars, 0, sizeof(Cur_deg_vars[0]) * Num_vars);
+    memset(Seq_sub_types, 0, sizeof(Seq_sub_types[0]) * Num_vars * Target_type_len);
 }
 
 
@@ -198,8 +193,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
 
 /* Now we are jumping into another module while inside a recursive call */
 
-        status = PerformMultiplePartition(The_ident,The_list,Num_vars,
-                                                    Seq_sub_types, Deg_vars);
+        status = PerformMultiplePartition(The_ident, The_list, Num_vars, Seq_sub_types, Deg_vars);
         if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
 /*          printf("Returning from PerformMultiplePartition().\n");*/
           return(-1);
