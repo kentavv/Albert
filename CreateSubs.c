@@ -58,16 +58,16 @@ static void DoCreateSubs(int row, int col);
 static void PrintSubstitution(void);
 #endif
 
-int *Deg_var;
-Basis *Substitution;
-struct polynomial *The_ident;
-Eqn_list_node *The_list;
-int Num_vars;
-Name *Set_partitions;
-int Max_deg_var;
+static int *Deg_var;
+static Basis *Substitution;
+static const struct polynomial *The_ident;
+static Eqn_list_node *The_list;
+static int Num_vars;
+static Name *Set_partitions;
+static int Max_deg_var;
 static int status = OK;
 
-int CreateSubs(Eqn_list_node *L, struct polynomial *F, int Nv, int Mdv, Name *Type_lists, int *Deg_var_types)
+int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Name *Type_lists, int *Deg_var_types)
 {
     The_list = L;
     The_ident = F;
@@ -100,8 +100,7 @@ void DoCreateSubs(int row, int col)
 
 /* Now for each substitution records, perform the substitution. */
 
-        status = PerformSubs(Substitution,The_ident,The_list,Num_vars,
-                                                    Max_deg_var,Deg_var);
+        status = PerformSubs(Substitution, The_ident, The_list, Num_vars, Max_deg_var, Deg_var);
     }
     else if (col >= Deg_var[row])
         DoCreateSubs(row+1,0);
