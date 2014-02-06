@@ -71,7 +71,7 @@ static void setPairPresent(int row, int col, char val);
 
 /* Added by DCL 8/92. These are variables used for gathering density stats */
 
-extern short gather_density_flag;
+extern int gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
 
@@ -178,7 +178,7 @@ void DestroyTheMatrix(void)
 void ZeroOutPairPresent(void)
 {
 #if 1
-    memset(Pair_present, 0, DIMENSION_LIMIT * PP_COL_SIZE);
+    memset(Pair_present, 0, sizeof(Pair_present[0]) * DIMENSION_LIMIT * PP_COL_SIZE);
 #else
     int i,j;
     for (i=0;i<DIMENSION_LIMIT;i++)
