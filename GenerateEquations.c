@@ -126,16 +126,12 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
         if (The_ident->deg_letter[i] > 0)
             Num_vars++;
 
-    Target_type = NULL;
     Target_type = GetNewType(); 
     assert_not_null(Target_type);
-    Seq_sub_types = NULL;
     Seq_sub_types = (Type) (Mymalloc(Num_vars * Target_type_len * sizeof(Degree)));
     assert_not_null(Seq_sub_types);
-    Deg_vars = NULL;
     Deg_vars = (int *) (Mymalloc(Num_vars * sizeof(int)));
     assert_not_null(Deg_vars);
-    Cur_deg_vars = NULL;
     Cur_deg_vars = (int *) (Mymalloc(Num_vars * sizeof(int)));
     assert_not_null(Cur_deg_vars);
 
@@ -204,9 +200,11 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
             csave = Cur_deg_vars[Cur_row];
             whatsave = Whatsleft;
             tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
+
             Seq_sub_types[Cur_row*Target_type_len + Cur_col] = Target_type[Cur_col] - Weight;
             Cur_deg_vars[Cur_row] += Seq_sub_types[Cur_row*Target_type_len + Cur_col];
             Whatsleft -= Seq_sub_types[Cur_row*Target_type_len + Cur_col];
+
             if ((Cur_col < (Target_type_len - 1)) ||
                ((Cur_col == (Target_type_len - 1)) && 
                (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
@@ -216,6 +214,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
                    return(-1);
                  }
 	    }
+
             Seq_sub_types[Cur_row*Target_type_len + Cur_col] = tsave; 
             Cur_deg_vars[Cur_row] = csave; 
             Whatsleft = whatsave;
@@ -227,6 +226,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
                 csave = Cur_deg_vars[Cur_row];
                 whatsave = Whatsleft;
                 tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
+
                 Seq_sub_types[Cur_row*Target_type_len + Cur_col] = i; 
                 Cur_deg_vars[Cur_row] += i; 
                 Whatsleft -= i; 
@@ -240,6 +240,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
                        return(-1);
                      }
 		}
+
                 Seq_sub_types[Cur_row*Target_type_len + Cur_col] = tsave; 
                 Cur_deg_vars[Cur_row] = csave; 
                 Whatsleft = whatsave;
@@ -272,7 +273,6 @@ Eqn_list_node *GetNewEqnListNode(void)
 {
     Eqn_list_node *temp_node;
 
-    temp_node = NULL;
     temp_node = (Eqn_list_node *) (Mymalloc(sizeof(Eqn_list_node)));
     assert_not_null(temp_node);
     temp_node->basis_pairs = NULL;
@@ -283,17 +283,10 @@ Eqn_list_node *GetNewEqnListNode(void)
 
 void FreeEqns(Eqn_list_node *L)
 {
-    assert_not_null_nv(L);
-
-    if (L->next == NULL) {
-        if (L->basis_pairs != NULL)
-            free(L->basis_pairs);
-        free(L);
-    }
-    else {
-        FreeEqns(L->next);
-        free(L->basis_pairs);
-        free(L);
+    if(L) {
+      FreeEqns(L->next);
+      if(L->basis_pairs) free(L->basis_pairs);
+      free(L);
     }
 }
 

@@ -78,12 +78,13 @@ int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Na
 
     status = OK;
    
-    Substitution = NULL;
     Substitution = (Basis *) (Mymalloc(Num_vars * Max_deg_var * sizeof(Basis))); 
     assert_not_null(Substitution);
 
     DoCreateSubs(0,0);  /* Start of recursive call. */
+
     free(Substitution);
+
     return(status);
 }
 
@@ -93,6 +94,7 @@ void DoCreateSubs(int row, int col)
 
     if (status != OK)
         return;
+
     if (row >= Num_vars) {
 #if DEBUG_SUBSTITUTION
         PrintSubstitution();
