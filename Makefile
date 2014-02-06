@@ -6,11 +6,13 @@ BIN=../bin
 CC=gcc
 
 #CFLAGS=-MMD
-#CFLAGS=-g -O0
-#CFLAGS=-g -O
-CFLAGS=-O2 -Wall
+#CFLAGS=-g -O0 -Wall
+#CFLAGS=-g -O -Wall
+CFLAGS=-g -O2 -Wall
+#CFLAGS=-g -O3 -flto -Wall
 
 LDFLAGS=
+#LDFLAGS=-g -O3 -flto
 LIBS=-lcurses -ltermcap -lm
 
 C_FILES=$(wildcard *.c)
