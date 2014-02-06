@@ -41,6 +41,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "CreateMatrix.h"
 #include "Basis_table.h"
@@ -74,7 +75,7 @@ extern short gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
 
-char **Pair_present;
+char *Pair_present;
 static char BIT_VECTOR[8]={'\200','\100','\040','\020','\010','\004','\002','\001'};
 
 static int Num_unique_basis_pairs;
@@ -176,12 +177,15 @@ void DestroyTheMatrix(void)
 
 void ZeroOutPairPresent(void)
 {
+#if 1
+    memset(Pair_present, 0, DIMENSION_LIMIT * PP_COL_SIZE);
+#else
     int i,j;
-
     for (i=0;i<DIMENSION_LIMIT;i++)
         for (j=0;j<PP_COL_SIZE;j++)
 /*            Pair_present[i][j] = 0;*/
 	    setPairPresent(i, j, 0);	/* 9/93 - TW - new Pair_present routine */
+#endif
 }
 
 
@@ -611,9 +615,13 @@ void PrintTheMatrix(void)
 /****************************************************************/
 char getPairPresent(int row, int col)
 {
+#if 1
+  return Pair_present[row * PP_COL_SIZE + col];
+#else
   char *rowPtr = Pair_present[row];
 
   return(rowPtr[col]);
+#endif
 }
 
 
@@ -627,8 +635,12 @@ char getPairPresent(int row, int col)
 /****************************************************************/
 void setPairPresent(int row, int col, char val)
 {
+#if 1
+  Pair_present[row * PP_COL_SIZE + col] = val;
+#else
   char *rowPtr = Pair_present[row];
 
   rowPtr[col] = val;
+#endif
 }
 
