@@ -17,7 +17,7 @@
 
  struct Node_struct {
 			struct Node_struct *Next_Node;
-			unsigned short int column;
+			int column;
 			Scalar element;
 		   } ;
 
