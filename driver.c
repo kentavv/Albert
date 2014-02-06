@@ -65,7 +65,7 @@ static void sigCatch(int x);
 
 
 Scalar Field = DEFAULT_FIELD;          /* Build_defs.h */
-short int sparse = TRUE;
+int sparse = TRUE;
 
 int sigIntFlag = 0;		/* TW 10/8/93 - flag for Ctrl-C */
 
