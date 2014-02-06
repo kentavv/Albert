@@ -297,7 +297,7 @@ void SparseProcessDependentBasis(void)
    NODE_PTR q;
    int rowid=0;
 
-   short int j/*,Row*/,k;
+   int j/*,Row*/,k;
    Basis /*n,*/b1,b2;
    int tl_index;
    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
