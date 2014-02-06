@@ -21,8 +21,6 @@
 #include "Po_parse_exptext.h"
 #include "Po_routines.h"
 
-struct id_queue_node *Id_queue_node_alloc();
-
 
 /********************************************************************/
 /* MODIFIES:                                                        */
