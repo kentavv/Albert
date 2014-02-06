@@ -27,6 +27,7 @@
 #define DIM_LIM_MIN     500
 #define DIM_LIM_MAX     50000
 #define DIM_LIM_INCR	500
+#define DIM_LIM_DEFAULT	20000
 
 /* number of rows and columns in Mt_block. */
 #define MTB_SIZE	100

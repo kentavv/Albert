@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
       }
     }
     if(!DIMENSION_LIMIT){
-      DIMENSION_LIMIT = DIM_LIM_MIN;
+      DIMENSION_LIMIT = DIM_LIM_DEFAULT;
     }
 
     initHelp();
