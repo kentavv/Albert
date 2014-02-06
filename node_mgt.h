@@ -28,7 +28,7 @@ typedef struct block {
                             Node  record[RECORDS_PER_BLOCK];
                             struct block *next_block;
 #ifdef DEBUGMM
-                            short int id;
+                            int id;
 #endif
 } mem_block;
 

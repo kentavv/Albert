@@ -40,7 +40,7 @@ static mem_block *current_block=NULL;
 static Node *node_list_head=NULL;
 
 #ifdef DEBUGMM
-static short int blocknum=0;
+static int blocknum=0;
 #endif
 
 Node *GetRecord(void) 
