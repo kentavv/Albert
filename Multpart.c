@@ -84,14 +84,14 @@ static void PrintSetPartitions(void);
 #endif
 
 
-int Num_vars;
-Name *Var_types;
-int *Deg_var_types;
-Name *Set_partitions;
+static int Num_vars;
+static Name *Var_types;
+static int *Deg_var_types;
+static Name *Set_partitions;
 static int *Cur_index_var;
-struct polynomial *The_ident;
-Eqn_list_node *The_list;
-int Max_deg_var;
+static const struct polynomial *The_ident;
+static Eqn_list_node *The_list;
+static int Max_deg_var;
 static Type temp_type = NULL;
 static int target_type_len;
 static int status = OK;
@@ -99,7 +99,7 @@ static int status = OK;
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 
-int PerformMultiplePartition(struct polynomial *Id, Eqn_list_node *List, int Nvars, Type Types, int *Deg_var)
+int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, int Nvars, Type Types, int *Deg_var)
 {
     int i,j;
 
