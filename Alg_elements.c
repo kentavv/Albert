@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Build_defs.h"
 #include "Alg_elements.h"
@@ -107,15 +108,17 @@ int DestroyAE(Alg_element *p)
 /*******************************************************************/ 
 int InitAE(Alg_element *p)
 {
-    Scalar zero;
+    Scalar zero = S_zero();
     Basis i;
 
     assert_not_null(p);
 
-    zero = S_zero();
-
-    for (i=0;i<=DIMENSION_LIMIT;i++)
+    if(zero == 0) {
+      memset(p->basis_coef, 0, sizeof(p->basis_coef[0]) * (DIMENSION_LIMIT + 1));
+    } else {
+      for (i=0;i<=DIMENSION_LIMIT;i++)
         p->basis_coef[i] = zero;
+    }
 
     p->first = p->last = 0;
 
