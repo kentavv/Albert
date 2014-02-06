@@ -35,8 +35,8 @@ static int DoSubstitution(void);
 
 static char *total_line;
 static int total_len;
-char *total_line1;
-Dalbert_node *Dalbertheadptr;
+static char *total_line1;
+static Dalbert_node *Dalbertheadptr;
 static int DotalbertPresent;
 
 /* Called from Main(). Returns the command and the operand.
