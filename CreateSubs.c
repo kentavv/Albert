@@ -58,16 +58,16 @@ static void DoCreateSubs(int row, int col);
 static void PrintSubstitution(void);
 #endif
 
-static int *Deg_var;
-static Basis *Substitution;
-static const struct polynomial *The_ident;
-static Eqn_list_node *The_list;
-static int Num_vars;
-static Name *Set_partitions;
-static int Max_deg_var;
+static const int *Deg_var = NULL;
+static Basis *Substitution = NULL;
+static const struct polynomial *The_ident = NULL;
+static Eqn_list_node *The_list = NULL;
+static int Num_vars = 0;
+static Name *Set_partitions = NULL;
+static int Max_deg_var = 0;
 static int status = OK;
 
-int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Name *Type_lists, int *Deg_var_types)
+int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Name *Type_lists, const int *Deg_var_types)
 {
     The_list = L;
     The_ident = F;
