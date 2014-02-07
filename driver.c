@@ -223,7 +223,16 @@ int main(int argc, char *argv[])
         ptype.degrees[i] = 0;
     ptype.tot_degree = 0;
 
-    signal(SIGINT, sigCatch);	/* TW 10/5/93 - Ctrl-C sig handler instantiation */
+    /* TW 10/5/93 - Ctrl-C sig handler instantiation */
+    {
+      struct sigaction na;
+     
+      na.sa_handler = sigCatch;
+      sigemptyset(&na.sa_mask);
+      na.sa_flags = 0;
+     
+      sigaction(SIGINT, &na, NULL);
+    }
 
     while (!quit) {
 
@@ -878,8 +887,6 @@ void usage(void)
 
 void sigCatch(int x)
 {
-  signal(SIGINT, sigCatch);
   sigIntFlag = 1;
 }
-
 
