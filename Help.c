@@ -15,30 +15,35 @@
 
 #include <stdio.h>
 #include <string.h>
+#if 0
 #include <curses.h>
+#endif
 
 #include "Help.h"
 #include "Help_pri.h"
 
 static char *getHelp(char *helpRqst);
 static void displayHelp(char *helpPtr, int rows, int cols);
-static void scrollScreen(void);
 
 void initHelp(void)
 {
+#if 1
+  helpLines = 24; /* resonable defaults */
+  helpCols = 80;
+#else
   initscr();                            /* initialize LINES and COLS */
   helpLines = LINES;
   helpCols = COLS;
   clear();                              /* clear the buffer */
   refresh();                            /* display the buffer */
   endwin();
+#endif
 }
 
 int Help(char topic[])
 {
   char str[80], *helpPtr; /*, *test;*/
 
-  scrollScreen();
   str[0] = '\0';
   if(!strlen(topic)){
     strcpy(str, "H");			/* if no topic, display menu */
@@ -60,7 +65,7 @@ int Help(char topic[])
     /*test =*/ fgets(str, 80, stdin);
     str[strlen(str)-1] = '\0';
   }
-  return(TRUE);
+  return 1;
 }
 
 
@@ -87,13 +92,13 @@ void displayHelp(char *helpPtr, int rows, int cols)
   int i, j, done, blankNdx;
 
   for(j = 0; *pos; ++j){
-    for(i = 0, done = FALSE, blankNdx = 0; i < cols && *pos && !done; ++i, ++pos){
+    for(i = 0, done = 0, blankNdx = 0; i < cols && *pos && !done; ++i, ++pos){
       if(*pos == ' ' || *pos == '\t'){
         blank = pos;		/* set blank to point to most current white space */
         blankNdx = i;		/* save the index to the last white space */
       }
       else if(*pos == '\n'){
-	done = TRUE;
+	done = 1;
       }
       line[i] = *pos;
     }
@@ -122,6 +127,8 @@ void displayHelp(char *helpPtr, int rows, int cols)
 
 void more(int *lines)
 {
+  return;
+
   if(*lines >= helpLines-2){
     *lines = 0;
     printf("\nHit Return to continue-->");    /* print more message at bottom left of screen */
@@ -130,15 +137,3 @@ void more(int *lines)
     printf("\n");
   }
 }
-
-
-
-void scrollScreen(void)
-{
-  int i;
-
-  for(i = 0; i < helpLines; ++i){
-    printf("\n");
-  }
-}
-

@@ -13,7 +13,8 @@ CFLAGS=-g -O2 -Wall
 
 LDFLAGS=
 #LDFLAGS=-g -O3 -flto
-LIBS=-lcurses -ltermcap -lm
+#LIBS=-lcurses -ltermcap -lm
+LIBS=
 
 C_FILES=$(wildcard *.c)
 OBJECTS=$(notdir $(C_FILES:.c=.o))
