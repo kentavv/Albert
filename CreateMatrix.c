@@ -75,13 +75,13 @@ extern int gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
 
-char *Pair_present;
+char *Pair_present = NULL;
 static char BIT_VECTOR[8]={'\200','\100','\040','\020','\010','\004','\002','\001'};
 
 static int Num_unique_basis_pairs;
 static int Num_equations;
 static Unique_basis_pair_list ColtoBP;
-static Eqn_list_node *First_eqn_list_node;
+static Eqn_list_node *First_eqn_list_node = NULL;
 static MAT_PTR TheSparseMatrix;
 static Matrix TheMatrix;
 static Name N;
