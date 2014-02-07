@@ -74,24 +74,24 @@ static void Sub(Alg_element *Ans, struct term_node *W);
 static Basis_pair_node *GetNewBPNode(void);
 
 
-Basis *Substitution;
-struct polynomial *The_ident;
-Eqn_list_node *The_list;
-int Num_vars;
-int *Deg_var;
-int Max_deg_var;
+static const Basis *Substitution;
+static const struct polynomial *The_ident;
+static Eqn_list_node *The_list;
+static int Num_vars;
+static const int *Deg_var;
+static int Max_deg_var;
 
-Perm *Permutation_list;
+static Perm *Permutation_list;
 
-Perm Permutation;
-int Permutation_length;
+static Perm Permutation;
+static int Permutation_length;
 
-Basis_pair_node *Local_list;
-Basis_pair_node *running_list;
+static Basis_pair_node *Local_list;
+static Basis_pair_node *running_list;
 
 static int status = OK;
 
-int PerformSubs(Basis *S, struct polynomial *F, Eqn_list_node *L, int Nv, int Mdv, int *Dv)
+int PerformSubs(const Basis *S, const struct polynomial *F, Eqn_list_node *L, int Nv, int Mdv, const int *Dv)
 {
     Substitution = S;
     The_ident = F;
@@ -479,15 +479,15 @@ void Sub(Alg_element *Ans, struct term_node *W)
 
 Basis_pair_node *GetNewBPNode(void)
 {
-    Basis_pair_node *temp_node;
+    Basis_pair_node *temp_node = (Basis_pair_node *) Mymalloc(sizeof(Basis_pair_node));
 
-    temp_node = (Basis_pair_node *) (Mymalloc(sizeof(Basis_pair_node)));
-    if (temp_node != NULL) {
-        (temp_node->bp).coef = 0;
-        (temp_node->bp).left_basis = 0;     
-        (temp_node->bp).right_basis = 0;     
+    if (temp_node) {
+        temp_node->bp.coef = 0;
+        temp_node->bp.left_basis = 0;     
+        temp_node->bp.right_basis = 0;     
         temp_node->next = NULL;
     }
-    return(temp_node);
+
+    return temp_node;
 }
 

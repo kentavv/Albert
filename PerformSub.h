@@ -16,6 +16,6 @@ typedef struct basis_pair_node {
     struct basis_pair_node *next;
 } Basis_pair_node;
 
-int PerformSubs(Basis *S, struct polynomial *F, Eqn_list_node *L, int Nv, int Mdv, int *Dv);
+int PerformSubs(const Basis *S, const struct polynomial *F, Eqn_list_node *L, int Nv, int Mdv, const int *Dv);
 
 #endif
