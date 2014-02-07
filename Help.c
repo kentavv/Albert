@@ -22,8 +22,8 @@
 #include "Help.h"
 #include "Help_pri.h"
 
-static char *getHelp(char *helpRqst);
-static void displayHelp(char *helpPtr, int rows, int cols);
+static const char *getHelp(const char *helpRqst);
+static void displayHelp(const char *helpPtr, int rows, int cols);
 
 void initHelp(void)
 {
@@ -42,7 +42,8 @@ void initHelp(void)
 
 int Help(char topic[])
 {
-  char str[80], *helpPtr; /*, *test;*/
+  char str[80];
+  const char *helpPtr; /*, *test;*/
 
   str[0] = '\0';
   if(!strlen(topic)){
@@ -71,7 +72,7 @@ int Help(char topic[])
 
 
 
-char *getHelp(char *helpRqst)
+const char *getHelp(const char *helpRqst)
 {
   int i;
 
@@ -86,8 +87,11 @@ char *getHelp(char *helpRqst)
 
 
 
-void displayHelp(char *helpPtr, int rows, int cols)
+void displayHelp(const char *helpPtr, int rows, int cols)
 {
+#if 1
+  puts(helpPtr);
+#else
   char line[500 + 1], *blank = NULL, *pos = helpPtr;
   int i, j, done, blankNdx;
 
@@ -113,6 +117,7 @@ void displayHelp(char *helpPtr, int rows, int cols)
       line[cols + 1] = '\0';
     }
     printf("%s\n", line);	/* write the line */
+#if 0
     if(j >= rows-2){
       j += 3;			/* increment the row counter */
       printf("\nHit Return to continue-->");	/* print more message at bottom left of screen */
@@ -121,7 +126,9 @@ void displayHelp(char *helpPtr, int rows, int cols)
       printf("\n");
       j = 0;			/* reset the line number */
     }
+#endif
   }
+#endif
 }
 
 
