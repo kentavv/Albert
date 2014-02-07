@@ -55,13 +55,13 @@ static void PrintTypetableindex(void);
 #endif
 /*static void PrintSbsizes(void);*/
 
-static Type Target_type;                    /* Input from higher level module. */
-static int Target_type_len;                 /* Computed from Target_type.      */
-static int Target_type_deg;                 /* Computed from Target_type.      */
+static Type Target_type = 0;                /* Input from higher level module. */
+static int Target_type_len = 0;             /* Computed from Target_type.      */
+static int Target_type_deg = 0;             /* Computed from Target_type.      */
 static int *Type_count = NULL;              /* Used to fill Type_table.        */
 static TT_node *Type_table = NULL;          /* Heart of the matter.            */
 static int *Type_table_index = NULL;        /* Map type to Type_table.         */
-static int Tot_subtypes;                    /* Computed from Type_count. Size of Type_table. */
+static int Tot_subtypes = 0;                /* Computed from Type_count. Size of Type_table. */
 static int *Deg_to_type_table_index = NULL; /* Map Degree to Type_table.*/
 static int *Temp_dttt_index = NULL;         /* Used to fill Type_table_index.  */
 static int *Store_block_sizes = NULL;       /* To find offset into Type_table. */
@@ -95,19 +95,20 @@ int CreateTypeTable(Type Cur_type)
     while (Cur_type[i++] != 0)
         Target_type_len++;
 
-    Target_type = NULL;
     Target_type = GetNewType(); 
     assert_not_null(Target_type);
+
     for (i=0;i<Target_type_len;i++)
         Target_type[i] = Cur_type[i];
+
     Target_type_deg = GetDegree(Target_type); 
 
     if (InitStoreblocksizes() != OK)
         return(0);
 
-    Type_count = NULL;
     Type_count = (int *) (Mymalloc((Target_type_deg + 1) * sizeof(int)));
     assert_not_null(Type_count);
+
     for (i=0;i<=Target_type_deg;i++)
         Type_count[i] = 0;
     
@@ -142,8 +143,10 @@ Type GetNewType(void)
 
     temp_type = (Type) (Mymalloc((Target_type_len + 1) * sizeof(Degree))); 
     assert_not_null(temp_type);
+
     for (i=0;i<=Target_type_len;i++)
         temp_type[i] = 0;
+
     return(temp_type);
 }
 
@@ -166,21 +169,22 @@ void SubtractTypeName(Name n1, Name n2, Name *res_name)
 
     temp_type = GetNewType();
     assert_not_null_nv(temp_type);
+
     for (i=0;i<Target_type_len;i++)
         temp_type[i] = Type_table[n1].type[i] - Type_table[n2].type[i];
+
     *res_name = TypeToName(temp_type);
+
     free(temp_type);
 }
 
 
 int GetDegree(Type Pntr)
 {
-    int i,deg;
+    int i, deg = 0;
 
     assert_not_null(Pntr);
     
-    i = deg = 0;
-
     for (i=0;i<Target_type_len;i++)
         deg += Pntr[i];
 
@@ -208,6 +212,7 @@ int IsSubtype(Name n1, Name n2)
     for (i=0;i<Target_type_len;i++)
         if (Type_table[n1].type[i] > Type_table[n2].type[i])
             is_sub_type = FALSE;
+
     return(is_sub_type);
 }
 
@@ -260,10 +265,13 @@ int InitStoreblocksizes(void)
 
     Store_block_sizes = (int *) (Mymalloc(Target_type_len * sizeof(int)));
     assert_not_null(Store_block_sizes);
+
     Store_block_sizes[Target_type_len - 1] = 1;
     for (i=Target_type_len - 2;i>=0;i--)
         Store_block_sizes[i] = (Target_type[i+1] + 1) * Store_block_sizes[i+1]; 
+
 /*    PrintSbsizes();   */
+
     return(OK);
 }
 
