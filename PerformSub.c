@@ -74,20 +74,20 @@ static void Sub(Alg_element *Ans, struct term_node *W);
 static Basis_pair_node *GetNewBPNode(void);
 
 
-static const Basis *Substitution;
-static const struct polynomial *The_ident;
-static Eqn_list_node *The_list;
-static int Num_vars;
-static const int *Deg_var;
-static int Max_deg_var;
+static const Basis *Substitution = NULL;
+static const struct polynomial *The_ident = NULL;
+static Eqn_list_node *The_list = NULL;
+static int Num_vars = 0;
+static const int *Deg_var = NULL;
+static int Max_deg_var = 0;
 
-static Perm *Permutation_list;
+static Perm *Permutation_list = NULL;
 
-static Perm Permutation;
-static int Permutation_length;
+static Perm Permutation = NULL;
+static int Permutation_length = 0;
 
-static Basis_pair_node *Local_list;
-static Basis_pair_node *running_list;
+static Basis_pair_node *Local_list = NULL;
+static Basis_pair_node *running_list = NULL;
 
 static int status = OK;
 
