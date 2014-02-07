@@ -84,22 +84,22 @@ static void PrintSetPartitions(void);
 #endif
 
 
-static int Num_vars;
-static Name *Var_types;
-static int *Deg_var_types;
-static Name *Set_partitions;
-static int *Cur_index_var;
-static const struct polynomial *The_ident;
-static Eqn_list_node *The_list;
-static int Max_deg_var;
+static int Num_vars = 0;
+static Name *Var_types = NULL;
+static const int *Deg_var_types = NULL;
+static Name *Set_partitions = NULL;
+static int *Cur_index_var = NULL;
+static const struct polynomial *The_ident = NULL;
+static Eqn_list_node *The_list = NULL;
+static int Max_deg_var = 0;
 static Type temp_type = NULL;
-static int target_type_len;
+static int target_type_len = 0;
 static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 
-int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, int Nvars, Type Types, int *Deg_var)
+int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, int Nvars, Type Types, const int *Deg_var)
 {
     int i,j;
 
@@ -109,9 +109,10 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
     Deg_var_types = Deg_var;
 
     status = OK;
-    Var_types = NULL;
+
     Var_types = (Name *) (Mymalloc(Num_vars * sizeof(Name)));
     assert_not_null(Var_types);
+
     if (temp_type == NULL) {
         temp_type = (Type) (Mymalloc(NUM_LETTERS * sizeof(Degree))); 
         assert_not_null(temp_type);
@@ -126,20 +127,22 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
             temp_type[j] = Types[i*target_type_len + j];
         Var_types[i] = TypeToName(temp_type);
     }
+
     Max_deg_var = Deg_var_types[0];
     for (i=1;i<Num_vars;i++)
         if (Deg_var_types[i] > Max_deg_var)
             Max_deg_var = Deg_var_types[i];
-    Set_partitions = NULL;
+
     Set_partitions = (Name *) (Mymalloc(Max_deg_var * Num_vars * sizeof(Name)));
     assert_not_null(Set_partitions);
-    Cur_index_var = NULL;
+
     Cur_index_var = (int *) (Mymalloc(Num_vars * sizeof(int)));
     assert_not_null(Cur_index_var);
     
     for (i=0;i<Max_deg_var;i++)
         for (j=0;j<Num_vars;j++)
             Set_partitions[i*Num_vars + j] = 0;
+
     for (i=0;i<Num_vars;i++)
          Cur_index_var[i] = 0;
 
