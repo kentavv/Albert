@@ -45,7 +45,8 @@
 
 static int InitializeStructures(void);
 static void DestroyStructures(void);
-static void PrintProgress(int i);
+static long ElapsedTime(void);
+static void PrintProgress(int i, int n);
 static int ProcessDegree(int i);
 static void InstallDegree1(void);
 static int ProcessType(Name n);
@@ -54,20 +55,19 @@ static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name
 /*****************************
  These variables are for the sparse implementation
 ******************************/
-extern short sparse;
-short int gather_density_flag;
+extern int sparse;
+int gather_density_flag;
 long num_elements;
 long max_num_elements;
 static long matrix_size;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
-Type Target_type;
-struct id_queue_node *First_id_node;
+static Type Target_type;
+static struct id_queue_node *First_id_node;
 
-static long Start_time; 
-long Current_time; 
-Basis Current_dimension;
+static time_t Start_time; 
+static Basis Current_dimension;
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -94,7 +94,7 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
 
     double density;
 
-    time(&Start_time);
+    Start_time = time(NULL);
     convtime = ctime(&Start_time);
     printf("\nBuild begun at %s\n",convtime);
     printf("Degree    Current Dimension   Elapsed Time(in seconds) \n");
@@ -120,7 +120,7 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
 	    }
             if (status != OK) 
                 break;
-            PrintProgress(i);
+            PrintProgress(i, Target_degree);
         }
     }
 #if PRINT_BASIS_TABLE
@@ -197,12 +197,14 @@ void DestroyStructures(void)
 }
 
 
-void PrintProgress(int i)
+long ElapsedTime(void) {
+    return time(NULL) - Start_time;
+}
+  
+void PrintProgress(int i, int n)
 {
-    time(&Current_time);
-
-    printf("  %2d             %4d            %5ld\n",
-           i, Current_dimension, Current_time - Start_time);
+    printf("  %2d/%2d           %4d            %5ld\n",
+           i, n, Current_dimension, ElapsedTime());
 }
 
 
@@ -222,9 +224,20 @@ int ProcessDegree(int i)
    if (i == 1)
        InstallDegree1();
    else {
+       int nn1 = 0;
+       int nn2 = 0;
+       {
+         n = FirstTypeDegree(i);
+         while ((status == OK) && (n != -1)) {
+           n = NextTypeSameDegree(n);
+           nn2++;  
+         }
+       }
+
        n = FirstTypeDegree(i);
        while ((status == OK) && (n != -1)) {
            begin_basis = GetNextBasisTobeFilled();
+           printf("\tProcessing(%2d/%2d, begin_basis:%d)...", (nn1++)+1, nn2, begin_basis); fflush(NULL);
            status = ProcessType(n);
 	   if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
 /*	     printf("Returning from ProcessDegree().\n");*/
@@ -293,13 +306,13 @@ int ProcessType(Name n)
     struct polynomial *f;
     struct id_queue_node *temp_id_node;
 
-    L = NULL;
     L = GetNewEqnListNode();
     assert_not_null(L);
 
     temp_id_node = First_id_node;
 
-    while ((temp_id_node != NULL) && (status == OK)) {
+    printf("Generating..."); fflush(NULL);
+    while (temp_id_node && status == OK) {
         f = temp_id_node->identity;
         if ((status == OK) && (f->degree <= GetDegreeName(n)))
             status = GenerateEquations(f,n,L);
@@ -317,10 +330,13 @@ int ProcessType(Name n)
     PrintEqns(L);
 #endif
 
+    printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
     if (status == OK) 
         status = SolveEquations(L,n);			
     if (L != NULL)
         FreeEqns(L);
+
+    printf("(%lds)\n", ElapsedTime());
 
     return(status);
 }
@@ -394,10 +410,26 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
 /* determine the matrix structure */
       if (!sparse)
       {
-         status = ReduceTheMatrix(mptr, rows, cols,&rank);
+#if 0
+{
+  int i, j, n=0;
+  for(i=0; i<rows; i++) {
+    for(j=0; j<cols; j++) {
+      if(mptr[i * cols + j] != 0) {
+        n++;
+      }
+    }
+  }
+printf("Matrix:(%4d X %4d, %d %d %f%%)", rows, cols, n, rows*cols, n/(double)(rows*cols)*100); fflush(NULL);
+}
+#else
+printf("Matrix:(%4d X %4d)", rows, cols); fflush(NULL);
+#endif
+         status = ReduceTheMatrix(mptr, rows, cols, &rank);
       }
       else
       {
+printf("Matrix(%4d X %4d)...", rows, cols); fflush(NULL);
          status = SparseReduceMatrix(&Sparse_Matrix,rows,cols,&rank);
       }
    }
