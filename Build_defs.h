@@ -25,9 +25,9 @@
 
 /* TW - used in dimension limit cmd line parameters */
 #define DIM_LIM_MIN     500
-#define DIM_LIM_MAX     50000
+#define DIM_LIM_MAX     200000
 #define DIM_LIM_INCR	500
-#define DIM_LIM_DEFAULT	20000
+#define DIM_LIM_DEFAULT	50000
 
 /* number of rows and columns in Mt_block. */
 #define MTB_SIZE	100
@@ -41,7 +41,7 @@ int PP_COL_SIZE;
 int MTB_INDEX_SIZE;
 
 typedef unsigned char Scalar;
-typedef short Basis;
+typedef int Basis;
 typedef char Degree;
 typedef Degree *Type;
 typedef int Name;
