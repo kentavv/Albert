@@ -268,15 +268,9 @@ int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
     while (tl->coef != 0) {
         w = tl->word;
         SetAE(P, w, S_add(GetAE(P, w), S_mul(x, tl->coef)));
-/*
-        P->basis_coef[w] = S_add(P->basis_coef[w],S_mul(x,tl->coef));
-*/
         tl++;
     }
-/*
-    AssignFirst(P);
-    AssignLast(P);
-*/
+
     return(OK);
 }
 /*******************************************************************/
