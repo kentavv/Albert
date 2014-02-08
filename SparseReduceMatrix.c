@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <omp.h>
+
 #include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
@@ -49,13 +51,13 @@ static NODE_PTR Locate_Element(NODE_PTR Tmp_Ptr, int row, int col);
 
 /* These external variables are for measuring density of last generated matrix*/
 
-extern short gather_density_flag;
+extern int gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
 
-static MAT_PTR Matrix_Base_Ptr;
-static int Num_rows;
-static int Num_cols;
+static MAT_PTR Matrix_Base_Ptr = NULL;
+static int Num_rows = 0;
+static int Num_cols = 0;
 
 
 int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int Rows, int Cols, int *Rank)
@@ -316,17 +318,23 @@ void SparseKnockOut(int row, int col)
 
     /* try to knockout elements in column in the rows above */ 
 
-    for (j=0;j < row; j++)
+#pragma omp parallel for schedule(dynamic, 10)
+    //for (j=0;j < row; j++)
+    for (j=0;j < Num_rows;j++)
     {
+if(j != row) {
         SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr,j,col)),row,j);
+}
     }
 
+#if 0
     /* try to knockout elements in column in the rows below */ 
 
     for (j=row+1;j < Num_rows;j++)
     {
         SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr,j,col)),row,j);
     }
+#endif
 }
 
 #if 0
@@ -444,14 +452,8 @@ void Print_Rows(int Row1, int Row2)
 
 Scalar Get_Matrix_Element(MAT_PTR Sparse_Matrix, int i, int j)
 {
-    NODE_PTR Tmp_Ptr;
-    /*MAT_PTR Srch_Matrix;*/
-
     /* either return the element at location i,j or return a zero */
-
-    Tmp_Ptr = Sparse_Matrix[i];
-    if (Tmp_Ptr != NULL)
-    {
+    NODE_PTR Tmp_Ptr = Sparse_Matrix[i];
         while ((Tmp_Ptr != NULL) && (Tmp_Ptr->column <= j))
         {
             if (Tmp_Ptr->column == j)
@@ -460,12 +462,7 @@ Scalar Get_Matrix_Element(MAT_PTR Sparse_Matrix, int i, int j)
             }
             Tmp_Ptr=Tmp_Ptr->Next_Node;
         }
-        return(S_zero());       
-    }
-    else
-    {
-        return(S_zero());
-    }
+    return(S_zero());
 }
 
 
@@ -503,7 +500,10 @@ void Insert_Element(MAT_PTR Sparse_Matrix, int matrow, Scalar element, int colum
         
     /* get a new node structure from the memory management system */
 
+#pragma omp critical(record)
+{
     New_Node =(NODE_PTR) GetRecord();
+}
 
     /* set the values of the structure */
 
@@ -603,7 +603,10 @@ void Delete_Node(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr)
 
     /* send the node back to the memory management system */
 
+#pragma omp critical(record)
+{
     PutRecord(Bad_Node);
+}
 };
 
 int Row_empty(MAT_PTR Sparse_Matrix, int row)
