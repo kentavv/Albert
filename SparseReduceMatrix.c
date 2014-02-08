@@ -138,7 +138,6 @@ void SparseMultRow(int Row, Scalar Factor)
 /*********************************************************************/
 void SparseAddRow(Scalar Factor, int Row1, int Row2)
 {
-    Scalar TmpRow1_S_Product;
     Scalar TmpRow2_S_Sum;
     NODE_PTR Row1_Ptr;
     /*NODE_PTR Row2_Ptr;*/
@@ -167,7 +166,7 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
    {
          /* go ahead and perform the scalar multiplication */
 
-      TmpRow1_S_Product = S_mul(Factor,Row1_Ptr->element);
+      Scalar TmpRow1_S_Product = S_mul(Factor,Row1_Ptr->element);
 
          /* Try to get the previous node to the one that we really want 
             which is the one that would match the column value of the
@@ -319,12 +318,11 @@ void SparseKnockOut(int row, int col)
     /* try to knockout elements in column in the rows above */ 
 
 #pragma omp parallel for schedule(dynamic, 10)
-    //for (j=0;j < row; j++)
     for (j=0;j < Num_rows;j++)
     {
-if(j != row) {
-        SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr,j,col)),row,j);
-}
+      if(j != row) {
+        SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr, j, col)), row, j);
+      }
     }
 
 #if 0
