@@ -7,7 +7,7 @@
 #include "Memory_routines.h"
 #include "Mult_table.h"
 
-extern char *Pair_present;
+//extern char *Pair_present;
 extern Mt_block ***Mt_block_index;
 
 int initGlobals(void)
@@ -18,6 +18,7 @@ int initGlobals(void)
   assert_not_null(Basis_table);
 
   PP_COL_SIZE = ((DIMENSION_LIMIT - 1) / 8) + 1;
+#if 0
 #if 1
   Pair_present = (char *)Mymalloc(sizeof(char) * DIMENSION_LIMIT * PP_COL_SIZE);
   assert_not_null(Pair_present);
@@ -28,6 +29,7 @@ int initGlobals(void)
     Pair_present[i] = ((char *) Mymalloc(sizeof(char) * PP_COL_SIZE));
     assert_not_null(Pair_present[i]);
   }
+#endif
 #endif
 
   MTB_INDEX_SIZE = (DIMENSION_LIMIT/MTB_SIZE) + 1;
@@ -52,6 +54,7 @@ void freeGlobals(void)
     Basis_table = NULL;
   }
 
+#if 0
   if(Pair_present) {
 #if 0
     for(i = 0; i < DIMENSION_LIMIT; ++i){
@@ -62,6 +65,7 @@ void freeGlobals(void)
     free(Pair_present);
     Pair_present = NULL;
   }
+#endif
 
   if(Mt_block_index) {
     for(i = 0; i < MTB_INDEX_SIZE; ++i){
