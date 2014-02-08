@@ -13,6 +13,8 @@
 
 #include <stdio.h>
 
+#include <omp.h>
+
 #include "ReduceMatrix.h"
 #include "Build_defs.h"
 #include "CreateMatrix.h"
@@ -32,13 +34,13 @@ static void CreateRandomMatrix(void);
 /*********************
 These are for density measurement on last matrix. 
 *********************/
-extern short gather_density_flag;
+extern int gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
 
-static Matrix TheMatrix;
-static int Num_rows;
-static int Num_cols;
+static Matrix TheMatrix = NULL;
+static int Num_rows = 0;
+static int Num_cols = 0;
 
 
 int ReduceTheMatrix(Matrix Mptr, int Rows, int Cols, int *Rank)
@@ -93,15 +95,16 @@ void Interchange(int Row1, int Row2)
 void Knockout(int Row, int Col)
 {
     int j;
-    Scalar x;
     Scalar one = S_one();
+    Scalar x = TheMatrix[Row*Num_cols + Col];
 
-    if ((x = TheMatrix[Row*Num_cols + Col]) != one)
+    if (x != one)
         MultRow(Row,S_inv(x));
-    for (j=0;j<Row;j++)
-        AddRow(S_minus(TheMatrix[j*Num_cols + Col]),Row,j);
-    for (j=Row+1;j<Num_rows;j++)
-        AddRow(S_minus(TheMatrix[j*Num_cols + Col]),Row,j);
+
+#pragma omp parallel for
+    for (j=0;j<Num_rows;j++)
+      if(j != Row)
+        AddRow(S_minus(TheMatrix[j*Num_cols + Col]), Row, j);
 }
 
 
@@ -112,7 +115,7 @@ void MultRow(int Row, Scalar Factor)
 
     for (j=0;j<Num_cols;j++)
     {
-        TheMatrix[row_start + j] = S_mul(TheMatrix[row_start + j],Factor);
+        TheMatrix[row_start + j] = S_mul(TheMatrix[row_start + j], Factor);
     } 
 } 
 
