@@ -92,8 +92,6 @@ static int *Cur_index_var = NULL;
 static const struct polynomial *The_ident = NULL;
 static Eqn_list_node *The_list = NULL;
 static int Max_deg_var = 0;
-static Type temp_type = NULL;
-static int target_type_len = 0;
 static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
@@ -110,22 +108,24 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
 
     status = OK;
 
-    Var_types = (Name *) (Mymalloc(Num_vars * sizeof(Name)));
+    Var_types = (Name *) Mymalloc(Num_vars * sizeof(Name));
     assert_not_null(Var_types);
+    {
+        int target_type_len = GetTargetLen();
 
-    if (temp_type == NULL) {
-        temp_type = (Type) (Mymalloc(NUM_LETTERS * sizeof(Degree))); 
+        Type temp_type = (Type) Mymalloc(target_type_len * sizeof(Degree)); 
         assert_not_null(temp_type);
-    }
 
-    target_type_len = GetTargetLen();
-    for (i=0;i<target_type_len;i++)
-        temp_type[i] = 0;
+        for (i=0;i<target_type_len;i++)
+            temp_type[i] = 0;
 
-    for (i=0;i<Num_vars;i++) {
-        for (j=0;j<target_type_len;j++)
-            temp_type[j] = Types[i*target_type_len + j];
-        Var_types[i] = TypeToName(temp_type);
+        for (i=0;i<Num_vars;i++) {
+            for (j=0;j<target_type_len;j++)
+                temp_type[j] = Types[i*target_type_len + j];
+            Var_types[i] = TypeToName(temp_type);
+        }
+
+        free(temp_type);
     }
 
     Max_deg_var = Deg_var_types[0];
@@ -133,10 +133,10 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
         if (Deg_var_types[i] > Max_deg_var)
             Max_deg_var = Deg_var_types[i];
 
-    Set_partitions = (Name *) (Mymalloc(Max_deg_var * Num_vars * sizeof(Name)));
+    Set_partitions = (Name *) Mymalloc(Max_deg_var * Num_vars * sizeof(Name));
     assert_not_null(Set_partitions);
 
-    Cur_index_var = (int *) (Mymalloc(Num_vars * sizeof(int)));
+    Cur_index_var = (int *) Mymalloc(Num_vars * sizeof(int));
     assert_not_null(Cur_index_var);
     
     for (i=0;i<Max_deg_var;i++)
@@ -145,6 +145,10 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
 
     for (i=0;i<Num_vars;i++)
          Cur_index_var[i] = 0;
+
+#if 0
+printf("mp: %d %d %d %d\n", Num_vars, NUM_LETTERS, target_type_len, Max_deg_var);
+#endif
 
 #if DEBUG_SET_PARTITIONS
     PrintVarTypes();
@@ -163,6 +167,7 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
     free(Var_types);
     free(Set_partitions);
     free(Cur_index_var);
+
     return(status);    
 }
 
@@ -175,17 +180,16 @@ void SplitJthType(int j)
 {
     if (status != OK)
         return;
-    if (j < Num_vars)
+
+    if (j < Num_vars) {
         Gen(Var_types[j],Deg_var_types[j],j);
-    else if (OKSetPartitions()) {
+    } else if (OKSetPartitions()) {
 #if DEBUG_SET_PARTITIONS
         PrintSetPartitions();
 #endif
 
 /* Now create a substitution record for current set partition. */
-
-        status = CreateSubs(The_list,The_ident,Num_vars,Max_deg_var,
-                                     Set_partitions,Deg_var_types);
+        status = CreateSubs(The_list, The_ident, Num_vars, Max_deg_var, Set_partitions, Deg_var_types);
     }
 }
 
