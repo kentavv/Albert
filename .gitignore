@@ -37,3 +37,4 @@ node_mgt.o
 cachegrind.out.*
 callgrind.out.*
 getchar.o
+pair_present.o
