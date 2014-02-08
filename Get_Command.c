@@ -33,11 +33,11 @@
 
 static int DoSubstitution(void);
 
-static char *total_line;
-static int total_len;
-static char *total_line1;
-static Dalbert_node *Dalbertheadptr;
-static int DotalbertPresent;
+static char *total_line = NULL;
+static int total_len = 0;
+static char *total_line1 = NULL;
+static Dalbert_node *Dalbertheadptr = NULL;
+static int DotalbertPresent = 0;
 
 /* Called from Main(). Returns the command and the operand.
  * Also uses the definitions in .albert. Since both comand and
