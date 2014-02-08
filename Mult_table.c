@@ -56,21 +56,21 @@ static void setMtBlock(int row, int col, Mt_block *val);
 
 /* Table of pointers to table of pointers to Term_lists. */
 /*static Mt_block *Mt_block_index[MTB_INDEX_SIZE][MTB_INDEX_SIZE];*/
-Mt_block ***Mt_block_index;
+Mt_block ***Mt_block_index = NULL;
 
 /* Pointer to first block of terms. */
 /* Useful in freeing the Memory */
-static Terms_block *First_terms_block;
+static Terms_block *First_terms_block = NULL;
 
 /* Pointer to current block of terms being filled. */
-static Terms_block *Cur_terms_block;
+static Terms_block *Cur_terms_block = NULL;
 
 /* Offset within current block of terms being filled. */
 /* There is free space for terms from this number onwards. */
-static int Cur_offset;
+static int Cur_offset = 0;
 
 /* TW 9/18/93 - line counter for view */
-int lineCnt;
+int lineCnt = 0;
 
 
 /*******************************************************************/
@@ -150,12 +150,16 @@ int EnterProduct(Basis B1, Basis B2, Term Tl[])
 /* First reference this Mt_block. So allocate space. */
 /*    if (Mt_block_index[mtbi_row][mtbi_col] == NULL)
         Mt_block_index[mtbi_row][mtbi_col] = Alloc_Mt_block(); TW 9/23/93 */
-    if(getMtBlock(mtbi_row, mtbi_col) == NULL){		/* TW 9/23/93 */
-      setMtBlock(mtbi_row, mtbi_col, Alloc_Mt_block());	/* TW 9/23/93 */
+    cur_mt_block = getMtBlock(mtbi_row, mtbi_col);
+    if(cur_mt_block == NULL){		/* TW 9/23/93 */
+      cur_mt_block = Alloc_Mt_block();
+      setMtBlock(mtbi_row, mtbi_col, cur_mt_block);	/* TW 9/23/93 */
     }
 
+#if 0
 /*    cur_mt_block = Mt_block_index[mtbi_row][mtbi_col]; TW 9/23/93 */
     cur_mt_block = getMtBlock(mtbi_row, mtbi_col);	/* TW 9/23/93 */
+#endif
 
     assert_not_null(cur_mt_block);
 
@@ -226,16 +230,19 @@ Term *RetrieveProduct(Basis B1, Basis B2)
     mtbi_row = (B1 - 1)/MTB_SIZE; 
     mtbi_col = (B2 - 1)/MTB_SIZE; 
 
+
+/*    if (Mt_block_index[mtbi_row][mtbi_col] == NULL) TW 9/23/93 */
+    MTBlock = getMtBlock(mtbi_row, mtbi_col);
+    if(MTBlock == NULL)	/* TW 9/23/93 */
+        return(NULL);
+
+#if 0
+/*    return((*Mt_block_index[mtbi_row][mtbi_col])[mtb_row][mtb_col]); TW 9/23/93 */
+    MTBlock = getMtBlock(mtbi_row, mtbi_col);	/* TW 9/23/93 */
+#endif
 /* Position in Mt_block where pointer to Terms_list is stored. */
     mtb_row = (B1 - 1) % MTB_SIZE;
     mtb_col = (B2 - 1) % MTB_SIZE;
-
-/*    if (Mt_block_index[mtbi_row][mtbi_col] == NULL) TW 9/23/93 */
-    if(getMtBlock(mtbi_row, mtbi_col) == NULL)	/* TW 9/23/93 */
-        return(NULL);
-
-/*    return((*Mt_block_index[mtbi_row][mtbi_col])[mtb_row][mtb_col]); TW 9/23/93 */
-    MTBlock = getMtBlock(mtbi_row, mtbi_col);	/* TW 9/23/93 */
     return((*MTBlock)[mtb_row][mtb_col]);	/* TW 9/23/93 */
 }
 
@@ -260,11 +267,16 @@ int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
 
     while (tl->coef != 0) {
         w = tl->word;
+        SetAE(P, w, S_add(GetAE(P, w), S_mul(x, tl->coef)));
+/*
         P->basis_coef[w] = S_add(P->basis_coef[w],S_mul(x,tl->coef));
+*/
         tl++;
     }
+/*
     AssignFirst(P);
     AssignLast(P);
+*/
     return(OK);
 }
 /*******************************************************************/
@@ -289,13 +301,14 @@ int DestroyMultTable(void)
   if(Mt_block_index) {
     for (i=0;i<MTB_INDEX_SIZE;i++)
        for (j=0;j<MTB_INDEX_SIZE;j++) {
+          Mt_block *mb = getMtBlock(i, j);
 /*          if (Mt_block_index[i][j] != NULL) {
               free(Mt_block_index[i][j]);
               MT_count++;
               Mt_block_index[i][j] = NULL;
           } TW 9/23/93 */
-          if(getMtBlock(i, j) != NULL) {	/* TW 9/23/93 */
-              free(getMtBlock(i, j));		/*     |      */
+          if(mb) {	/* TW 9/23/93 */
+              free(mb);		/*     |      */
               MT_count++;			/*     |      */
               setMtBlock(i, j, NULL);		/*     V      */
           }
@@ -621,12 +634,15 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
  
 void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
 {
-  int x,i;
+  int x; /*,i;*/
   int trmcnt = 0;		/* How many terms have been printed */
   int lnecnt = 0;		/* How many have been printed on current line */
-  for (i = ae->first; i <= ae ->last; i++) {
-    if ( (ae->basis_coef)[i] != 0) {
-      x = ae->basis_coef[i]; 
+  //for (i = ae->first; i <= ae ->last; i++) {
+  while(ae) {
+    //if ( (ae->basis_coef)[i] != 0) {
+      //x = ae->basis_coef[i]; 
+    if(ae->basis != 0 && ae->basis_coef != 0) {
+      x = ae->basis_coef; 
       if ((trmcnt > 0) && (trmcnt % 4 == 0)) { 		/* 4 items per line */
         fprintf(filePtr, "\n");	
 	if(outputType == 1){	/* TW 9/19/93 - support for view */
@@ -636,14 +652,15 @@ void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - ad
         lnecnt = 0;
       }
       if (lnecnt == 0){
-	fprintf(filePtr, "   %3d b%-4d",x,i);
+	fprintf(filePtr, "   %3d b%-4d", x, ae->basis);
       }
       else{
-        fprintf(filePtr, "+  %3d b%-4d",x,i);
+        fprintf(filePtr, "+  %3d b%-4d", x, ae->basis);
       }
       trmcnt++;
       lnecnt++;
     }
+    ae = ae->next;
   }
 }
 
