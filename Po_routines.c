@@ -492,41 +492,34 @@ to *ae */
 
 void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status)
 {
-    Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
-    Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
-    Basis b;
-
     assert_not_null_nv(W);
     assert_not_null_nv(Ans);
-    assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
-    assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
 
     if(*status != OK){
-      DestroyAE(left);                     /* TW 9/23/93 - Can we free this? */
-      DestroyAE(right);                    /* TW 9/23/93 - Can we free this? */
       return;
     }
 
     if ((W->left == NULL) && (W->right == NULL)) {
-        b = GetBasisNumberofLetter(W->letter);
-        Ans->basis_coef[b] = 1;
-        Ans->first = b;
-        Ans->last = b;
-    }
-    else {
-        InitAE(left);			/* TW 9/22/93 - change left to *left */
+        Basis b = GetBasisNumberofLetter(W->letter);
+        SetAE(Ans, b, 1);
+    } else {
+        Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
+        Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
+
+        assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
+        assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
+
         if (*status == OK)
-            ExpandTerm(left,W->left,status);	/* TW 9/22/93 - change left to
-*left */
-        InitAE(right);			/* TW 9/22/93 - change right to *right */
+            ExpandTerm(left,W->left,status);	/* TW 9/22/93 - change left to *left */
+
         if (*status == OK)
-            ExpandTerm(right,W->right,status);	/* TW 9/22/93 - change right
-to *right */
-        *status = MultAE(left,right,Ans);	/* TW 9/22/93 - change right to
-*right & left to *left */
+            ExpandTerm(right,W->right,status);	/* TW 9/22/93 - change right to *right */
+
+        *status = MultAE(left, right, Ans);	/* TW 9/22/93 - change right to *right & left to *left */
+
+        DestroyAE(left);
+        DestroyAE(right);
    }
-   DestroyAE(left);                     /* TW 9/23/93 - Can we free this? */
-   DestroyAE(right);                    /* TW 9/23/93 - Can we free this? */
 }
 
 
