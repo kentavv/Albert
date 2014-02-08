@@ -48,13 +48,13 @@ static Type T1;
 static Type T2;
 static int Cur_type_degree;
 static int Cur_type_len;
-static int *Dependent;
-static Basis *BasisNames;
+static int *Dependent = NULL;
+static Basis *BasisNames = NULL;
 static int Num_rows;
 static int Num_cols;
 static int MatrixRank;
-static Matrix TheMatrix;
-static MAT_PTR TheSparseMatrix;
+static Matrix TheMatrix = NULL;
+static MAT_PTR TheSparseMatrix = NULL;
 static Unique_basis_pair_list ColtoBP;
 
 int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, Unique_basis_pair_list BPCptr)
