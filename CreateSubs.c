@@ -53,13 +53,12 @@
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-static void DoCreateSubs(int row, int col);
+static void DoCreateSubs(int row, int col, Basis *Substitution);
 #if DEBUG_SUBSTITUTION
-static void PrintSubstitution(void);
+static void PrintSubstitution(const Basis *Substitution);
 #endif
 
 static const int *Deg_var = NULL;
-static Basis *Substitution = NULL;
 static const struct polynomial *The_ident = NULL;
 static Eqn_list_node *The_list = NULL;
 static int Num_vars = 0;
@@ -78,26 +77,24 @@ int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Na
 
     status = OK;
    
-    Substitution = (Basis *) (Mymalloc(Num_vars * Max_deg_var * sizeof(Basis))); 
+    Basis *Substitution = (Basis *) Mymalloc(Num_vars * Max_deg_var * sizeof(Basis));
     assert_not_null(Substitution);
 
-    DoCreateSubs(0,0);  /* Start of recursive call. */
+    DoCreateSubs(0,0, Substitution);  /* Start of recursive call. */
 
     free(Substitution);
 
     return(status);
 }
 
-void DoCreateSubs(int row, int col)
+void DoCreateSubs(int row, int col, Basis *Substitution)
 {
-    Basis b;
-
     if (status != OK)
         return;
 
     if (row >= Num_vars) {
 #if DEBUG_SUBSTITUTION
-        PrintSubstitution();
+        PrintSubstitution(Substitution);
 #endif
 
 /* Now for each substitution records, perform the substitution. */
@@ -105,18 +102,18 @@ void DoCreateSubs(int row, int col)
         status = PerformSubs(Substitution, The_ident, The_list, Num_vars, Max_deg_var, Deg_var);
     }
     else if (col >= Deg_var[row])
-        DoCreateSubs(row+1,0);
+        DoCreateSubs(row+1, 0, Substitution);
     else {
-        b = FirstBasis(Set_partitions[col*Num_vars + row]); 
+        Basis b = FirstBasis(Set_partitions[col*Num_vars + row]); 
         while ((b != 0) && (status == OK)) {
             Substitution[row*Max_deg_var + col] = b;
-            DoCreateSubs(row,col+1);
+            DoCreateSubs(row, col+1, Substitution);
             b = NextBasisSameType(b);
         }
     }
 }
 
-void PrintSubstitution(void)
+void PrintSubstitution(const Basis *Substitution)
 {
     int i,j;
     static int count = 1;
