@@ -4,25 +4,29 @@
 BIN=../bin
 
 CC=gcc
+CXX=g++
 
 #CFLAGS=-MMD
 #CFLAGS=-g -O0 -Wall
 #CFLAGS=-g -O -Wall
-CFLAGS=-g -O2 -Wall
+CFLAGS=-g -O2 -Wall -fopenmp
 #CFLAGS=-g -O3 -flto -Wall
 
-LDFLAGS=
+CXXFLAGS=$(CFLAGS)
+
+LDFLAGS=-fopenmp
 #LDFLAGS=-g -O3 -flto
 #LIBS=-lcurses -ltermcap -lm
 LIBS=
 
 C_FILES=$(wildcard *.c)
-OBJECTS=$(notdir $(C_FILES:.c=.o))
+CPP_FILES=$(wildcard *.cpp)
+OBJECTS=$(notdir $(C_FILES:.c=.o) $(CPP_FILES:.cpp=.o))
 
 albert: $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
-doxygen: $(wildcard *.c *.h)
+doxygen: $(wildcard *.c *.h *.cpp)
 	doxygen doxygen_config
 
 install: albert
@@ -39,16 +43,17 @@ clean:
 #-include $(OBJFILES:.o=.d)
 
 Alg_elements.o: Alg_elements.c Build_defs.h Alg_elements.h \
- Memory_routines.h Po_prod_bst.h Mult_table.h Scalar_arithmetic.h
+ Scalar_arithmetic.h Memory_routines.h Po_prod_bst.h Mult_table.h
 Basis_table.o: Basis_table.c Basis_table.h Build_defs.h Generators.h \
  Po_parse_exptext.h Help.h Memory_routines.h Po_prod_bst.h Type_table.h
 Build.o: Build.c Build.h Id_routines.h Type_table.h Build_defs.h \
  Basis_table.h ExtractMatrix.h CreateMatrix.h Sparse_structs.h \
  Sparse_defs.h GenerateEquations.h Po_parse_exptext.h Mult_table.h \
- Alg_elements.h node_mgt.h ReduceMatrix.h SparseReduceMatrix.h Debug.h
+ Alg_elements.h Scalar_arithmetic.h node_mgt.h ReduceMatrix.h \
+ SparseReduceMatrix.h Debug.h
 CreateMatrix.o: CreateMatrix.c CreateMatrix.h Sparse_structs.h \
  Build_defs.h Sparse_defs.h Basis_table.h Memory_routines.h Po_prod_bst.h \
- Scalar_arithmetic.h SparseReduceMatrix.h Type_table.h
+ Scalar_arithmetic.h SparseReduceMatrix.h Type_table.h pair_present.h
 CreateSubs.o: CreateSubs.c CreateSubs.h Build_defs.h CreateMatrix.h \
  Sparse_structs.h Sparse_defs.h Po_parse_exptext.h Type_table.h \
  Memory_routines.h Po_prod_bst.h PerformSub.h GenerateEquations.h Debug.h
@@ -74,20 +79,22 @@ Help.o: Help.c Help.h Help_pri.h
 Id_routines.o: Id_routines.c Id_routines.h Memory_routines.h \
  Po_prod_bst.h Po_parse_exptext.h Po_routines.h
 initGlobals.o: initGlobals.c initGlobals.h Build_defs.h Basis_table.h \
- Memory_routines.h Po_prod_bst.h Mult_table.h Alg_elements.h
+ Memory_routines.h Po_prod_bst.h Mult_table.h Alg_elements.h \
+ Scalar_arithmetic.h
 Memory_routines.o: Memory_routines.c Memory_routines.h Po_prod_bst.h \
  Po_parse_poly.h Po_parse_exptext.h Id_routines.h
 Multpart.o: Multpart.c Multpart.h Build_defs.h CreateSubs.h \
  CreateMatrix.h Sparse_structs.h Sparse_defs.h Po_parse_exptext.h \
  Type_table.h Memory_routines.h Po_prod_bst.h Debug.h
 Mult_table.o: Mult_table.c Mult_table.h Build_defs.h Alg_elements.h \
- Help.h Memory_routines.h Po_prod_bst.h Scalar_arithmetic.h Basis_table.h
+ Scalar_arithmetic.h Help.h Memory_routines.h Po_prod_bst.h Basis_table.h
 node_mgt.o: node_mgt.c node_mgt.h Sparse_structs.h Build_defs.h \
  Sparse_defs.h Memory_routines.h Po_prod_bst.h Debug.h
+pair_present.o: pair_present.cpp pair_present.h
 PerformSub.o: PerformSub.c PerformSub.h Build_defs.h CreateMatrix.h \
  Sparse_structs.h Sparse_defs.h GenerateEquations.h Po_parse_exptext.h \
- Alg_elements.h Memory_routines.h Po_prod_bst.h Debug.h \
- Scalar_arithmetic.h
+ Alg_elements.h Scalar_arithmetic.h Memory_routines.h Po_prod_bst.h \
+ Debug.h
 Po_create_poly.o: Po_create_poly.c Po_create_poly.h Po_parse_exptext.h \
  Po_create_poly_pri.h Po_expand_poly.h Memory_routines.h Po_prod_bst.h \
  Po_parse_poly.h Po_semantics.h Strings.h
@@ -100,8 +107,8 @@ Po_parse_poly.o: Po_parse_poly.c Po_parse_poly.h Po_parse_poly_pri.h \
  Po_syn_stack.h Po_semantics.h Po_prod_bst.h
 Po_prod_bst.o: Po_prod_bst.c Po_prod_bst.h Memory_routines.h
 Po_routines.o: Po_routines.c Po_routines.h Po_parse_exptext.h \
- Build_defs.h Generators.h Debug.h Alg_elements.h Memory_routines.h \
- Po_prod_bst.h Scalar_arithmetic.h getchar.h
+ Build_defs.h Generators.h Debug.h Alg_elements.h Scalar_arithmetic.h \
+ Memory_routines.h Po_prod_bst.h
 Po_semantics.o: Po_semantics.c Po_parse_poly.h Po_syn_stack.h \
  Po_semantics.h Memory_routines.h Po_prod_bst.h
 Po_syn_stack.o: Po_syn_stack.c Po_syn_stack.h Po_parse_poly.h
