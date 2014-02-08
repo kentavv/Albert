@@ -94,19 +94,24 @@ static void PrintEqns(Eqn_list_node *L);
 static void PrintEqn(Basis_pair *Temp_eqn);
 #endif
 
-static Type Target_type;
-static int Target_type_len;
-static int Target_type_deg;
-static int Num_vars;
-static Type Seq_sub_types;
-static int *Deg_vars;
-static int *Cur_deg_vars;
-static int Whatsleft;
-static const struct polynomial *The_ident;
-static Eqn_list_node *The_list;
+static Type Target_type = 0;
+static int Target_type_len = 0;
+static int Target_type_deg = 0;
+static int Num_vars = 0;
+static Type Seq_sub_types = 0;
+static int *Deg_vars = NULL;
+static int *Cur_deg_vars = NULL;
+static int Whatsleft = 0;
+static const struct polynomial *The_ident = NULL;
+static Eqn_list_node *The_list = NULL;
 static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
+
+#if 0
+static int depth = 0;
+static int mdepth = 0;
+#endif
 
 int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
 {
@@ -128,10 +133,13 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
 
     Target_type = GetNewType(); 
     assert_not_null(Target_type);
+
     Seq_sub_types = (Type) (Mymalloc(Num_vars * Target_type_len * sizeof(Degree)));
     assert_not_null(Seq_sub_types);
+
     Deg_vars = (int *) (Mymalloc(Num_vars * sizeof(int)));
     assert_not_null(Deg_vars);
+
     Cur_deg_vars = (int *) (Mymalloc(Num_vars * sizeof(int)));
     assert_not_null(Cur_deg_vars);
 
@@ -142,7 +150,14 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
             Deg_vars[j++] = The_ident->deg_letter[i];
 
     InitSeqSubtypes();
+#if 0
+depth = 0;
+mdepth = 0;
+#endif
     GenerateSeqSubtypes(0,0,0); /* Starting of deep recursive calls */
+#if 0
+printf("\nmdepth: %d\n", mdepth);
+#endif
 
     if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
       free(Seq_sub_types);
@@ -155,6 +170,7 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
     free(Seq_sub_types);
     free(Deg_vars);
     free(Cur_deg_vars);
+
     return(status);
 }
 
@@ -178,8 +194,22 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
     static int count = 1;
 #endif
 
-    if (status != OK)
+#if 0
+printf("GenerateSeqSubtypes %d %d %d   %d %d %d   %d %d %d %d\n", 
+Cur_col, Target_type_len, Cur_col == Target_type_len, 
+Cur_row, (Num_vars - 1), Cur_row == (Num_vars - 1),
+Cur_deg_vars[Cur_row], Whatsleft, Deg_vars[Cur_row], (Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]); fflush(NULL);
+depth++;
+if(mdepth < depth) {
+  mdepth = depth;
+}
+#endif
+    if(status != OK) {
+#if 0
+depth--;
+#endif
         return -1;
+    }
 
     if (Cur_col == Target_type_len) {
 #if DEBUG_SEQ_SUBTYPES
@@ -192,11 +222,14 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
         status = PerformMultiplePartition(The_ident, The_list, Num_vars, Seq_sub_types, Deg_vars);
         if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
 /*          printf("Returning from PerformMultiplePartition().\n");*/
+#if 0
+depth--;
+#endif
           return(-1);
         }
     }
     else if (Cur_row == (Num_vars - 1)) {
-        if ((Whatsleft + Cur_deg_vars[Cur_row]) >= Deg_vars[Cur_row]) {
+        if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
             csave = Cur_deg_vars[Cur_row];
             whatsave = Whatsleft;
             tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
@@ -211,18 +244,24 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
                  GenerateSeqSubtypes(0,Cur_col+1,0);
                  if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
 /*                   printf("Returning from PerformMultiplePartition().\n");*/
+#if 0
+depth--;
+#endif
                    return(-1);
                  }
 	    }
 
-            Seq_sub_types[Cur_row*Target_type_len + Cur_col] = tsave; 
             Cur_deg_vars[Cur_row] = csave; 
             Whatsleft = whatsave;
+            Seq_sub_types[Cur_row*Target_type_len + Cur_col] = tsave; 
         }
     }
     else {
-        for (i=Target_type[Cur_col] - Weight;i>=0;i--) {
-            if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
+        if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
+#if 0
+printf("is:%d\n", i=Target_type[Cur_col] - Weight);
+#endif
+            for (i=Target_type[Cur_col] - Weight;i>=0;i--) {
                 csave = Cur_deg_vars[Cur_row];
                 whatsave = Whatsleft;
                 tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
@@ -237,17 +276,23 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
                      GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i);
                      if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
 /*                       printf("Returning from PerformMultiplePartition().\n");*/
+#if 0
+depth--;
+#endif
                        return(-1);
                      }
 		}
 
-                Seq_sub_types[Cur_row*Target_type_len + Cur_col] = tsave; 
                 Cur_deg_vars[Cur_row] = csave; 
                 Whatsleft = whatsave;
+                Seq_sub_types[Cur_row*Target_type_len + Cur_col] = tsave; 
             }
         }
     }
 
+#if 0
+depth--;
+#endif
     return 1;
 }
 
