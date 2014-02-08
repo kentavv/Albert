@@ -34,6 +34,7 @@ static Scalar S_div(Scalar x, Scalar y);
 static void Print_inv_table(void);
 #endif
 
+#ifdef NINLINE
 #define  PRIME_BOUND  256
 
 #define Scalar_assert(x) \
@@ -41,9 +42,10 @@ static void Print_inv_table(void);
         printf("WARNING: Scalar %d out of range.\n",x); \
         exit(1); \
      }
+#endif
 
-static Scalar Prime;
-static Scalar Inverse_table[PRIME_BOUND];
+Scalar Prime;
+Scalar Inverse_table[PRIME_BOUND];
 
 int S_init(void)
 {
@@ -64,6 +66,7 @@ int S_init(void)
 }
 
 
+#ifdef NINLINE
 Scalar ConvertToScalar(int i)
 {
    if (i > 0)
@@ -72,7 +75,7 @@ Scalar ConvertToScalar(int i)
        return(S_minus((-i)%Prime));
 }
 
-
+#ifdef NINLINE
 Scalar S_zero(void)
 {
     return(0);
@@ -82,6 +85,7 @@ Scalar S_one(void)
 {
     return(1);
 }
+#endif
 
 #if 0
 Scalar S_minus1(void)
@@ -160,4 +164,5 @@ void Print_inv_table(void)
     }
     printf("\n");
 }
+#endif
 #endif
