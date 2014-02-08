@@ -69,8 +69,8 @@ static void SortPermutation(int begin_index);
 static int Expand(void);
 static void FreeLocalList(Basis_pair_node *Ll);
 static void AppendToLocalList(Basis_pair_node *Rl);
-static int SubstituteWord(struct term_node *W);
-static void Sub(Alg_element *Ans, struct term_node *W);
+static int SubstituteWord(const struct term_node *W);
+static void Sub(Alg_element *Ans, const struct term_node *W);
 static Basis_pair_node *GetNewBPNode(void);
 
 
@@ -102,19 +102,22 @@ int PerformSubs(const Basis *S, const struct polynomial *F, Eqn_list_node *L, in
 
     status = OK;
 
-    Permutation_list = NULL;
-    Permutation_list = (Perm *) (Mymalloc(Num_vars * sizeof(Perm)));
+    Permutation_list = (Perm *) Mymalloc(Num_vars * sizeof(Perm));
     assert_not_null(Permutation_list);
 
     Local_list = NULL;
+
     DoPermutation(0);    /* Start of recursive call. */
     if (status != OK)
         return(0);
+
     if (AppendLocalListToTheList() != OK)
         return(0);
+
     FreeLocalList(Local_list);
     FreePermutationList(Permutation_list);
     free(Permutation_list);
+
     return(OK);
 }
 
@@ -325,21 +328,28 @@ int Expand(void)
 
     if (The_ident == NULL)
         return(OK);
+
     temp_head = The_ident->terms;
+
     while (temp_head != NULL) {
         running_list = NULL;
         alpha = temp_head->coef;
         salpha = ConvertToScalar(alpha);
+
         if (SubstituteWord(temp_head->term) != OK)
             return(0);
+
         temp_list = running_list; 
+
         while (temp_list != NULL) {
-            (temp_list->bp).coef = S_mul(salpha,(temp_list->bp).coef);
+            temp_list->bp.coef = S_mul(salpha, temp_list->bp.coef);
             temp_list = temp_list->next;
         }
+
         AppendToLocalList(running_list);
         temp_head = temp_head->next;
     }
+
     return(OK);
 }
 
@@ -381,99 +391,108 @@ void AppendToLocalList(Basis_pair_node *Rl)
  * identity. 
  */
 
-int SubstituteWord(struct term_node *W)
+int SubstituteWord(const struct term_node *W)
 {
-    Alg_element *ae1 = AllocAE();	/* TW 9/22/93 - change ae1 to *ae1 */
-    Alg_element *ae2 = AllocAE();	/* TW 9/22/93 - change ae2 to *ae2 */
+    Alg_element *ae1;	/* TW 9/22/93 - change ae1 to *ae1 */
+    Alg_element *ae2;	/* TW 9/22/93 - change ae2 to *ae2 */
+    Alg_element *ae1b;
+    Alg_element *ae2b;
 
-    Scalar zero;
-    int i,j;
+    Scalar zero = S_zero();
+    /*int i,j;*/
     Scalar alpha,beta;
     Basis_pair_node *temp_list = NULL;
 
-    assert_not_null(ae1);		/* TW 9/22/93 - change ae1 to *ae1 */
-    assert_not_null(ae2);		/* TW 9/22/93 - change ae2 to *ae2 */
-
     if (W == NULL){
+#if 0
         DestroyAE(ae1);     /* TW 9/23/93 - Can we free this up? */
         DestroyAE(ae2);     /* TW 9/23/93 - Can we free this up? */
+#endif
         return(OK);
     }
 
-    zero = S_zero();
+    ae1 = AllocAE();	/* TW 9/22/93 - change ae1 to *ae1 */
+    ae2 = AllocAE();	/* TW 9/22/93 - change ae2 to *ae2 */
+    assert_not_null(ae1);		/* TW 9/22/93 - change ae1 to *ae1 */
+    assert_not_null(ae2);		/* TW 9/22/93 - change ae2 to *ae2 */
 
-    InitAE(ae1);			/* TW 9/22/93 - change ae1 to *ae1 */
-    Sub(ae1,W->left);   /* We can expand left tree of W. *//* TW 9/22/93 - change ae1 to *ae1 */
-    InitAE(ae2);			/* TW 9/22/93 - change ae2 to *ae2 */
-    Sub(ae2,W->right);  /* We can expand the right tree of W. *//* TW 9/22/93 - change ae2 to *ae2 */
+    Sub(ae1, W->left);   /* We can expand left tree of W. *//* TW 9/22/93 - change ae1 to *ae1 */
+    Sub(ae2, W->right);  /* We can expand the right tree of W. *//* TW 9/22/93 - change ae2 to *ae2 */
 
 /* We can't do any more expansion. i.e We can't multiply ae1 & ae2. */
 /* Because we are entering new basis elements of degree of W. */
 /* But now it is time for new basis pairs. */
 /* The equations are nothing but summation of basis pairs. */
 
-    for (i=ae1->first;i<=ae1->last;i++) {	/* TW 9/22/93 - change ae1 to *ae1 */
-        if ((alpha = ae1->basis_coef[i]) != zero) {	/* TW 9/22/93 - change ae1 to *ae1 */
-            for (j=ae2->first;j<=ae2->last;j++) {	/* TW 9/22/93 - change ae2 to *ae2 */
-                if ((beta = ae2->basis_coef[j]) != zero) {	/* TW 9/22/93 - change ae2 to *ae2 */
+    ae1b = ae1;
+    while(ae1b) {
+      if(ae1b->basis != 0) {
+        alpha = ae1b->basis_coef;
+        if (alpha != zero) { /* TW 9/22/93 - change ae1 to *ae1 */
+          ae2b = ae2;
+          while(ae2b) {
+            if(ae2b->basis != 0) {
+                beta = ae2b->basis_coef; /* TW 9/22/93 - change ae2 to *ae2 */
+                if(beta != zero) { /* TW 9/22/93 - change ae2 to *ae2 */
                     if (running_list == NULL) {
-                        temp_list = running_list = GetNewBPNode(); 
-                        assert_not_null(temp_list);
+                        running_list = GetNewBPNode(); 
+                        temp_list = running_list;
                     }
                     else {
                         temp_list->next = GetNewBPNode();
                         temp_list = temp_list->next;
-                        assert_not_null(temp_list);
                     }
-                    (temp_list->bp).coef = S_mul(alpha,beta);
-                    (temp_list->bp).left_basis = i;
-                    (temp_list->bp).right_basis = j;
+                        assert_not_null(temp_list);
+                    temp_list->bp.coef = S_mul(alpha,beta);
+                    temp_list->bp.left_basis = ae1b->basis;
+                    temp_list->bp.right_basis = ae2b->basis;
                 }
             }
+            ae2b = ae2b->next;
         }
+      }
+      }
+            ae1b = ae1b->next;
     }
+
     DestroyAE(ae1);     /* TW 9/23/93 - Can we free this up? */
     DestroyAE(ae2);     /* TW 9/23/93 - Can we free this up? */
+
     return(OK);
 }
                         
 
-void Sub(Alg_element *Ans, struct term_node *W)
+void Sub(Alg_element *Ans, const struct term_node *W)
 {
-    Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
-    Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
-    
-    int var_number;
-    int var_occurrence_number;
-    Basis b;
-    int perm_number;
-
     assert_not_null_nv(W);
     assert_not_null_nv(Ans);
-    assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
-    assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
 
     if ((W->left == NULL) && (W->right == NULL)) {
-        var_number = GetVarNumber(W->letter) - 1;
-        var_occurrence_number = W->number - 1;
-        perm_number = (Permutation_list[var_number])[var_occurrence_number] - 1;
-        b = Substitution[var_number*Max_deg_var + perm_number];
-        Ans->basis_coef[b] = 1;
-        Ans->first = b;
-        Ans->last = b;
-    }
-    else {
-        InitAE(left);			/* TW 9/22/93 - change left to *left */
+        int var_number = GetVarNumber(W->letter) - 1;
+
+        int var_occurrence_number = W->number - 1;
+        int perm_number = Permutation_list[var_number][var_occurrence_number] - 1;
+
+        Basis b = Substitution[var_number*Max_deg_var + perm_number];
+
+        SetAE(Ans, b, 1); 
+    } else {
+        Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
+        Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
+    
+        assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
+        assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
+
         Sub(left,W->left); 		/* TW 9/22/93 - change left to *left */
-        InitAE(right);			/* TW 9/22/93 - change right to *right */
         Sub(right,W->right); 		/* TW 9/22/93 - change right to *right */
 
  /* This is where we use the multiplication table. */ 
 
         MultAE(left,right,Ans);	/* TW 9/22/93 - change right to *right & left to *left */
+
+        DestroyAE(left);     /* TW 9/23/93 - Can we free this? */
+        DestroyAE(right);    /* TW 9/23/93 - Can we free this? */
    }
-   DestroyAE(left);     /* TW 9/23/93 - Can we free this? */
-   DestroyAE(right);    /* TW 9/23/93 - Can we free this? */
 }
 
 
