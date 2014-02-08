@@ -42,7 +42,7 @@ static int SameType(Type T1, Type T2);
 static int InitStoreblocksizes(void);
 static int FillTypecount(int Cur_scan_pos);
 static int InitTypetable(void);
-static int FillTypetable(int Cur_scan_pos);
+static int FillTypetable(int Cur_scan_pos, int *Temp_dttt_index);
 static int GetIndex(Type Pntr);
 #if 0
 static int NumberOfBasis(Name n);
@@ -63,7 +63,6 @@ static TT_node *Type_table = NULL;          /* Heart of the matter.            *
 static int *Type_table_index = NULL;        /* Map type to Type_table.         */
 static int Tot_subtypes = 0;                /* Computed from Type_count. Size of Type_table. */
 static int *Deg_to_type_table_index = NULL; /* Map Degree to Type_table.*/
-static int *Temp_dttt_index = NULL;         /* Used to fill Type_table_index.  */
 static int *Store_block_sizes = NULL;       /* To find offset into Type_table. */
 
 /*******************************************************************/
@@ -117,11 +116,6 @@ int CreateTypeTable(Type Cur_type)
     if (InitTypetable() != OK)
         return(0);
 
-    if(Temp_dttt_index) {
-      free(Temp_dttt_index);
-      Temp_dttt_index = NULL;
-    }
-    
     if(Type_count) {
       free(Type_count);
       Type_count = NULL;
@@ -339,7 +333,7 @@ int InitTypetable(void)
     for (i=0;i<=Target_type_deg;i++)
         Tot_subtypes += Type_count[i];
 
-    Type_table = (TT_node *) (Mymalloc(Tot_subtypes * sizeof(TT_node)));
+    Type_table = (TT_node *) Mymalloc(Tot_subtypes * sizeof(TT_node));
     assert_not_null(Type_table);
 
     for (i=0;i<Tot_subtypes;i++) {
@@ -348,23 +342,28 @@ int InitTypetable(void)
         Type_table[i].begin_basis = Type_table[i].end_basis = 0;
     }
    
-    Deg_to_type_table_index = (int *) (Mymalloc((Target_type_deg + 1) * sizeof(int)));
+    Deg_to_type_table_index = (int *) Mymalloc((Target_type_deg + 1) * sizeof(int));
     assert_not_null(Deg_to_type_table_index);
 
     Deg_to_type_table_index[0] = 0;
     for (i=1;i<=Target_type_deg;i++)
         Deg_to_type_table_index[i] = Deg_to_type_table_index[i - 1] + Type_count[i - 1];
-    
-    Temp_dttt_index = (int *) (Mymalloc((Target_type_deg + 1) * sizeof(int)));
-    assert_not_null(Temp_dttt_index);
-    for (i=0;i<=Target_type_deg;i++)
-        Temp_dttt_index[i] = Deg_to_type_table_index[i]; 
-    
-    Type_table_index = (int *) (Mymalloc(Tot_subtypes * sizeof(int)));
-    assert_not_null(Type_table_index);
 
-    FillTypetable(0);
-    return(OK);
+    Type_table_index = (int *) Mymalloc(Tot_subtypes * sizeof(int));
+    assert_not_null(Type_table_index);
+    { 
+      int *Temp_dttt_index = (int *) Mymalloc((Target_type_deg + 1) * sizeof(int));         /* Used to fill Type_table_index.  */
+      assert_not_null(Temp_dttt_index);
+
+      for (i=0; i<=Target_type_deg; i++)
+          Temp_dttt_index[i] = Deg_to_type_table_index[i]; 
+    
+      FillTypetable(0, Temp_dttt_index);
+
+      free(Temp_dttt_index);
+    }
+
+    return OK;
 }
 
 
@@ -409,7 +408,7 @@ void DestroyTypeTable(void)
 /* FUNCTION:                                                       */
 /*     Fill the Type_table.                                        */ 
 /*******************************************************************/ 
-int FillTypetable(int Cur_scan_pos)
+int FillTypetable(int Cur_scan_pos, int *Temp_dttt_index)
 {
     int save;
     int i = 0;
@@ -427,7 +426,7 @@ int FillTypetable(int Cur_scan_pos)
         for (i=0;i<=Target_type[Cur_scan_pos];i++) {
             save = Target_type[Cur_scan_pos];
             Target_type[Cur_scan_pos] = i;
-            FillTypetable(Cur_scan_pos + 1);
+            FillTypetable(Cur_scan_pos + 1, Temp_dttt_index);
             Target_type[Cur_scan_pos] = save;
         }
     }
@@ -501,9 +500,7 @@ Basis FirstBasis(Name N)
 
 Basis NextBasisSameType(Basis B)
 {
-    int Nextbasistobefilled;
-
-    Nextbasistobefilled = GetNextBasisTobeFilled();
+    int Nextbasistobefilled = GetNextBasisTobeFilled();
 
     if ((B+1) >= Nextbasistobefilled) 		/* Check range of B,B+1 */
         return(0);
