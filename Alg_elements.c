@@ -38,10 +38,10 @@
 
 #if 0
 static Alg_element *CreateAE();
-static int AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
-static int AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
-static int AssignNegAE(const Alg_element *p1, Alg_element *p2);
-static int CopyAE(const Alg_element *p1, Alg_element *p2);
+static void AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
+static void AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
+static void AssignNegAE(const Alg_element *p1, Alg_element *p2);
+static void CopyAE(const Alg_element *p1, Alg_element *p2);
 #endif
 static int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2);
 #if 0
@@ -62,16 +62,9 @@ static void PrintAE(const Alg_element *p);
 /*******************************************************************/ 
 Alg_element *CreateAE()
 {
-    Alg_element *p;
-
-    p = AllocAE(); 
-
-    if (p == NULL)
-        return(NULL);
-
+    Alg_element *p = AllocAE(); 
     InitAE(p);
-
-    return(p);
+    return p;
 }
 #endif
 
@@ -85,15 +78,13 @@ Alg_element *CreateAE()
 /* FUNCTION:                                                       */
 /*     Free the space pointed by p.                                */
 /*******************************************************************/ 
-int DestroyAE(Alg_element *p)
+void DestroyAE(Alg_element *p)
 {
-    assert_not_null(p);
-    assert_not_null(p->basis_coef);	/* TW 9/23/93 */
-
-    free(p->basis_coef);	/* TW 9/23/93 - forgot to free it */
-    free(p);
-
-    return(OK);
+    while(p) {
+      Alg_element *q = p->next;
+      free(p);
+      p = q;
+    }
 }
 
 /*******************************************************************/
@@ -106,23 +97,12 @@ int DestroyAE(Alg_element *p)
 /* FUNCTION:                                                       */
 /*     Initialize all Basis coefficients to 0's.                   */ 
 /*******************************************************************/ 
-int InitAE(Alg_element *p)
+void InitAE(Alg_element *p)
 {
-    Scalar zero = S_zero();
-    Basis i;
-
-    assert_not_null(p);
-
-    if(zero == 0) {
-      memset(p->basis_coef, 0, sizeof(p->basis_coef[0]) * (DIMENSION_LIMIT + 1));
-    } else {
-      for (i=0;i<=DIMENSION_LIMIT;i++)
-        p->basis_coef[i] = zero;
-    }
-
-    p->first = p->last = 0;
-
-    return(OK);
+    if(!p) return;
+    p->basis = 0;
+    p->basis_coef = 0;
+    p->next = NULL;
 }
 
 /*******************************************************************/
@@ -138,21 +118,12 @@ int InitAE(Alg_element *p)
 /*     Only the basis coefficients between first and last nonzero  */
 /*     basis coefficients are made zeroes for speed.               */
 /*******************************************************************/ 
-int ZeroOutAE(Alg_element *p)
+void ZeroOutAE(Alg_element *p)
 {
-    Scalar zero;
-    Basis i;
-
-    assert_not_null(p);
-
-    zero = S_zero();
-
-    for (i=p->first;i<=p->last;i++)
-        p->basis_coef[i] = zero;
-
-    p->first = p->last = 0;
-
-    return(OK);
+    if(p) {
+      DestroyAE(p->next);
+      InitAE(p);
+    }
 }
 
 /*******************************************************************/
@@ -165,12 +136,12 @@ int ZeroOutAE(Alg_element *p)
 /*******************************************************************/ 
 int IsZeroAE(const Alg_element *p)
 {
-    assert_not_null(p);
+  while(p) {
+    if(p->basis != 0 && p->basis_coef != 0) return FALSE;
+    p = p->next;
+  }
 
-    if (p->first == 0)
-        return(TRUE);
-    else
-        return(FALSE);
+  return TRUE;
 }
 
 /*******************************************************************/
@@ -185,22 +156,16 @@ int IsZeroAE(const Alg_element *p)
 /*     Multiply Alg_element *p with scalar x.                      */
 /*     *p = *p * x.                                                */
 /*******************************************************************/ 
-int ScalarMultAE(Scalar x, Alg_element *p)
+void ScalarMultAE(Scalar x, Alg_element *p)
 {
-    Basis i;
-
-    assert_not_null(p);
-
-    if (x == S_one())
-        return(OK);
-    else if (x == S_zero()) {
+    if (x == S_one()) {
+    } else if (x == S_zero()) {
         ZeroOutAE(p);
-        return(OK);
-    }
-    else {
-        for (i=p->first;i<=p->last;i++)
-            p->basis_coef[i] = S_mul(x,p->basis_coef[i]);
-        return(OK);
+    } else {
+        while(p) {
+          p->basis_coef = S_mul(x, p->basis_coef);
+          p = p->next;
+        }
     }
 }    
 
@@ -217,76 +182,33 @@ int ScalarMultAE(Scalar x, Alg_element *p)
 /*     Add Alg_element's *p1 and *p2 and put the result in *p3.    */
 /*     *p3 = *p1 + *p2.                                            */
 /*******************************************************************/ 
-int AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
+void AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
 {
-    Basis i,left,right;
-    Scalar x,zero;
-    Boolean left_found = FALSE;
-    Basis current_right = 0;
-    
-    assert_not_null(p1);
-    assert_not_null(p2);
-    assert_not_null(p3);
-
-    left = Min(p1->first,p2->first); 
-    right = Max(p1->last,p2->last); 
- 
-    ZeroOutAE(p3);
-
-    zero = S_zero();
-
-    if (IsZeroAE(p1) && IsZeroAE(p2))
-        return(OK);
-    else {
-        for (i=left;i<=right;i++) {
-            x = S_add(p1->basis_coef[i],p2->basis_coef[i]);
-            if (x != zero) {
-                p3->basis_coef[i] = x;
-                current_right = i;
-                if (!left_found) {
-                    left_found = TRUE;
-                    p3->first = i;
-                } 
-            }
-        }
-        p3->last = current_right;
-        return(OK);
-    }
+    CopyAE(p1, p3);
+    AddAE(p2, p3);
 }    
 
-int AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
+void AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
 {
-    Alg_element *ae; 
+    Alg_element *np2 = CreateAE();
 
-    ae = CreateAE();
-    assert_not_null(p1);
-    assert_not_null(p2);
-    assert_not_null(p3);
-    assert_not_null(ae);
+    assert_not_null_nv(p1);
+    assert_not_null_nv(p2);
+    assert_not_null_nv(p3);
+    assert_not_null_nv(np2);
 
-    AssignNegAE(p2,ae);
-    AssignAddAE(p1,ae,p3);
-    DestroyAE(ae);
-    return(OK);
+    AssignNegAE(p2, np2);
+    AssignAddAE(p1, np2, p3);
+    DestroyAE(np2);
 }    
 
-int AssignNegAE(const Alg_element *p1, Alg_element *p2)
+void AssignNegAE(const Alg_element *p1, Alg_element *p2)
 {
-    Scalar zero;
-    int i;
-
-    assert_not_null(p1);
-    assert_not_null(p2);
-
-    zero = S_zero();
-
-    for (i=p1->first;i<=p1->last;i++) {
-         if (p1->basis_coef[i] != zero)
-             p2->basis_coef[i] = S_minus(p1->basis_coef[i]);
+    CopyAE(p1, p2);
+    while(p2) {
+      p2->basis_coef = S_minus(p2->basis_coef);
+      p2 = p2->next;
     }
-    p2->first = p1->first;
-    p2->last = p1->last;
-    return(OK);
 }    
 #endif
 
@@ -304,87 +226,51 @@ int AssignNegAE(const Alg_element *p1, Alg_element *p2)
 /* NOTE:                                                           */
 /*     We have to scan p2 to find and store p2->first.             */
 /*******************************************************************/ 
-int AddAE(const Alg_element *p1, Alg_element *p2)
+void AddAE(const Alg_element *p1, Alg_element *p2)
 {
-    Basis i;
-    /*Scalar zero;*/
-    
-    assert_not_null(p1);
-    assert_not_null(p2);
+    Alg_element *pp2 = p2;
 
-    /*zero = S_zero();*/
+    assert_not_null_nv(p1);
+    assert_not_null_nv(p2);
 
-    if (IsZeroAE(p1))
-        return(OK);
-    else {
-        for (i=p1->first;i<=p1->last;i++)
-            p2->basis_coef[i] = S_add(p1->basis_coef[i],p2->basis_coef[i]);
-        AssignFirst(p2); 
-        AssignLast(p2); 
-        return(OK);
+    while(p1) {
+      if(!p2) {  /* occurs if max_basis(p2) < max_basis(p1) */
+        Alg_element *t = AllocAE();
+        *t = *p1;
+        t->next = NULL;
+        pp2->next = t;
+
+        pp2 = t;
+        p1 = p1->next;
+      } else if(p2->basis == 0) {
+        p2->basis = p1->basis;
+        p2->basis_coef = p1->basis_coef;
+
+        pp2 = p2;
+        p1 = p1->next;
+        p2 = p2->next;
+      } else if(p2->basis == p1->basis) {
+        p2->basis_coef = S_add(p2->basis_coef, p1->basis_coef);
+
+        pp2 = p2;
+        p1 = p1->next;
+        p2 = p2->next;
+      } else if(p2->basis < p1->basis) {
+        pp2 = p2;
+        p2 = p2->next;
+      } else if(p2->basis > p1->basis) {
+        Alg_element *t = AllocAE();
+        *t = *p2;
+        p2->basis = p1->basis;
+        p2->basis_coef = p1->basis_coef;
+        p2->next = t;
+
+        pp2 = p2;
+        p1 = p1->next;
+        p2 = p2->next;
+      }
     }
 }    
-
-/*******************************************************************/
-/* MODIFIES:                                                       */
-/*     *p -- Alg_element.                                          */ 
-/* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     assign p3->first = i where p3->basis_coef[i] is the first   */ 
-/*     non_zero basis_coefficient.                                 */
-/*******************************************************************/ 
-int AssignFirst(Alg_element *p)
-{
-    Scalar zero;
-    int i;
-
-    assert_not_null(p);
-    zero = S_zero();
-
-    p->first = 0;
-
-    for (i=1;i<DIMENSION_LIMIT;i++) {
-        if (p->basis_coef[i] != zero) {
-            p->first = i;
-            break;
-        }
-    }
-    return(OK);
-}
-    
-/*******************************************************************/
-/* MODIFIES:                                                       */
-/*     *p -- Alg_element.                                          */ 
-/* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     assign p3->last = i where p3->basis_coef[i] is the last     */ 
-/*     non_zero basis_coefficient.                                 */
-/*******************************************************************/ 
-int AssignLast(Alg_element *p)
-{
-    Scalar zero;
-    int i;
-
-    zero = S_zero();
-
-    assert_not_null(p);
-
-    p->last = 0;
-
-    for (i=DIMENSION_LIMIT;i>0;i--) {
-        if (p->basis_coef[i] != zero) {
-            p->last = i;
-            break;
-        }
-    }
-    return(OK);
-}
 
 #if 0
 /*******************************************************************/
@@ -399,20 +285,19 @@ int AssignLast(Alg_element *p)
 /*     Copy Alg_element *p1 into Alg_element *p2.                  */
 /*     *p2 = *p1.                                                  */
 /*******************************************************************/ 
-int CopyAE(const Alg_element *p1, Alg_element *p2)
+void CopyAE(const Alg_element *p1, Alg_element *p2)
 {
-    Basis i;
+    ZeroOutAE(p2);
 
-    assert_not_null(p1);
-    assert_not_null(p2);
-
-    p2->first = p1->first;
-    p2->last = p1->last;
-
-    for (i=p1->first;i<=p1->last;i++)
-        p2->basis_coef[i] = p1->basis_coef[i];
-
-    return(OK);
+    while(p1) {
+      p2->basis = p1->basis;
+      p2->basis_coef = p1->basis_coef;
+      p1 = p1->next;
+      if(p1) {
+        p2->next = AllocAE();
+        p2 = p2->next;
+      }
+    }
 }
 #endif
 
@@ -432,25 +317,24 @@ int CopyAE(const Alg_element *p1, Alg_element *p2)
 /*******************************************************************/ 
 int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2)
 {
-    Basis i;
-    Scalar zero;
+    Scalar zero = S_zero();
     
     int status;
      
     assert_not_null(p1);
     assert_not_null(p2);
 
-    zero = S_zero();
-
     status = OK;
 
     if ((x == zero) || IsZeroAE(p1))
         return(OK);
     else {
-        for (i=p1->first;i<=p1->last;i++)
-            if (p1->basis_coef[i] != zero) {
+        while(p1) {
+            if (p1->basis_coef != zero) {
                 if (status == OK)
-                    status = Mult2basis(b,i,S_mul(x,p1->basis_coef[i]),p2); 
+                    status = Mult2basis(b, p1->basis, S_mul(x, p1->basis_coef), p2); 
+            }
+            p1 = p1->next;
             }
         return(status);
     }
@@ -470,35 +354,26 @@ int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2)
 /*******************************************************************/ 
 int MultAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
 {
-    Scalar zero;
-    Basis i;
+    Scalar zero = S_zero();
 
-    int status;
+    int status = OK;
 
     assert_not_null(p1);
     assert_not_null(p2);
 
-    zero = S_zero();
-
-    status = OK;
-
     if (IsZeroAE(p1) || IsZeroAE(p2))
         return(OK);
     else {
-        for (i=p1->first;i<=p1->last;i++) {
-            if (p1->basis_coef[i] != zero) {
+        while(p1) {
+            if (p1->basis_coef != zero) {
                 if (status == OK)
-                    status = LeftTapAE(p1->basis_coef[i],i,p2,p3); 
+                    status = LeftTapAE(p1->basis_coef, p1->basis, p2, p3); 
             }
+            p1 = p1->next;
         }
-    }
-    if (status == OK) {
-        AssignFirst(p3);
-        AssignLast(p3);
     }
     return(status);
 }
-
 
 #if 0
 Basis Min(Basis x, Basis y)
@@ -518,7 +393,6 @@ Basis Max(Basis x, Basis y)
 }
 #endif
 
-
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES: None.                                                 */
@@ -529,16 +403,12 @@ Basis Max(Basis x, Basis y)
 /*******************************************************************/ 
 Alg_element *AllocAE()
 {
-    Alg_element *new_alg_element = NULL;
-    
-    new_alg_element = ((Alg_element *) Mymalloc(sizeof(Alg_element)));
-    assert_not_null(new_alg_element);
+    Alg_element *p = (Alg_element *) Mymalloc(sizeof(Alg_element));
+    assert_not_null(p);
 
-    /* TW 9/16/93 - altered basis_coef from array to ptr */
-    new_alg_element->basis_coef = ((Scalar *) Mymalloc(sizeof(Scalar) * (DIMENSION_LIMIT + 1)));
-    assert_not_null(new_alg_element->basis_coef);
+    InitAE(p);
 
-    return(new_alg_element);
+    return p;
 }
 
 
@@ -555,23 +425,24 @@ Alg_element *AllocAE()
 /*******************************************************************/ 
 void PrintAE(const Alg_element *p)
 {
-    int i;
+    /*int i;*/
     int k = 0;
 
     assert_not_null_nv(p);
 
-    printf("Alg_element: First = %d Last = %d\n",p->first,p->last);
+    printf("Alg_element:\n");
 
-    for (i=p->first;i<=p->last;i++) {
-         if (p->basis_coef[i] != 0) {
-             if (p->basis_coef[i] > 0)
-                 printf(" + %d b[%d]",p->basis_coef[i],i);
+    while(p) {
+         if(p->basis_coef != 0) {
+             if (p->basis_coef > 0)
+                 printf(" + %d b[%d]", p->basis_coef, p->basis);
              else
-                 printf(" - %d b[%d]",p->basis_coef[i],i);
+                 printf(" - %d b[%d]", p->basis_coef, p->basis);
              k = (k + 1) % 7;
              if (k == 0)
                  printf("\n");
           }
+     p = p->next;
     }
     printf("\n");
 } 
