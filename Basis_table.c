@@ -73,8 +73,10 @@ int CreateBasisTable(int Target_degree)
 
     if (InitializeDegtoBasisTable(Target_degree) != OK)
         return(0);
+
     Nextbasistobefilled = 1;
     Deg_of_last_basis = 0;
+
     return(OK);
 }
     
