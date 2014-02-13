@@ -43,8 +43,29 @@ static int Deg_of_last_basis;
 Deg_to_basis_rec *Deg_to_basis_table = NULL;
 extern jmp_buf env;
 
+#if 0
 /* TW 9/25/93 - line counter for view */
-int lineCnt;
+static int lineCnt;
+#endif
+
+static BT_rec *Basis_table; /* TW 9/22/93 - changed Basis_table from array to ptr */
+
+void initBasisTable(void) {
+  Basis_table = (BT_rec *)Mymalloc(sizeof(BT_rec) * (DIMENSION_LIMIT + 1));
+  assert_not_null_nv(Basis_table);
+}
+
+void freeBasisTable(void) {
+  if(Basis_table) {
+    free(Basis_table);
+    Basis_table = NULL;
+  }
+}
+
+int basisTableReady(void) {
+  return Basis_table != NULL;
+}
+
 
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
@@ -236,7 +257,9 @@ void PrintBasisTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
 
   if(Nextbasistobefilled > 0){
     fprintf(filePtr, "Basis Table: \n");
+#if 0
     ++lineCnt;			/* TW 9/19/93 - support for view */
+#endif
     for (i=1;i<Nextbasistobefilled;i++) {
          fprintf(filePtr, " %3d.   %3d %3d   ",i,Basis_table[i].left_factor,
                              Basis_table[i].right_factor);
@@ -244,10 +267,12 @@ void PrintBasisTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
          fprintf(filePtr, "    ");
          PrintBasis(i, filePtr);
          fprintf(filePtr, "\n");
+#if 0
 	 if(outputType == 1){	/* TW 9/19/93 - support for view */
 	   ++lineCnt;
 	   more(&lineCnt);
 	 }
+#endif
     }
   }
 }

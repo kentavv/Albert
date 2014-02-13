@@ -14,8 +14,7 @@ int initGlobals(void)
 {
   int i;
 
-  Basis_table = (BT_rec *)Mymalloc(sizeof(BT_rec) * (DIMENSION_LIMIT + 1));
-  assert_not_null(Basis_table);
+  initBasisTable();
 
   PP_COL_SIZE = ((DIMENSION_LIMIT - 1) / 8) + 1;
 #if 0
@@ -49,10 +48,7 @@ void freeGlobals(void)
 {
   int i;
 
-  if(Basis_table) {
-    free(Basis_table);
-    Basis_table = NULL;
-  }
+  freeBasisTable();
 
 #if 0
   if(Pair_present) {
