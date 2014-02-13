@@ -34,14 +34,18 @@
 /*******************************************************************/ 
 void Str_cat(char **Str1_ptr, char Str2[], int *Str1_maxsize_ptr)
 {
-    if ((*Str1_maxsize_ptr) < (strlen(*Str1_ptr) + strlen(Str2))) {
-        if (((*Str1_ptr) = realloc(*Str1_ptr,2*((*Str1_maxsize_ptr) + strlen(Str2)))) == NULL)
+    if (*Str1_maxsize_ptr < strlen(*Str1_ptr) + strlen(Str2)) {
+        int n = 2 * (*Str1_maxsize_ptr + strlen(Str2));
+
+        *Str1_ptr = (char*) realloc(*Str1_ptr, n);
+
+        if (*Str1_ptr == NULL)
             No_memory_panic();
         else {
-            strcat(*Str1_ptr,Str2);
-            (*Str1_maxsize_ptr) = 2 * (strlen(Str2) + (*Str1_maxsize_ptr));
+            strcat(*Str1_ptr, Str2);
+            *Str1_maxsize_ptr = n;
         }
     }
     else
-        strcat(*Str1_ptr,Str2);
+        strcat(*Str1_ptr, Str2);
 }
