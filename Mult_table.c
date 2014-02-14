@@ -552,8 +552,6 @@ Term *Alloc_Terms_list(void)
 /*******************************************************************/ 
 Terms_block *Alloc_Terms_block(void)
 {
-    int i;
-
     Terms_block *new_terms_block = (Terms_block *) Mymalloc(sizeof(Terms_block));
     assert_not_null(new_terms_block);
 
@@ -562,12 +560,6 @@ Terms_block *Alloc_Terms_block(void)
     assert_not_null(new_terms_block->terms);
 
     memset(new_terms_block->terms, 0, sizeof(Term) * DIMENSION_LIMIT);
-#if 0
-    for (i=0;i<DIMENSION_LIMIT;i++) {
-        new_terms_block->terms[i].coef = 0; 
-        new_terms_block->terms[i].word = 0; 
-    }
-#endif
     new_terms_block->next = NULL;
 
     return(new_terms_block);
