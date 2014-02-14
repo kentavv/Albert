@@ -328,14 +328,21 @@ Eqn_list_node *GetNewEqnListNode(void)
 
 void FreeEqns(Eqn_list_node *L)
 {
-    if(L) {
-      FreeEqns(L->next);
+    int n = 0;
+    while(L) {
+      Eqn_list_node *Ln = L->next;
+
       if(L->basis_pairs) free(L->basis_pairs);
       free(L);
+ 
+      L = Ln;
+      n++;
     }
+    printf("\nn: %d\n", n);
 }
 
 
+#if DEBUG_SEQ_SUBTYPES
 void PrintSeqSubtypes(void)
 {
 #if DEBUG_SEQ_SUBTYPES
@@ -352,6 +359,7 @@ void PrintSeqSubtypes(void)
         printf("\n");
     }
 }
+#endif
 
 #if 0
 void PrintEqns(Eqn_list_node *L)
