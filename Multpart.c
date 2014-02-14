@@ -116,8 +116,10 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
         Type temp_type = (Type) Mymalloc(target_type_len * sizeof(Degree)); 
         assert_not_null(temp_type);
 
+#if 0
         for (i=0;i<target_type_len;i++)
             temp_type[i] = 0;
+#endif
 
         for (i=0;i<Num_vars;i++) {
             for (j=0;j<target_type_len;j++)
