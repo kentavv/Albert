@@ -56,7 +56,6 @@ struct unexp_tnode *Create_parse_tree(char Poly_str[])
     int  Syn_stack[STACK_SIZE];           /* stack used while parsing */
     struct unexp_tnode *Sem_stack[STACK_SIZE];  
     static PROD_TREEPTR Prod_bst_root = NULL;
-    void Init_prod_tree();
     int  sp = -1;				
 
     int  token;                            /* token number returned */

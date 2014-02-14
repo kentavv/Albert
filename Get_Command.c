@@ -77,7 +77,7 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
     }
     i = 0;
     tl = strlen(total_line);
-    total_line1 = Mymalloc(tl+1);
+    total_line1 = (char*) Mymalloc(tl+1);
     while (i < tl) {
         if ((total_line[i] == ' ') || (total_line[i] == '\t'))
             break;
@@ -134,7 +134,7 @@ int DoSubstitution(void)
     if (tl < 3)
         return(0);
 
-    str1 = Mymalloc(tl+1);
+    str1 = (char*) Mymalloc(tl+1);
     i = 0;
     j = 0;
     while ((i<tl) && (total_line[i] != '$'))
@@ -144,7 +144,7 @@ int DoSubstitution(void)
         free(str1);
         return(0);
     }
-    str2 = Mymalloc(tl+1);
+    str2 = (char*) Mymalloc(tl+1);
     j = 0;
     while ((i<tl) && (total_line[i] != '$'))
         str2[j++] = total_line[i++];
@@ -154,7 +154,7 @@ int DoSubstitution(void)
         free(str2);
         return(0);
     }
-    str3 = Mymalloc(tl+1);
+    str3 = (char*) Mymalloc(tl+1);
     j = 0;
     while (i<tl)
         str3[j++] = total_line[i++];
@@ -230,7 +230,7 @@ int ReadDotAlbert(Dalbert_node *dalbert_node_ptr, char *albertFileLoc) /* TW - l
 
 
     total_len = MAX_LINE;
-    total_line = Mymalloc(total_len);
+    total_line = (char*) Mymalloc(total_len);
 
     Dalbertheadptr = dalbert_node_ptr;
     tnodeptr = dalbert_node_ptr;
@@ -274,7 +274,7 @@ message to display path */
     DotalbertPresent = TRUE;
 
     albert_line_len = MAX_LINE;
-    albert_line = Mymalloc(albert_line_len);
+    albert_line = (char*) Mymalloc(albert_line_len);
     albert_line[0] = '\0';
     while ((temp = fgets(temp_line,MAX_LINE,albert_fp)) != NULL) {
         slashfound = TRUE;
@@ -334,7 +334,7 @@ message to display path */
             i++;
         }
         if ((lhs_len > 0) && (rhs_len > 0))  {
-            tnodeptr->lhs = Mymalloc(lhs_len+1);
+            tnodeptr->lhs = (char*) Mymalloc(lhs_len+1);
             i = lhsstart;
             j = 0;
             while (i < alinelen) {
@@ -344,14 +344,14 @@ message to display path */
             }
             tnodeptr->lhs[j++] = '\0';
 
-            tnodeptr->rhs = Mymalloc(rhs_len+1);
+            tnodeptr->rhs = (char*) Mymalloc(rhs_len+1);
             j = 0;
             while (i < alinelen) {
                 if ((albert_line[i] != ' ') && (albert_line[i] != '\t'))
                      tnodeptr->rhs[j++] = albert_line[i];
                 i++;
             }
-            tnodeptr->next = (Dalbert_node *) (Mymalloc(sizeof(Dalbert_node)));
+            tnodeptr->next = (Dalbert_node *) Mymalloc(sizeof(Dalbert_node));
             tnodeptr = tnodeptr->next;
             tnodeptr->lhs = NULL;
             tnodeptr->rhs = NULL;

@@ -52,7 +52,7 @@
  *
  */
 typedef struct unexp_tnode {
-    int    operator;
+    int    op;
     char   s_letter;
     int    scalar_num;
     struct unexp_tnode *operand1;

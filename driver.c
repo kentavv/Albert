@@ -67,6 +67,13 @@ static void sigCatch(int x);
 Scalar Field = DEFAULT_FIELD;          /* Build_defs.h */
 int sparse = TRUE;
 
+int DIMENSION_LIMIT;
+int PP_COL_SIZE;
+
+/* Size of the Translation table: i.e from basis to Mt_block. */
+/* Used To save memory.  */
+int MTB_INDEX_SIZE;
+
 int sigIntFlag = 0;		/* TW 10/8/93 - flag for Ctrl-C */
 
 
@@ -214,8 +221,8 @@ int main(int argc, char *argv[])
     printf("Type h for help.\n");
     Command_len = COMMAND_LEN;
     Operand_len = MAX_LINE;
-    Command = Mymalloc(Command_len);
-    Operand = Mymalloc(Operand_len);
+    Command =(char*) Mymalloc(Command_len);
+    Operand =(char*) Mymalloc(Operand_len);
 
     S_init();
 
@@ -604,7 +611,7 @@ type to show */
 
                  switch(table){
                    case 'b':
-		     if(mtable_status == PRESENT && Basis_table && Deg_to_basis_table){
+                     if(mtable_status == PRESENT && basisTableReady() && Deg_to_basis_table){
                        sprintf(tableFileName, "/tmp/Basis.table");
                        tableFilePtr = fopen(tableFileName, "w");
                        if(tableFilePtr){
@@ -664,11 +671,12 @@ type to show */
 
                  switch(table){
                    case 'b':
-		     if(mtable_status == PRESENT && Basis_table && Deg_to_basis_table){
+		     if(mtable_status == PRESENT && basisTableReady() && Deg_to_basis_table){
 		       printf("File Name --> ");
 			fflush(stdout);
 		       fgets(tableFileName,sizeof(tableFileName),stdin);
-		       tableFileName[ strlen(tableFileName) -1 ] = 0;
+		       tableFileName[sizeof(tableFileName) - 1] = '\0';
+		       tableFileName[strlen(tableFileName) - 1] = '\0';
 		       printf("\n");
 		       if(strlen(tableFileName)){
 		         if(!(tableFilePtr = fopen(tableFileName, "w"))){
@@ -692,7 +700,8 @@ type to show */
 		       printf("File Name --> ");
 			fflush(stdout);
 		       fgets(tableFileName,sizeof(tableFileName),stdin);
-		       tableFileName[ strlen(tableFileName) -1 ] = 0;
+		       tableFileName[sizeof(tableFileName) - 1] = '\0';
+		       tableFileName[strlen(tableFileName) - 1] = '\0';
 		       printf("\n");
 		       if(strlen(tableFileName)){
 		         if(!(tableFilePtr = fopen(tableFileName, "w"))){
@@ -727,7 +736,7 @@ type to show */
 
 		 switch(table){
 		   case 'b':
-		     if(mtable_status == PRESENT && Basis_table && Deg_to_basis_table){
+		     if(mtable_status == PRESENT && basisTableReady() && Deg_to_basis_table){
 		       PrintBasisTable(stdout, 1);
 		     }
 		     else{

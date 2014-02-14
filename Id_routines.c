@@ -47,7 +47,7 @@ int Add_id(struct polynomial *Id, char Str[], struct id_queue_head *Id_queue)
     pntr = Id_queue_node_alloc();
  
     pntr->identity = Id;
-    pntr->user_str = Mymalloc(strlen(Str)+1);
+    pntr->user_str = (char*) Mymalloc(strlen(Str)+1);
     strcpy(pntr->user_str,Str);
     pntr->next = NULL;
 

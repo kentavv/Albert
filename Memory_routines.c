@@ -67,7 +67,7 @@ struct unexp_tnode *Unexp_tnode_alloc()
         new_tnode = ((struct unexp_tnode *) Mymalloc(sizeof(struct unexp_tnode)));
     }
 
-    new_tnode->operator = -1;
+    new_tnode->op = -1;
     new_tnode->s_letter = ' ';
     new_tnode->scalar_num = 0;
     new_tnode->operand1 = NULL; 

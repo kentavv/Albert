@@ -33,12 +33,12 @@
 #define MTB_SIZE	100
 
 /* TW 9/22/93 - switch from #define to globals */
-int DIMENSION_LIMIT;
-int PP_COL_SIZE;
+extern int DIMENSION_LIMIT;
+extern int PP_COL_SIZE;
 
 /* Size of the Translation table: i.e from basis to Mt_block. */
 /* Used To save memory.  */
-int MTB_INDEX_SIZE;
+extern int MTB_INDEX_SIZE;
 
 typedef unsigned char Scalar;
 typedef int Basis;

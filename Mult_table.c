@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "Mult_table.h"
 #include "Build_defs.h"
@@ -69,8 +70,10 @@ static Terms_block *Cur_terms_block = NULL;
 /* There is free space for terms from this number onwards. */
 static int Cur_offset = 0;
 
+#if 0
 /* TW 9/18/93 - line counter for view */
 int lineCnt = 0;
+#endif
 
 
 /*******************************************************************/
@@ -532,9 +535,7 @@ Mt_block *Alloc_Mt_block()
 /*******************************************************************/
 Term *Alloc_Terms_list(void)
 {
-    Term *new_terms_list = NULL;
-
-    new_terms_list = ((Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT));
+    Term *new_terms_list = (Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT);
     assert_not_null(new_terms_list);
 
     return(new_terms_list);
@@ -551,20 +552,22 @@ Term *Alloc_Terms_list(void)
 /*******************************************************************/ 
 Terms_block *Alloc_Terms_block(void)
 {
-    Terms_block *new_terms_block = NULL;
     int i;
 
-    new_terms_block = ((Terms_block *) Mymalloc(sizeof(Terms_block)));
+    Terms_block *new_terms_block = (Terms_block *) Mymalloc(sizeof(Terms_block));
     assert_not_null(new_terms_block);
 
     /* TW 9/22/93 - change of terms from array to ptr */
-    new_terms_block->terms = ((Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT));
+    new_terms_block->terms = (Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT);
     assert_not_null(new_terms_block->terms);
 
+    memset(new_terms_block->terms, 0, sizeof(Term) * DIMENSION_LIMIT);
+#if 0
     for (i=0;i<DIMENSION_LIMIT;i++) {
-        (new_terms_block->terms[i]).coef = 0; 
-        (new_terms_block->terms[i]).word = 0; 
+        new_terms_block->terms[i].coef = 0; 
+        new_terms_block->terms[i].word = 0; 
     }
+#endif
     new_terms_block->next = NULL;
 
     return(new_terms_block);
@@ -589,12 +592,16 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
 
   assert_not_null_nv(prod);	/* TW 9/22/93 - change prod[] to *prod */
 
+#if 0
   lineCnt = 0;			/* TW 9/19/93 - support for view */
+#endif
   dim = GetNextBasisTobeFilled();
   if(dim > 0){
     fprintf(filePtr, "\n");
     fprintf(filePtr, "Multiplication table: \n");
+#if 0
     lineCnt += 2;		/* TW 9/19/93 - support for view */
+#endif
     InitAE(prod);
     for (i = 1; i <= dim; i++) {
       for (j = 1; j <= dim; j++) {
@@ -603,22 +610,28 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
         if (!IsZeroAE(prod)) {	/* TW 9/22/93 - change prod[] to *prod */
           /* PrintBasis(i); */
           fprintf(filePtr, "(b%d)*(b%d)\n",i,j);
+#if 0
 	  if(outputType == 1){	/* TW 9/19/93 - support for view */
 	    ++lineCnt;
 	    more(&lineCnt);
 	  }
+#endif
           /* PrintBasis(j); */
           Print_AE(prod, filePtr, outputType); 	/* TW 9/22/93 - change prod[] to *prod */
           fprintf(filePtr, "\n");
+#if 0
 	  if(outputType == 1){	/* TW 9/19/93 - support for view */
 	    ++lineCnt;
 	    more(&lineCnt);
 	  }
+#endif
           fprintf(filePtr, "\n");
+#if 0
 	  if(outputType == 1){	/* TW 9/19/93 - support for view */
 	    ++lineCnt;
 	    more(&lineCnt);
 	  }
+#endif
         }
       }
     }   
@@ -639,10 +652,12 @@ void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - ad
       x = ae->basis_coef; 
       if ((trmcnt > 0) && (trmcnt % 4 == 0)) { 		/* 4 items per line */
         fprintf(filePtr, "\n");	
+#if 0
 	if(outputType == 1){	/* TW 9/19/93 - support for view */
 	  ++lineCnt;
 	  more(&lineCnt);
 	}
+#endif
         lnecnt = 0;
       }
       if (lnecnt == 0){

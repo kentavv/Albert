@@ -57,22 +57,22 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
     if (Unexp_tree == NULL)
         return(NULL);
 
-    if (Unexp_tree->operator == SMALL_LETTER) {
+    if (Unexp_tree->op == SMALL_LETTER) {
         temp_tnode_ptr = Unexp_tnode_alloc();
-        temp_tnode_ptr->operator = SMALL_LETTER;
+        temp_tnode_ptr->op = SMALL_LETTER;
         temp_tnode_ptr->s_letter = Unexp_tree->s_letter;
         temp_tnode_ptr->next = Unexp_tree->next;
         return(temp_tnode_ptr);
     }
-    else if (Unexp_tree->operator == SCALAR) {
+    else if (Unexp_tree->op == SCALAR) {
         temp_tnode_ptr = Unexp_tnode_alloc();
-        temp_tnode_ptr->operator = SCALAR;
+        temp_tnode_ptr->op = SCALAR;
         temp_tnode_ptr->scalar_num = Unexp_tree->scalar_num;
         temp_tnode_ptr->next = Unexp_tree->next;
         return(temp_tnode_ptr);
     }
     else {
-        switch (Unexp_tree->operator) {
+        switch (Unexp_tree->op) {
 
             case   UNARY_PLUS :   /* +(polynomial) becomes polynomial */	
                 return(Expand_parse_tree(Unexp_tree->operand1));
@@ -80,9 +80,9 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   UNARY_MINUS :  /* -(poly) becomes -1(poly) */	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = SCALAR_MULT;
+                temp_tnode_ptr->op = SCALAR_MULT;
                 temp1 = Unexp_tnode_alloc(); 
-                temp1->operator = SCALAR;
+                temp1->op = SCALAR;
                 temp1->scalar_num = -1;
                 temp_tnode_ptr->operand1 = temp1; 
                 temp_tnode_ptr->operand2 = Expand_parse_tree(Unexp_tree->operand1);
@@ -92,7 +92,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
             case   ADDITION    :	
             case   SUBTRACTION :	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = Unexp_tree->operator;
+                temp_tnode_ptr->op = Unexp_tree->op;
                 temp_tnode_ptr->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                 temp_tnode_ptr->operand2 = Expand_parse_tree(Unexp_tree->operand2);
                 return(temp_tnode_ptr);
@@ -100,7 +100,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   SCALAR_MULT :	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = SCALAR_MULT;
+                temp_tnode_ptr->op = SCALAR_MULT;
                 temp_tnode_ptr->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                 temp_tnode_ptr->operand2 = Expand_parse_tree(Unexp_tree->operand2);
                 return(temp_tnode_ptr);
@@ -111,14 +111,14 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
                     return(Expand_parse_tree(Unexp_tree->operand1));
                 else {
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = JUXT_PROD;
+                    temp_tnode_ptr->op = JUXT_PROD;
                     temp_tnode_ptr->operand2=Expand_parse_tree(Unexp_tree->operand1);
                     temp1 = Unexp_tnode_alloc(); 
                     temp2 = Unexp_tnode_alloc(); 
-                    temp1->operator = EXPONENTIATION;
+                    temp1->op = EXPONENTIATION;
                     temp1->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                     temp1->operand2 = temp2; 
-                    temp2->operator = SCALAR;
+                    temp2->op = SCALAR;
                     temp2->scalar_num = Unexp_tree->operand2->scalar_num - 1;
                     temp_tnode_ptr->operand1 = Expand_parse_tree(temp1);
                     return(temp_tnode_ptr);
@@ -127,7 +127,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   JUXT_PROD :	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = JUXT_PROD;
+                temp_tnode_ptr->op = JUXT_PROD;
                 temp_tnode_ptr->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                 temp_tnode_ptr->operand2 = Expand_parse_tree(Unexp_tree->operand2);
                 return(temp_tnode_ptr);
@@ -135,10 +135,10 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   COMMUTATION :  /* [x,y] = xy-yx */	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = SUBTRACTION;
+                temp_tnode_ptr->op = SUBTRACTION;
                 temp1 = Unexp_tnode_alloc(); 
                 temp2 = Unexp_tnode_alloc(); 
-                temp1->operator = temp2->operator = JUXT_PROD;
+                temp1->op = temp2->op = JUXT_PROD;
                 temp1->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                 temp2->operand2 = Expand_parse_tree(Unexp_tree->operand1);
                 temp1->operand2 = Expand_parse_tree(Unexp_tree->operand2);
@@ -150,10 +150,10 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   JORDAN_PROD :  /* x*y = xy+yx */	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = ADDITION;
+                temp_tnode_ptr->op = ADDITION;
                 temp1 = Unexp_tnode_alloc(); 
                 temp2 = Unexp_tnode_alloc(); 
-                temp1->operator = temp2->operator = JUXT_PROD;
+                temp1->op = temp2->op = JUXT_PROD;
                 temp1->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                 temp2->operand2 = Expand_parse_tree(Unexp_tree->operand1);
                 temp1->operand2 = Expand_parse_tree(Unexp_tree->operand2);
@@ -165,13 +165,13 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   ASSOCIATION :  /* (x,y,z) = (xy)z-x(yz) */	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = SUBTRACTION;
+                temp_tnode_ptr->op = SUBTRACTION;
                 temp1 = Unexp_tnode_alloc(); 
                 temp2 = Unexp_tnode_alloc(); 
                 temp3 = Unexp_tnode_alloc(); 
                 temp4 = Unexp_tnode_alloc(); 
-                temp1->operator = temp2->operator = JUXT_PROD;
-                temp3->operator = temp4->operator = JUXT_PROD;
+                temp1->op = temp2->op = JUXT_PROD;
+                temp3->op = temp4->op = JUXT_PROD;
                 temp1->operand1 = temp3;
                 temp2->operand2 = temp4;
                 temp3->operand1 = Expand_parse_tree(Unexp_tree->operand1);
@@ -187,7 +187,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   JACOBI :  /* J(x,y,z) = (xy)z+(yz)x+(zx)y */	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = ADDITION;
+                temp_tnode_ptr->op = ADDITION;
                 temp1 = Unexp_tnode_alloc(); 
                 temp2 = Unexp_tnode_alloc(); 
                 temp3 = Unexp_tnode_alloc(); 
@@ -195,9 +195,9 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
                 temp5 = Unexp_tnode_alloc(); 
                 temp6 = Unexp_tnode_alloc(); 
                 temp7 = Unexp_tnode_alloc(); 
-                temp1->operator = ADDITION;
-                temp2->operator = temp3->operator = temp4->operator = JUXT_PROD;
-                temp5->operator = temp6->operator = temp7->operator = JUXT_PROD;
+                temp1->op = ADDITION;
+                temp2->op = temp3->op = temp4->op = JUXT_PROD;
+                temp5->op = temp6->op = temp7->op = JUXT_PROD;
                 temp1->operand1 = temp3;
                 temp1->operand2 = temp4;
                 temp2->operand1 = temp5;
@@ -219,13 +219,13 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   JORDAN_ASSOC :  /* <x,y,z> = (x*y)*z-x*(y*z) */	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = SUBTRACTION;
+                temp_tnode_ptr->op = SUBTRACTION;
                 temp1 = Unexp_tnode_alloc(); 
                 temp2 = Unexp_tnode_alloc(); 
                 temp3 = Unexp_tnode_alloc(); 
                 temp4 = Unexp_tnode_alloc(); 
-                temp1->operator = temp2->operator = JORDAN_PROD;
-                temp3->operator = temp4->operator = JORDAN_PROD;
+                temp1->op = temp2->op = JORDAN_PROD;
+                temp3->op = temp4->op = JORDAN_PROD;
                 temp1->operand1 = temp3;
                 temp2->operand2 = temp4;
                 temp3->operand1 = Expand_parse_tree(Unexp_tree->operand1);
@@ -245,11 +245,11 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
                 else {
                     temp1 = Unexp_tnode_alloc(); 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp1->operator = OPERATOR_PROD;
+                    temp1->op = OPERATOR_PROD;
                     temp1->operand1 = temp_tnode_ptr;
                     temp1->operand2 = Unexp_tree->operand2->next;
-                    temp_tnode_ptr->operator = JUXT_PROD;
-                    if (Unexp_tree->operand2->operator == LEFT_MULT) {
+                    temp_tnode_ptr->op = JUXT_PROD;
+                    if (Unexp_tree->operand2->op == LEFT_MULT) {
                         temp_tnode_ptr->operand1 = Expand_parse_tree(Unexp_tree->operand2->operand1);
                         temp_tnode_ptr->operand2 = Expand_parse_tree(Unexp_tree->operand1);
                     }
@@ -263,7 +263,7 @@ struct unexp_tnode *Expand_parse_tree(struct unexp_tnode *Unexp_tree)
 
             case   ARTIFICIAL_WORD : /* W{n;(xy):y:a:c...} */ 	
                 temp = Unexp_tnode_alloc();
-                temp->operator = ARTIFICIAL_WORD;
+                temp->op = ARTIFICIAL_WORD;
                 temp->operand1 = Expand_parse_tree(Unexp_tree->operand1);
                 temp->operand2 = Expand_parse_tree(Unexp_tree->operand2);
                 temp1 = temp->operand2;
@@ -320,7 +320,7 @@ struct unexp_tnode *Simplify_art_word(int T, struct unexp_tnode *Pntr)
     }
     else if (deg == 2) {
         temp = Unexp_tnode_alloc();
-        temp->operator = JUXT_PROD;
+        temp->op = JUXT_PROD;
         temp->operand1 = Pntr;
         temp->operand2 = Pntr->next;
         temp->operand1->next = NULL;
@@ -370,7 +370,7 @@ struct unexp_tnode *Simplify_art_word(int T, struct unexp_tnode *Pntr)
         right_tree = Simplify_art_word(t2,temp2);
 
         temp = Unexp_tnode_alloc();
-        temp->operator = JUXT_PROD;
+        temp->op = JUXT_PROD;
         temp->operand1 = left_tree;
         temp->operand2 = right_tree;
 
@@ -435,39 +435,39 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
     if (Unsimp_tree == NULL)
         return(NULL);
 
-    if (Unsimp_tree->operator == SMALL_LETTER) {
+    if (Unsimp_tree->op == SMALL_LETTER) {
         temp_tnode_ptr = Unexp_tnode_alloc();
-        temp_tnode_ptr->operator = SMALL_LETTER;
+        temp_tnode_ptr->op = SMALL_LETTER;
         temp_tnode_ptr->s_letter = Unsimp_tree->s_letter;
         temp_tnode_ptr->next = Unsimp_tree->next;
         return(temp_tnode_ptr);
     }
-    else if (Unsimp_tree->operator == SCALAR) {
+    else if (Unsimp_tree->op == SCALAR) {
         temp_tnode_ptr = Unexp_tnode_alloc();
-        temp_tnode_ptr->operator = SCALAR;
+        temp_tnode_ptr->op = SCALAR;
         temp_tnode_ptr->scalar_num = Unsimp_tree->scalar_num;
         temp_tnode_ptr->next = Unsimp_tree->next;
         return(temp_tnode_ptr);
     }
     else {
-        switch (Unsimp_tree->operator) {
+        switch (Unsimp_tree->op) {
 
             case   ADDITION    :	
             case   SUBTRACTION :	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = Unsimp_tree->operator;
+                temp_tnode_ptr->op = Unsimp_tree->op;
                 temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                 temp_tnode_ptr->operand2 = Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
                 return(temp_tnode_ptr);
                 break;
 
             case   JUXT_PROD :	
-                if (((Unsimp_tree->operand1->operator == JUXT_PROD) ||
-                     (Unsimp_tree->operand1->operator == SMALL_LETTER)) &&
-                    ((Unsimp_tree->operand2->operator == JUXT_PROD) ||
-                     (Unsimp_tree->operand2->operator == SMALL_LETTER))) {
+                if (((Unsimp_tree->operand1->op == JUXT_PROD) ||
+                     (Unsimp_tree->operand1->op == SMALL_LETTER)) &&
+                    ((Unsimp_tree->operand2->op == JUXT_PROD) ||
+                     (Unsimp_tree->operand2->op == SMALL_LETTER))) {
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = JUXT_PROD;
+                    temp_tnode_ptr->op = JUXT_PROD;
                     temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp_tnode_ptr->operand2 = Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
                     return(temp_tnode_ptr);
@@ -475,15 +475,15 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
 
                 /* x(y+z) = xy + xz */
 
-                else if (((Unsimp_tree->operand1->operator == SMALL_LETTER) || 
-                          (Unsimp_tree->operand1->operator == JUXT_PROD)) && 
-                         ((Unsimp_tree->operand2->operator == ADDITION) ||
-                          (Unsimp_tree->operand2->operator == SUBTRACTION))) {
+                else if (((Unsimp_tree->operand1->op == SMALL_LETTER) || 
+                          (Unsimp_tree->operand1->op == JUXT_PROD)) && 
+                         ((Unsimp_tree->operand2->op == ADDITION) ||
+                          (Unsimp_tree->operand2->op == SUBTRACTION))) {
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator=Unsimp_tree->operand2->operator;
+                    temp_tnode_ptr->op=Unsimp_tree->operand2->op;
                     temp1 = Unexp_tnode_alloc(); 
                     temp2 = Unexp_tnode_alloc(); 
-                    temp1->operator = temp2->operator = JUXT_PROD;
+                    temp1->op = temp2->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp2->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2->operand1,Modified_ptr);
@@ -496,15 +496,15 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
       
                 /* (x+y)z = xz + yz */
 
-                else if (((Unsimp_tree->operand2->operator == SMALL_LETTER) || 
-                          (Unsimp_tree->operand2->operator == JUXT_PROD)) && 
-                         ((Unsimp_tree->operand1->operator == ADDITION) ||
-                          (Unsimp_tree->operand1->operator == SUBTRACTION))) {
+                else if (((Unsimp_tree->operand2->op == SMALL_LETTER) || 
+                          (Unsimp_tree->operand2->op == JUXT_PROD)) && 
+                         ((Unsimp_tree->operand1->op == ADDITION) ||
+                          (Unsimp_tree->operand1->op == SUBTRACTION))) {
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator=Unsimp_tree->operand1->operator;
+                    temp_tnode_ptr->op=Unsimp_tree->operand1->op;
                     temp1 = Unexp_tnode_alloc(); 
                     temp2 = Unexp_tnode_alloc(); 
-                    temp1->operator = temp2->operator = JUXT_PROD;
+                    temp1->op = temp2->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand1,Modified_ptr);
                     temp2->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand2,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
@@ -517,15 +517,15 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
 
                 /* (a+b)(c-d) = ac+bc-bc-bd  */
 
-                else if (((Unsimp_tree->operand1->operator == ADDITION) ||
-                          (Unsimp_tree->operand1->operator == SUBTRACTION)) &&
-                         ((Unsimp_tree->operand2->operator == ADDITION) ||
-                          (Unsimp_tree->operand2->operator == SUBTRACTION))) {
+                else if (((Unsimp_tree->operand1->op == ADDITION) ||
+                          (Unsimp_tree->operand1->op == SUBTRACTION)) &&
+                         ((Unsimp_tree->operand2->op == ADDITION) ||
+                          (Unsimp_tree->operand2->op == SUBTRACTION))) {
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator=Unsimp_tree->operand1->operator;
+                    temp_tnode_ptr->op=Unsimp_tree->operand1->op;
                     temp1 = Unexp_tnode_alloc(); 
                     temp2 = Unexp_tnode_alloc(); 
-                    temp1->operator = temp2->operator = JUXT_PROD;
+                    temp1->op = temp2->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand1,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
                     temp2->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand2,Modified_ptr);
@@ -538,13 +538,13 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
 
                 /* (x.y).3x = 3(x.y).x  */
 
-                else if (((Unsimp_tree->operand1->operator == JUXT_PROD) ||
-                          (Unsimp_tree->operand1->operator == SMALL_LETTER)) &&
-                          (Unsimp_tree->operand2->operator == SCALAR_MULT)) {
+                else if (((Unsimp_tree->operand1->op == JUXT_PROD) ||
+                          (Unsimp_tree->operand1->op == SMALL_LETTER)) &&
+                          (Unsimp_tree->operand2->op == SCALAR_MULT)) {
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = JUXT_PROD;
+                    temp1->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2->operand2,Modified_ptr);
                     temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand2->operand1,Modified_ptr);
@@ -552,13 +552,13 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
                     *Modified_ptr = TRUE;
                     return(temp_tnode_ptr);
                 }
-                else if ((Unsimp_tree->operand1->operator == SCALAR_MULT) &&
-                         ((Unsimp_tree->operand2->operator == SMALL_LETTER) || 
-                          (Unsimp_tree->operand2->operator == JUXT_PROD))) { 
+                else if ((Unsimp_tree->operand1->op == SCALAR_MULT) &&
+                         ((Unsimp_tree->operand2->op == SMALL_LETTER) || 
+                          (Unsimp_tree->operand2->op == JUXT_PROD))) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = JUXT_PROD;
+                    temp1->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand2,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
                     temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand1,Modified_ptr);
@@ -569,17 +569,17 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
 
                 /* 3(4x) = 12x  */
 
-                else if ((Unsimp_tree->operand1->operator == SCALAR_MULT) &&
-                         (Unsimp_tree->operand2->operator == SCALAR_MULT)) { 
+                else if ((Unsimp_tree->operand1->op == SCALAR_MULT) &&
+                         (Unsimp_tree->operand2->op == SCALAR_MULT)) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = SCALAR;
+                    temp1->op = SCALAR;
                     Assert_scalar_bounds(Unsimp_tree->operand1->operand1->scalar_num);
                     Assert_scalar_bounds(Unsimp_tree->operand2->operand1->scalar_num);
                     temp1->scalar_num = Unsimp_tree->operand1->operand1->scalar_num * Unsimp_tree->operand2->operand1->scalar_num;
                     temp2 = Unexp_tnode_alloc(); 
-                    temp2->operator = JUXT_PROD;
+                    temp2->op = JUXT_PROD;
                     temp2->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand2,Modified_ptr);
                     temp2->operand2 = Simplify_parse_tree(Unsimp_tree->operand2->operand2,Modified_ptr);
                     temp_tnode_ptr->operand1 = temp1; 
@@ -590,13 +590,13 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
 
                 /* 3x.(y+z) = 3x.y + 3x.z */
 
-                else if ((Unsimp_tree->operand1->operator == SCALAR_MULT) &&
-                         ((Unsimp_tree->operand2->operator == ADDITION) || 
-                          (Unsimp_tree->operand2->operator == SUBTRACTION))) { 
+                else if ((Unsimp_tree->operand1->op == SCALAR_MULT) &&
+                         ((Unsimp_tree->operand2->op == ADDITION) || 
+                          (Unsimp_tree->operand2->op == SUBTRACTION))) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = JUXT_PROD;
+                    temp1->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand2,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
                     temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand1->operand1,Modified_ptr);
@@ -607,13 +607,13 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
 
                 /* (y+z).3x = 3y.x + 3z.x */
 
-                else if ((Unsimp_tree->operand2->operator == SCALAR_MULT) &&
-                         ((Unsimp_tree->operand1->operator == ADDITION) || 
-                          (Unsimp_tree->operand1->operator == SUBTRACTION))) { 
+                else if ((Unsimp_tree->operand2->op == SCALAR_MULT) &&
+                         ((Unsimp_tree->operand1->op == ADDITION) || 
+                          (Unsimp_tree->operand1->op == SUBTRACTION))) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = JUXT_PROD;
+                    temp1->op = JUXT_PROD;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2->operand2,Modified_ptr);
                     temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand2->operand1,Modified_ptr);
@@ -624,10 +624,10 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
                 break;
 
             case   SCALAR_MULT :	
-                if ((Unsimp_tree->operand2->operator == SMALL_LETTER) || 
-                    (Unsimp_tree->operand2->operator == JUXT_PROD)) { 
+                if ((Unsimp_tree->operand2->op == SMALL_LETTER) || 
+                    (Unsimp_tree->operand2->op == JUXT_PROD)) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp_tnode_ptr->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp_tnode_ptr->operand2=Simplify_parse_tree(Unsimp_tree->operand2,Modified_ptr);
                     return(temp_tnode_ptr);
@@ -635,11 +635,11 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
                 
                 /* 3(3x) = 9x  */
 
-                else if (Unsimp_tree->operand2->operator == SCALAR_MULT) { 
+                else if (Unsimp_tree->operand2->op == SCALAR_MULT) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = SCALAR;
+                    temp1->op = SCALAR;
                     Assert_scalar_bounds(Unsimp_tree->operand1->scalar_num);
                     Assert_scalar_bounds(Unsimp_tree->operand2->operand1->scalar_num);
                     temp1->scalar_num = Unsimp_tree->operand1->scalar_num * Unsimp_tree->operand2->operand1->scalar_num;
@@ -651,13 +651,13 @@ struct unexp_tnode *Simplify_parse_tree(struct unexp_tnode *Unsimp_tree, int *Mo
                
                 /* 3(x+y) = 3x + 3y  */
 
-                else if ((Unsimp_tree->operand2->operator == ADDITION) || 
-                         (Unsimp_tree->operand2->operator == SUBTRACTION)) { 
+                else if ((Unsimp_tree->operand2->op == ADDITION) || 
+                         (Unsimp_tree->operand2->op == SUBTRACTION)) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = Unsimp_tree->operand2->operator;
+                    temp_tnode_ptr->op = Unsimp_tree->operand2->op;
                     temp1 = Unexp_tnode_alloc(); 
                     temp2 = Unexp_tnode_alloc(); 
-                    temp1->operator = temp2->operator = SCALAR_MULT;
+                    temp1->op = temp2->op = SCALAR_MULT;
                     temp1->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr);
                     temp2->operand1 = Simplify_parse_tree(Unsimp_tree->operand1,Modified_ptr); 
                     temp1->operand2 = Simplify_parse_tree(Unsimp_tree->operand2->operand1,Modified_ptr);
@@ -698,27 +698,27 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
     if (Unsimp_tree == NULL)
         return(NULL);
 
-    if (Unsimp_tree->operator == SMALL_LETTER) {
+    if (Unsimp_tree->op == SMALL_LETTER) {
         temp_tnode_ptr = Unexp_tnode_alloc();
-        temp_tnode_ptr->operator = SMALL_LETTER;
+        temp_tnode_ptr->op = SMALL_LETTER;
         temp_tnode_ptr->s_letter = Unsimp_tree->s_letter;
         temp_tnode_ptr->next = Unsimp_tree->next;
         return(temp_tnode_ptr);
     }
-    else if (Unsimp_tree->operator == SCALAR) {
+    else if (Unsimp_tree->op == SCALAR) {
         temp_tnode_ptr = Unexp_tnode_alloc();
-        temp_tnode_ptr->operator = SCALAR;
+        temp_tnode_ptr->op = SCALAR;
         temp_tnode_ptr->scalar_num = Unsimp_tree->scalar_num;
         temp_tnode_ptr->next = Unsimp_tree->next;
         return(temp_tnode_ptr);
     }
     else {
-        switch (Unsimp_tree->operator) {
+        switch (Unsimp_tree->op) {
 
             case   ADDITION    :	
             case   JUXT_PROD   :	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = Unsimp_tree->operator;
+                temp_tnode_ptr->op = Unsimp_tree->op;
                 temp_tnode_ptr->operand1 = Elim_subtraction(Unsimp_tree->operand1,Modified_ptr);
                 temp_tnode_ptr->operand2 = Elim_subtraction(Unsimp_tree->operand2,Modified_ptr);
                 return(temp_tnode_ptr);
@@ -726,13 +726,13 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
 
             case   SUBTRACTION :	
                 temp_tnode_ptr = Unexp_tnode_alloc(); 
-                temp_tnode_ptr->operator = ADDITION; 
+                temp_tnode_ptr->op = ADDITION; 
                 temp_tnode_ptr->operand1 = Elim_subtraction(Unsimp_tree->operand1,Modified_ptr);
                 temp1 = Unexp_tnode_alloc(); 
                 temp2 = Unexp_tnode_alloc(); 
-                temp1->operator = SCALAR_MULT;
+                temp1->op = SCALAR_MULT;
                 temp1->operand1 = temp2;
-                temp2->operator = SCALAR;
+                temp2->op = SCALAR;
                 temp2->scalar_num = -1;
                 temp1->operand2 = Elim_subtraction(Unsimp_tree->operand2,Modified_ptr);
                 temp_tnode_ptr->operand2=temp1;
@@ -741,10 +741,10 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
                 break;
 
             case   SCALAR_MULT :	
-                if ((Unsimp_tree->operand2->operator == SMALL_LETTER) || 
-                    (Unsimp_tree->operand2->operator == JUXT_PROD)) { 
+                if ((Unsimp_tree->operand2->op == SMALL_LETTER) || 
+                    (Unsimp_tree->operand2->op == JUXT_PROD)) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp_tnode_ptr->operand1 = Elim_subtraction(Unsimp_tree->operand1,Modified_ptr);
                     temp_tnode_ptr->operand2=Elim_subtraction(Unsimp_tree->operand2,Modified_ptr);
                     return(temp_tnode_ptr);
@@ -752,11 +752,11 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
                 
                 /* 3(3x) = 9x  */
 
-                else if (Unsimp_tree->operand2->operator == SCALAR_MULT) { 
+                else if (Unsimp_tree->operand2->op == SCALAR_MULT) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = SCALAR_MULT;
+                    temp_tnode_ptr->op = SCALAR_MULT;
                     temp1 = Unexp_tnode_alloc(); 
-                    temp1->operator = SCALAR;
+                    temp1->op = SCALAR;
                     Assert_scalar_bounds(Unsimp_tree->operand1->scalar_num);
                     Assert_scalar_bounds(Unsimp_tree->operand2->operand1->scalar_num);
                     temp1->scalar_num = Unsimp_tree->operand1->scalar_num * Unsimp_tree->operand2->operand1->scalar_num;
@@ -768,13 +768,13 @@ struct unexp_tnode *Elim_subtraction(struct unexp_tnode *Unsimp_tree, int *Modif
                
                 /* 3(x+y) = 3x + 3y  */
 
-                else if ((Unsimp_tree->operand2->operator == ADDITION) || 
-                         (Unsimp_tree->operand2->operator == SUBTRACTION)) { 
+                else if ((Unsimp_tree->operand2->op == ADDITION) || 
+                         (Unsimp_tree->operand2->op == SUBTRACTION)) { 
                     temp_tnode_ptr = Unexp_tnode_alloc(); 
-                    temp_tnode_ptr->operator = Unsimp_tree->operand2->operator;
+                    temp_tnode_ptr->op = Unsimp_tree->operand2->op;
                     temp1 = Unexp_tnode_alloc(); 
                     temp2 = Unexp_tnode_alloc(); 
-                    temp1->operator = temp2->operator = SCALAR_MULT;
+                    temp1->op = temp2->op = SCALAR_MULT;
                     temp1->operand1 = Elim_subtraction(Unsimp_tree->operand1,Modified_ptr);
                     temp2->operand1 = Elim_subtraction(Unsimp_tree->operand1,Modified_ptr); 
                     temp1->operand2 = Elim_subtraction(Unsimp_tree->operand2->operand1,Modified_ptr);

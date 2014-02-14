@@ -16,8 +16,8 @@
  */
 
 static struct prod_node {
-    char *rhs;
-    int  lhs;
+    const char *rhs;
+    const int  lhs;
 } Prod_nodes[] = { 
   {"2", 1}, 
   {"192", 1}, 

@@ -9,7 +9,7 @@ PROD_TREEPTR  prod_talloc();
 struct polynomial *Poly_alloc();
 struct term_node *Term_node_alloc();
 struct term_head *Term_head_alloc();
-void *Mymalloc();
+void *Mymalloc(int size);
 struct id_queue_node *Id_queue_node_alloc();
 void No_memory_panic();
 void Short_string_panic();

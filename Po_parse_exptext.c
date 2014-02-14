@@ -86,7 +86,7 @@ struct polynomial *Parse_exptext(char Poly_str[])
         cur_coef = 0;
     }
 
-    term_str = Mymalloc(strlen(Poly_str)+1);
+    term_str = (char*) Mymalloc(strlen(Poly_str)+1);
     while (poly_str_indx < strlen(Poly_str)) {
         if((Poly_str[poly_str_indx] != '+') && (Poly_str[poly_str_indx] != '-'))
             term_str[term_str_indx++] = Poly_str[poly_str_indx++];

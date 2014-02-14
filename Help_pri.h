@@ -17,8 +17,8 @@ static int helpLines = 0;
 static int helpCols = 0;
 
 typedef struct Help_struct {
-    char *help_topic;
-    char *help_text;
+    const char *help_topic;
+    const char *help_text;
 } Help_struct;
 
 static struct Help_struct Help_lines[NUM_COMMANDS] = {

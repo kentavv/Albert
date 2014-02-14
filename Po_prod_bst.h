@@ -25,7 +25,7 @@ typedef  struct  prod_tnode {
     struct   prod_tnode  *left, *right ;
 } PROD_TREENODE, *PROD_TREEPTR ;
 
-PROD_TREEPTR Prod_insert(char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr);
-PROD_TREEPTR Prod_member(char X[], PROD_TREEPTR Node_ptr);
+PROD_TREEPTR Prod_insert(const char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr);
+PROD_TREEPTR Prod_member(const char X[], PROD_TREEPTR Node_ptr);
 
 #endif

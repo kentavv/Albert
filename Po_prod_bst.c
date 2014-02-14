@@ -25,9 +25,9 @@
 #if 0
 static void Prt_prod_inorder(PROD_TREEPTR Node);
 #endif
-static int LT(char X[], char Y[]);
-static int GT(char X[], char Y[]);
-static int EQUAL(char X[], char Y[]);
+static int LT(const char *X, const char *Y);
+static int GT(const char *X, const char *Y);
+static int EQUAL(const char *X, const char *Y);
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -48,7 +48,7 @@ static int EQUAL(char X[], char Y[]);
 /*     part of initialization. Called from Init_prod_tree() in     */
 /*     the module Po_parse_poly.c                                  */
 /*******************************************************************/ 
-PROD_TREEPTR Prod_insert(char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr)
+PROD_TREEPTR Prod_insert(const char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr)
 {
     if (*Node_ptr == NULL) { 
         (*Node_ptr) = prod_talloc();
@@ -84,7 +84,7 @@ PROD_TREEPTR Prod_insert(char  X[], int Left, int Pnum, PROD_TREEPTR *Node_ptr)
 /*     This routine is called from Reduce() in the file            */
 /*     Po_parse_poly.c, while doing the parsing of identity.       */ 
 /*******************************************************************/ 
-PROD_TREEPTR Prod_member(char X[], PROD_TREEPTR Node_ptr)
+PROD_TREEPTR Prod_member(const char X[], PROD_TREEPTR Node_ptr)
 {
     if (Node_ptr == NULL) 
         return(NULL) ;
@@ -137,7 +137,7 @@ void Prt_prod_inorder(PROD_TREEPTR Node)
 /*     1 if string X is less than string Y.                        */ 
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int LT(char X[], char Y[])
+int LT(const char *X, const char *Y)
 {
     if (strcmp(X, Y) < 0)
         return(1) ;
@@ -155,7 +155,7 @@ int LT(char X[], char Y[])
 /*     1 if string X is greater than string Y.                     */ 
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int GT(char X[], char Y[])
+int GT(const char *X, const char *Y)
 {
     if (strcmp(X, Y) > 0)
         return(1) ;
@@ -173,7 +173,7 @@ int GT(char X[], char Y[])
 /*     1 if string X is equal to string Y.                         */ 
 /*     0 otherwise.                                                */
 /*******************************************************************/
-int EQUAL(char X[], char Y[])
+int EQUAL(const char *X, const char *Y)
 {
     if (strcmp(X, Y) == 0)
         return(1) ;

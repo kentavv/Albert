@@ -95,7 +95,7 @@ struct polynomial *Create_poly(char In_str[], int *In_str_len, int *Out_of_memor
 
 /* Allocate space for exp_poly_str first_time */
     if (first_time) {
-        exp_poly_str = Mymalloc(EXP_STR_LEN);
+        exp_poly_str = (char*) Mymalloc(EXP_STR_LEN);
         Maxsize_exp_poly_str = EXP_STR_LEN;
         first_time = FALSE;
     }
@@ -236,9 +236,9 @@ struct polynomial *Create_poly(char In_str[], int *In_str_len, int *Out_of_memor
 void Print_tree(struct unexp_tnode *Pntr)
 {
     if (Pntr != NULL) {
-        if ((Pntr->operator != SMALL_LETTER) && (Pntr->operator != SCALAR) &&
-            (Pntr->operator != OPERATOR_PROD) && (Pntr->operator != ARTIFICIAL_WORD)) {
-            printf("%c(",OPR_SYMBOL[Pntr->operator]);
+        if ((Pntr->op != SMALL_LETTER) && (Pntr->op != SCALAR) &&
+            (Pntr->op != OPERATOR_PROD) && (Pntr->op != ARTIFICIAL_WORD)) {
+            printf("%c(",OPR_SYMBOL[Pntr->op]);
             Print_tree(Pntr->operand1);
             if (Pntr->operand2 != NULL) {
                 printf(",");
@@ -250,18 +250,18 @@ void Print_tree(struct unexp_tnode *Pntr)
             }
             printf(")");
         }
-        else if (Pntr->operator == SMALL_LETTER)
+        else if (Pntr->op == SMALL_LETTER)
             printf("%c",Pntr->s_letter);
-        else if (Pntr->operator == SCALAR)
+        else if (Pntr->op == SCALAR)
             printf("%d",Pntr->scalar_num);
-        else if (Pntr->operator == OPERATOR_PROD) {
-            printf("%c(",OPR_SYMBOL[Pntr->operator]);
+        else if (Pntr->op == OPERATOR_PROD) {
+            printf("%c(",OPR_SYMBOL[Pntr->op]);
             Print_tree(Pntr->operand1);
             Print_opr_prod_tree(Pntr->operand2);
             printf(")");
         }
-        else if (Pntr->operator == ARTIFICIAL_WORD) {
-            printf("%c(",OPR_SYMBOL[Pntr->operator]);
+        else if (Pntr->op == ARTIFICIAL_WORD) {
+            printf("%c(",OPR_SYMBOL[Pntr->op]);
             Print_tree(Pntr->operand1);
             Print_art_word(Pntr->operand2);
             printf(")");
@@ -341,39 +341,39 @@ void Create_exp_str(struct unexp_tnode *Pntr, char **Str_ptr, int  *Maxsize_str_
 
     if (Pntr != NULL) {
 
-        if ((Pntr->operator != SMALL_LETTER) && (Pntr->operator != SCALAR)) {
+        if ((Pntr->op != SMALL_LETTER) && (Pntr->op != SCALAR)) {
 
-            if (Pntr->operator == JUXT_PROD) {
+            if (Pntr->op == JUXT_PROD) {
                 sprintf(Temp_str,"(");
                 Str_cat(Str_ptr,Temp_str,Maxsize_str_ptr);
             }
 
             Create_exp_str(Pntr->operand1,Str_ptr,Maxsize_str_ptr);
 
-            if (Pntr->operator == ADDITION) {
+            if (Pntr->op == ADDITION) {
                 if (!Found_minus(Pntr->operand2)) {
                     sprintf(Temp_str,"+");
                     Str_cat(Str_ptr,Temp_str,Maxsize_str_ptr);
                 }
             }
-            else if (Pntr->operator == SUBTRACTION) {
+            else if (Pntr->op == SUBTRACTION) {
                 sprintf(Temp_str,"-");
                 Str_cat(Str_ptr,Temp_str,Maxsize_str_ptr);
             }
 
             Create_exp_str(Pntr->operand2,Str_ptr,Maxsize_str_ptr);
 
-            if (Pntr->operator == JUXT_PROD) {
+            if (Pntr->op == JUXT_PROD) {
                 sprintf(Temp_str,")");
                 Str_cat(Str_ptr,Temp_str,Maxsize_str_ptr);
             }
         }
 
-        else if (Pntr->operator == SMALL_LETTER) {
+        else if (Pntr->op == SMALL_LETTER) {
                 sprintf(Temp_str,"%c",Pntr->s_letter);
                 Str_cat(Str_ptr,Temp_str,Maxsize_str_ptr);
             }
-        else if (Pntr->operator == SCALAR) {
+        else if (Pntr->op == SCALAR) {
             if (Pntr->scalar_num == -1) {
                 sprintf(Temp_str,"-");
                 Str_cat(Str_ptr,Temp_str,Maxsize_str_ptr);

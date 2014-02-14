@@ -58,7 +58,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  2   : /* polynomial -> - term */
             Temp_tnode_ptr = Unexp_tnode_alloc(); 
-            Temp_tnode_ptr->operator = UNARY_MINUS;
+            Temp_tnode_ptr->op = UNARY_MINUS;
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr);
@@ -66,7 +66,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  3   : /* polynomial -> + term */ 
             Temp_tnode_ptr = Unexp_tnode_alloc(); 
-            Temp_tnode_ptr->operator = UNARY_PLUS;
+            Temp_tnode_ptr->op = UNARY_PLUS;
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr);
@@ -74,7 +74,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case   4  : /* polynomial -> polynomial + term */ 
             Temp_tnode_ptr = Unexp_tnode_alloc(); 
-            Temp_tnode_ptr->operator = ADDITION;
+            Temp_tnode_ptr->op = ADDITION;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
@@ -83,7 +83,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case   5  : /* polynomial -> polynomial - term */ 
             Temp_tnode_ptr =  Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = SUBTRACTION;
+            Temp_tnode_ptr->op = SUBTRACTION;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
@@ -95,7 +95,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
             
         case   7  : /* term -> int product */ 
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = SCALAR_MULT;
+            Temp_tnode_ptr->op = SCALAR_MULT;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr);
@@ -106,7 +106,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case   9  : /* product -> atom_or_dbl_atom ^ int */ 
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = EXPONENTIATION;
+            Temp_tnode_ptr->op = EXPONENTIATION;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
@@ -115,7 +115,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case   10 : /* atom_or_dbl_atom -> atom_or_dbl_atom  * atom_or_dbl_atom */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = JORDAN_PROD;
+            Temp_tnode_ptr->op = JORDAN_PROD;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
@@ -130,7 +130,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  13  : /* double_atom -> atom ratom */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = JUXT_PROD;
+            Temp_tnode_ptr->op = JUXT_PROD;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr);
@@ -154,7 +154,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  23  : /* commutator -> [ polynomial-, polynomial- ] */ 
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = COMMUTATION;
+            Temp_tnode_ptr->op = COMMUTATION;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
@@ -165,7 +165,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 			
         case  24  : /* associator -> ( polynomial-, polynomial-, polynomial- )  */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = ASSOCIATION;
+            Temp_tnode_ptr->op = ASSOCIATION;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand3 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
@@ -178,7 +178,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 			
         case  25  : /* jacobi -> J(polynomial-,polynomial-,polynomial-) */ 
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = JACOBI;
+            Temp_tnode_ptr->op = JACOBI;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand3 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
@@ -192,7 +192,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  26  : /* jordan_associator -> <polynomial-,polynomial-,polynomial-> */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = JORDAN_ASSOC;
+            Temp_tnode_ptr->op = JORDAN_ASSOC;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand3 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
@@ -208,7 +208,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  28  : /* operator_product -> { atom operator_list- } */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = OPERATOR_PROD;
+            Temp_tnode_ptr->op = OPERATOR_PROD;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
@@ -232,7 +232,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  32  : /* operator -> atom ' */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = LEFT_MULT;
+            Temp_tnode_ptr->op = LEFT_MULT;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr);
@@ -240,7 +240,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 			
         case  33  : /* operator -> atom ` */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = RIGHT_MULT;
+            Temp_tnode_ptr->op = RIGHT_MULT;
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             Push_tnode_ptr(Sem_stack,Sem_sp_ptr,Temp_tnode_ptr);
@@ -262,7 +262,7 @@ void Reduce_semantics(int Reduction_num, struct unexp_tnode *Sem_stack[], int *S
 
         case  36  : /* artificial_word -> W { int : atom */
             Temp_tnode_ptr =   Unexp_tnode_alloc();
-            Temp_tnode_ptr->operator = ARTIFICIAL_WORD;
+            Temp_tnode_ptr->op = ARTIFICIAL_WORD;
             Temp_tnode_ptr->operand2 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
             /*trash =*/ Pop_tnode_ptr(Sem_stack,Sem_sp_ptr);
             Temp_tnode_ptr->operand1 = Pop_tnode_ptr(Sem_stack,Sem_sp_ptr); 
@@ -294,12 +294,12 @@ void Store_semantics(struct unexp_tnode *Sem_stack[], int Sem_sp, int Token, cha
 {
     if (Token == LETTER) {
         Sem_stack[Sem_sp] = Unexp_tnode_alloc(); 
-        Sem_stack[Sem_sp]->operator = SMALL_LETTER;
+        Sem_stack[Sem_sp]->op = SMALL_LETTER;
         Sem_stack[Sem_sp]->s_letter = Current_letter;
     }
     else if (Token == INT) {
         Sem_stack[Sem_sp] =  Unexp_tnode_alloc();
-        Sem_stack[Sem_sp]->operator = SCALAR;
+        Sem_stack[Sem_sp]->op = SCALAR;
         Sem_stack[Sem_sp]->scalar_num = Current_int;
     }
 }
