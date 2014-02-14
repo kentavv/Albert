@@ -404,10 +404,6 @@ int SubstituteWord(const struct term_node *W)
     Basis_pair_node *temp_list = NULL;
 
     if (W == NULL){
-#if 0
-        DestroyAE(ae1);     /* TW 9/23/93 - Can we free this up? */
-        DestroyAE(ae2);     /* TW 9/23/93 - Can we free this up? */
-#endif
         return(OK);
     }
 
@@ -455,8 +451,8 @@ int SubstituteWord(const struct term_node *W)
             ae1b = ae1b->next;
     }
 
-    DestroyAE(ae1);     /* TW 9/23/93 - Can we free this up? */
-    DestroyAE(ae2);     /* TW 9/23/93 - Can we free this up? */
+    DestroyAE(ae1);
+    DestroyAE(ae2);
 
     return(OK);
 }
