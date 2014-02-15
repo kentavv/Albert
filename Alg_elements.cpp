@@ -45,19 +45,19 @@ static void AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_elemen
 static void AssignNegAE(const Alg_element *p1, Alg_element *p2);
 static void CopyAE(const Alg_element *p1, Alg_element *p2);
 #endif
-static int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2);
+static int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2);
 #if 0
 static Basis Min(Basis x, Basis y);
 static Basis Max(Basis x, Basis y);
 static void PrintAE(const Alg_element *p);
 #endif
 
-static void clearZeros(Alg_element *p2) {
+static void clearZeros(Alg_element &p2) {
     map<Basis, Scalar>::iterator p2i;
-    for(p2i = p2->elements.begin(); p2i != p2->elements.end();) {
+    for(p2i = p2.begin(); p2i != p2.end();) {
       if(p2i->first == 0 || p2i->second == 0) {
         map<Basis, Scalar>::iterator t = p2i++;
-        p2->elements.erase(t);
+        p2.erase(t);
         puts("asdf"); 
       } else {
         p2i++;
@@ -83,6 +83,7 @@ Alg_element *CreateAE()
 }
 #endif
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */ 
@@ -130,6 +131,7 @@ void ZeroOutAE(Alg_element *p)
 {
   InitAE(p);
 }
+#endif
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -139,16 +141,14 @@ void ZeroOutAE(Alg_element *p)
 /*     1 if all basis coef of Alg_element *p are zeroes.           */
 /*     0 otherwise.                                                */
 /*******************************************************************/ 
-int IsZeroAE(const Alg_element *p)
+int IsZeroAE(const Alg_element &p)
 {
-  if(p) {
     map<Basis, Scalar>::const_iterator i;
-    for(i = p->elements.begin(); i != p->elements.end(); i++) {
-      if(i->first != 0 && i->second != 0) return FALSE;
+    for(i = p.begin(); i != p.end(); i++) {
+      if(i->first != 0 && i->second != 0) return 0;
     }
-  }
 
-  return TRUE;
+  return 1;
 }
 
 /*******************************************************************/
@@ -163,14 +163,14 @@ int IsZeroAE(const Alg_element *p)
 /*     Multiply Alg_element *p with scalar x.                      */
 /*     *p = *p * x.                                                */
 /*******************************************************************/ 
-void ScalarMultAE(Scalar x, Alg_element *p)
+void ScalarMultAE(Scalar x, Alg_element &p)
 {
     if (x == S_one()) {
     } else if (x == S_zero()) {
-        ZeroOutAE(p);
+        p.clear();
     } else {
       map<Basis, Scalar>::iterator i;
-      for(i = p->elements.begin(); i != p->elements.end(); i++) {
+      for(i = p.begin(); i != p.end(); i++) {
         i->second = S_mul(x, i->second);
       }
     }
@@ -235,17 +235,14 @@ void AssignNegAE(const Alg_element *p1, Alg_element *p2)
 /* NOTE:                                                           */
 /*     We have to scan p2 to find and store p2->first.             */
 /*******************************************************************/ 
-void AddAE(const Alg_element *p1, Alg_element *p2)
+void AddAE(const Alg_element &p1, Alg_element &p2)
 {
-    assert_not_null_nv(p1);
-    assert_not_null_nv(p2);
-
-      map<Basis, Scalar>::const_iterator p1i = p1->elements.begin();
-      map<Basis, Scalar>::iterator p2i = p2->elements.begin();
+      map<Basis, Scalar>::const_iterator p1i = p1.begin();
+      map<Basis, Scalar>::iterator p2i = p2.begin();
       
-    while(p1i != p1->elements.end()) {
-      if(p2i == p2->elements.end()) {  /* occurs if max_basis(p2) < max_basis(p1) */
-        p2->elements[p1i->first] = p1i->second;
+    while(p1i != p1.end()) {
+      if(p2i == p2.end()) {  /* occurs if max_basis(p2) < max_basis(p1) */
+        p2[p1i->first] = p1i->second;
 
         p1i++;
 #if 0
@@ -264,7 +261,7 @@ void AddAE(const Alg_element *p1, Alg_element *p2)
       } else if(p2i->first < p1i->first) {
         p2i++;
       } else if(p2i->first > p1i->first) {
-        p2->elements[p1i->first] = p1i->second;
+        p2[p1i->first] = p1i->second;
 
         p1i++;
         p2i++;
@@ -317,22 +314,17 @@ void CopyAE(const Alg_element *p1, Alg_element *p2)
 /*     Multiply term with Alg_element *p1 and add to *p2.          */
 /*         *p2 = xb.(*p1) + *p2                                    */
 /*******************************************************************/ 
-int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2)
+int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2)
 {
     Scalar zero = S_zero();
     
-    int status;
-     
-    assert_not_null(p1);
-    assert_not_null(p2);
-
-    status = OK;
+    int status = OK;
 
     if ((x == zero) || IsZeroAE(p1))
         return(OK);
     else {
       map<Basis, Scalar>::const_iterator i;
-      for(i = p1->elements.begin(); i != p1->elements.end(); i++) {
+      for(i = p1.begin(); i != p1.end(); i++) {
         if(i->second != zero) {
                 if (status == OK)
                     status = Mult2basis(b, i->first, S_mul(x, i->second), p2); 
@@ -355,20 +347,17 @@ int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2)
 /*     Multiply Alg_elements *p1,*p2 and add to *p3.               */
 /*         *p3 = (*p1) * (*p2) + *p3                               */ 
 /*******************************************************************/ 
-int MultAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
+int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3)
 {
     Scalar zero = S_zero();
 
     int status = OK;
 
-    assert_not_null(p1);
-    assert_not_null(p2);
-
     if (IsZeroAE(p1) || IsZeroAE(p2))
         return(OK);
     else {
       map<Basis, Scalar>::const_iterator p1i;
-      for(p1i = p1->elements.begin(); p1i != p1->elements.end(); p1i++) {
+      for(p1i = p1.begin(); p1i != p1.end(); p1i++) {
         if(p1i->second != zero) {
                 if (status == OK)
                     status = LeftTapAE(p1i->second, p1i->first, p2, p3); 
@@ -397,6 +386,7 @@ Basis Max(Basis x, Basis y)
 }
 #endif
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES: None.                                                 */
@@ -414,7 +404,7 @@ Alg_element *AllocAE()
 
     return p;
 }
-
+#endif
 
 #if 0
 /*******************************************************************/

@@ -12,53 +12,45 @@
 
 #include "Build_defs.h"
 
-class Alg_element {
-public:
-  std::map<Basis, Scalar> elements; // basis -> coef
-  //  struct Alg_element *next; 
-}; // Alg_element, *Alg_element_ptr; 
+typedef std::map<Basis, Scalar> Alg_element; // basis -> coef
 
-void DestroyAE(Alg_element *p);
-void InitAE(Alg_element *p);
-void ZeroOutAE(Alg_element *p);
-int IsZeroAE(const Alg_element *p);
-void ScalarMultAE(Scalar x, Alg_element *p);
-void AddAE(const Alg_element *p1, Alg_element *p2);
-int MultAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
-Alg_element *AllocAE();
+int IsZeroAE(const Alg_element &p);
+void ScalarMultAE(Scalar x, Alg_element &p);
+void AddAE(const Alg_element &p1, Alg_element &p2);
+int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3);
 
 #include "Scalar_arithmetic.h"
 
-inline static void SetAE(Alg_element *p, Basis b, Scalar x) {
+inline static void SetAE(Alg_element &p, Basis b, Scalar x) {
   if(x != S_zero()) {
-    p->elements[b] = x;
+    p[b] = x;
   } else {
-    p->elements.erase(b);
+    p.erase(b);
   }
 }
 
-inline static Scalar GetAE(const Alg_element *p, Basis b) {
-  std::map<Basis, Scalar>::const_iterator i = p->elements.find(b);
+inline static Scalar GetAE(const Alg_element &p, Basis b) {
+  std::map<Basis, Scalar>::const_iterator i = p.find(b);
 
-  if(i != p->elements.end()) {
+  if(i != p.end()) {
     return i->second;
   }
 
   return S_zero();
 }
 
-inline static void AccumAE(Alg_element *p, Basis b, Scalar x) {
+inline static void AccumAE(Alg_element &p, Basis b, Scalar x) {
   if(b != 0 && x != S_zero()) {
-    std::map<Basis, Scalar>::iterator i = p->elements.find(b);
-    if(i != p->elements.end()) {
+    std::map<Basis, Scalar>::iterator i = p.find(b);
+    if(i != p.end()) {
       x = S_add(i->second, x);
       if(x != S_zero()) {
         i->second = x;
       } else {
-        p->elements.erase(i);
+        p.erase(i);
       }
     } else {
-      p->elements[b] = x;
+      p[b] = x;
     }
   }
 }
