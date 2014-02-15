@@ -16,35 +16,39 @@ Scalar S_mul(Scalar x, Scalar y);
 Scalar S_inv(Scalar x);
 #endif
 
-__inline__ static Scalar S_zero(void)
+inline Scalar S_zero(void)
 {
     return(0);
 }
 
-__inline__ static Scalar S_one(void)
+inline Scalar S_one(void)
 {
     return(1);
 }
 
-#define  PRIME_BOUND  256
+#define PRIME_BOUND  256
 
+#if 0
 #define Scalar_assert(x) \
-    if (0 && x > Prime ) { \
+    if (x > Prime ) { \
         printf("WARNING: Scalar %d out of range.\n",x); \
         exit(1); \
      }
+#else
+#define Scalar_assert(x) {}
+#endif
 
 extern Scalar Prime;
 extern Scalar Inverse_table[PRIME_BOUND];
 
-__inline__ static Scalar S_minus(Scalar x)
+inline Scalar S_minus(Scalar x)
 {
     Scalar_assert(x);
 
     return((Prime - x) % Prime);
 }
 
-__inline__ static Scalar ConvertToScalar(int i)
+inline Scalar ConvertToScalar(int i)
 {
    if (i > 0)
        return(i%Prime);
@@ -52,7 +56,7 @@ __inline__ static Scalar ConvertToScalar(int i)
        return(S_minus((-i)%Prime));
 }
 
-__inline__ static Scalar S_add(Scalar x, Scalar y)
+inline Scalar S_add(Scalar x, Scalar y)
 {
     Scalar_assert(x);
     Scalar_assert(y);
@@ -60,7 +64,7 @@ __inline__ static Scalar S_add(Scalar x, Scalar y)
     return((x + y) % Prime);
 }
 
-__inline__ static Scalar S_mul(Scalar x, Scalar y)
+inline Scalar S_mul(Scalar x, Scalar y)
 {
     Scalar_assert(x);
     Scalar_assert(y);
@@ -68,7 +72,7 @@ __inline__ static Scalar S_mul(Scalar x, Scalar y)
     return((x * y) % Prime);
 }
 
-__inline__ static Scalar S_inv(Scalar x)
+inline Scalar S_inv(Scalar x)
 {
     Scalar_assert(x);
 

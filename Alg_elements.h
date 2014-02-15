@@ -11,6 +11,7 @@
 #include <map>
 
 #include "Build_defs.h"
+#include "Scalar_arithmetic.h"
 
 typedef std::map<Basis, Scalar> Alg_element; // basis -> coef
 
@@ -19,9 +20,7 @@ void ScalarMultAE(Scalar x, Alg_element &p);
 void AddAE(const Alg_element &p1, Alg_element &p2);
 int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3);
 
-#include "Scalar_arithmetic.h"
-
-inline static void SetAE(Alg_element &p, Basis b, Scalar x) {
+inline void SetAE(Alg_element &p, Basis b, Scalar x) {
   if(x != S_zero()) {
     p[b] = x;
   } else {
@@ -29,19 +28,16 @@ inline static void SetAE(Alg_element &p, Basis b, Scalar x) {
   }
 }
 
-inline static Scalar GetAE(const Alg_element &p, Basis b) {
+inline Scalar GetAE(const Alg_element &p, Basis b) {
   std::map<Basis, Scalar>::const_iterator i = p.find(b);
 
-  if(i != p.end()) {
-    return i->second;
-  }
-
-  return S_zero();
+  return i != p.end() ? i->second : S_zero();
 }
 
-inline static void AccumAE(Alg_element &p, Basis b, Scalar x) {
+inline void AccumAE(Alg_element &p, Basis b, Scalar x) {
   if(b != 0 && x != S_zero()) {
     std::map<Basis, Scalar>::iterator i = p.find(b);
+
     if(i != p.end()) {
       x = S_add(i->second, x);
       if(x != S_zero()) {
