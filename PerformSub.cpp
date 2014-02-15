@@ -61,18 +61,18 @@
 
 using namespace std;
 
-class basis_pair_node {
-    Basis_pair bp;
-    struct basis_pair_node *next;
-} Basis_pair_node;
+//class basis_pair_node {
+//    Basis_pair bp;
+//    struct basis_pair_node *next;
+//}; // Basis_pair_node;
 
-typedef int *Perm;
+//typedef int *Perm;
 
 #define  DEBUG_PERMUTATIONS 0
 #if DEBUG_PERMUTATIONS
 static void PrintPermutationList(void);
 static void PrintPermutation(int Var_num, Perm P);
-static void FreePermutationList(Perm *Pl);
+//static void FreePermutationList(Perm *Pl);
 #endif
 static void DoPermutation(int row);
 static int AppendLocalListToTheList(void);
@@ -86,7 +86,7 @@ static void SortPermutation(int begin_index);
 static int Expand(void);
 static void AppendToLocalList(list<Basis_pair> &Rl);
 static int SubstituteWord(const struct term_node *W);
-static void Sub(Alg_element *Ans, const struct term_node *W);
+static void Sub(Alg_element &Ans, const struct term_node *W);
 //static Basis_pair_node *GetNewBPNode(void);
 
 
@@ -168,7 +168,7 @@ void PrintPermutation(int Var_num, Perm P)
 }
 #endif
 
-
+#if 0
 void FreePermutationList(Perm *Pl)
 {
 #if 0
@@ -180,7 +180,7 @@ void FreePermutationList(Perm *Pl)
         free(Pl[i]);
 #endif
 }
-
+#endif
 
 void DoPermutation(int row)
 {
@@ -411,8 +411,8 @@ void AppendToLocalList(list<Basis_pair> &Rl)
 
 int SubstituteWord(const struct term_node *W)
 {
-    Alg_element *ae1;	/* TW 9/22/93 - change ae1 to *ae1 */
-    Alg_element *ae2;	/* TW 9/22/93 - change ae2 to *ae2 */
+    Alg_element ae1;
+    Alg_element ae2;
 
     Scalar zero = S_zero();
     /*int i,j;*/
@@ -427,11 +427,6 @@ int SubstituteWord(const struct term_node *W)
         return(OK);
     }
 
-    ae1 = AllocAE();	/* TW 9/22/93 - change ae1 to *ae1 */
-    ae2 = AllocAE();	/* TW 9/22/93 - change ae2 to *ae2 */
-    assert_not_null(ae1);		/* TW 9/22/93 - change ae1 to *ae1 */
-    assert_not_null(ae2);		/* TW 9/22/93 - change ae2 to *ae2 */
-
     Sub(ae1, W->left);   /* We can expand left tree of W. *//* TW 9/22/93 - change ae1 to *ae1 */
     Sub(ae2, W->right);  /* We can expand the right tree of W. *//* TW 9/22/93 - change ae2 to *ae2 */
 
@@ -442,13 +437,13 @@ int SubstituteWord(const struct term_node *W)
 
     map<Basis, Scalar>::const_iterator ae1i, ae2i;
     
-    ae1i = ae1->elements.begin();
-    while(ae1i != ae1->elements.end()) {
+    ae1i = ae1.begin();
+    while(ae1i != ae1.end()) {
       if(ae1i->first != 0) {
         alpha = ae1i->second;
         if (alpha != zero) { /* TW 9/22/93 - change ae1 to *ae1 */
-          ae2i = ae2->elements.begin();
-          while(ae2i != ae2->elements.end()) {
+          ae2i = ae2.begin();
+          while(ae2i != ae2.end()) {
             if(ae2i->first != 0) {
                 beta = ae2i->second; /* TW 9/22/93 - change ae2 to *ae2 */
                 if(beta != zero) { /* TW 9/22/93 - change ae2 to *ae2 */
@@ -477,17 +472,13 @@ int SubstituteWord(const struct term_node *W)
       ae1i++;
     }
 
-    DestroyAE(ae1);
-    DestroyAE(ae2);
-
     return(OK);
 }
                         
 
-void Sub(Alg_element *Ans, const struct term_node *W)
+void Sub(Alg_element &Ans, const struct term_node *W)
 {
     assert_not_null_nv(W);
-    assert_not_null_nv(Ans);
 
     if ((W->left == NULL) && (W->right == NULL)) {
         int var_number = GetVarNumber(W->letter) - 1;
@@ -502,21 +493,15 @@ printf("vn:%d on:%d\n", var_number, var_occurrence_number);
 
         SetAE(Ans, b, 1); 
     } else {
-        Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
-        Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
+        Alg_element left;
+        Alg_element right;
     
-        assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
-        assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
-
-        Sub(left,W->left); 		/* TW 9/22/93 - change left to *left */
-        Sub(right,W->right); 		/* TW 9/22/93 - change right to *right */
+        Sub(left, W->left); 		/* TW 9/22/93 - change left to *left */
+        Sub(right, W->right); 		/* TW 9/22/93 - change right to *right */
 
  /* This is where we use the multiplication table. */ 
 
-        MultAE(left,right,Ans);	/* TW 9/22/93 - change right to *right & left to *left */
-
-        DestroyAE(left);     /* TW 9/23/93 - Can we free this? */
-        DestroyAE(right);    /* TW 9/23/93 - Can we free this? */
+        MultAE(left, right, Ans);	/* TW 9/22/93 - change right to *right & left to *left */
    }
 }
 

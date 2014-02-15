@@ -44,7 +44,7 @@ static int Same_type(struct P_type type1, struct P_type type2);
 static void AssignNumbersToTerm(struct term_node *Pntr, int Cln[]);
 static void DestroyTerms(struct term_head *Term_head);
 static void FreeNodes(struct term_node *Term_node);
-static void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status);
+static void ExpandTerm(Alg_element &Ans, const struct term_node *W, int *status);
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -444,31 +444,21 @@ void FreeNodes(struct term_node *Term_node)
 
 int IsIdentity(struct polynomial *Poly)
 {
-    struct term_head *temp_head;
-
-    Scalar alpha;
-
     int status = OK;
 
-    Alg_element *ae = AllocAE();	/* TW 9/22/93 - change ae to *ae */
-    Alg_element *result = AllocAE();	/* TW 9/22/93 - change result to *result */
-
-    assert_not_null(ae);		/* TW 9/22/93 - change ae to *ae */
-    assert_not_null(result);		/* TW 9/22/93 - change result to *result */
+    Alg_element ae;	/* TW 9/22/93 - change ae to *ae */
+    Alg_element result;	/* TW 9/22/93 - change result to *result */
 
     assert_not_null(Poly);
-    temp_head = Poly->terms;
+    struct term_head *temp_head = Poly->terms;
 
-    InitAE(result);			/* TW 9/22/93 - change result to *result */
-    while (temp_head != NULL) {
-        alpha = ConvertToScalar(temp_head->coef);
-        InitAE(ae);			/* TW 9/22/93 - change ae to *ae */
+    while (temp_head) {
+        Scalar alpha = ConvertToScalar(temp_head->coef);
+        ae.clear();			/* TW 9/22/93 - change ae to *ae */
         ExpandTerm(ae,temp_head->term,&status);	/* TW 9/22/93 - change ae
 to *ae */
         if (status != OK) {
             printf("Severe Bug. Cant ExpandTerm. Basis product undefined\n");
-            DestroyAE(ae);              /* TW 9/23/93 - Can we free this? */
-            DestroyAE(result);          /* TW 9/23/93 - Can we free this? */
             return(0);
         }
         ScalarMultAE(alpha,ae);		/* TW 9/22/93 - change ae to *ae */
@@ -476,24 +466,13 @@ to *ae */
 *result */
         temp_head = temp_head->next;
     }
-    if(IsZeroAE(result)){               /* TW 9/22/93 - change result to
-*result */
-        DestroyAE(ae);                  /* TW 9/23/93 - Can we free this? */
-        DestroyAE(result);              /* TW 9/23/93 - Can we free this? */
-        return(1);
-    }
-    else{
-        DestroyAE(ae);                  /* TW 9/23/93 - Can we free this? */
-        DestroyAE(result);              /* TW 9/23/93 - Can we free this? */
-        return(0);
-    }
+    return IsZeroAE(result);
 }
 
 
-void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status)
+void ExpandTerm(Alg_element &Ans, const struct term_node *W, int *status)
 {
     assert_not_null_nv(W);
-    assert_not_null_nv(Ans);
 
     if(*status != OK){
       return;
@@ -503,22 +482,16 @@ void ExpandTerm(Alg_element *Ans, struct term_node *W, int *status)
         Basis b = GetBasisNumberofLetter(W->letter);
         SetAE(Ans, b, 1);
     } else {
-        Alg_element *left = AllocAE();	/* TW 9/22/93 - change left to *left */
-        Alg_element *right = AllocAE();	/* TW 9/22/93 - change right to *right */
-
-        assert_not_null_nv(left);		/* TW 9/22/93 - change left to *left */
-        assert_not_null_nv(right);		/* TW 9/22/93 - change right to *right */
+        Alg_element left;
+        Alg_element right;
 
         if (*status == OK)
-            ExpandTerm(left,W->left,status);	/* TW 9/22/93 - change left to *left */
+            ExpandTerm(left, W->left, status);
 
         if (*status == OK)
-            ExpandTerm(right,W->right,status);	/* TW 9/22/93 - change right to *right */
+            ExpandTerm(right, W->right, status);
 
-        *status = MultAE(left, right, Ans);	/* TW 9/22/93 - change right to *right & left to *left */
-
-        DestroyAE(left);
-        DestroyAE(right);
+        *status = MultAE(left, right, Ans);
    }
 }
 

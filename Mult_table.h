@@ -71,10 +71,8 @@ inline int EnterProduct(Basis B1, Basis B2, const std::vector<std::pair<Basis, S
     return(OK);
 }
 
-inline int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
+inline int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element &P)
 {
-    assert_not_null(P);
-
   const std::pair<Basis, Basis> bb = std::make_pair(B1, B2);
 
   std::map<std::pair<Basis, Basis>, std::vector<std::pair<Basis, Scalar> > >::const_iterator ii = mult_table.find(bb);

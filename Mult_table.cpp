@@ -60,7 +60,7 @@ static int PrintTL(Term *P);
 static Mt_block *Alloc_Mt_block();
 static Terms_block *Alloc_Terms_block(void);
 #endif
-static void Print_AE(Alg_element *ae, FILE *filePtr, int outputType);
+static void Print_AE(const Alg_element &ae, FILE *filePtr, int outputType);
 #if 0
 static Mt_block *getMtBlock(int row, int col);
 static void setMtBlock(int row, int col, Mt_block *val);
@@ -663,9 +663,7 @@ Terms_block *Alloc_Terms_block(void)
 void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
   int i, j, dim;
-  Alg_element *prod = AllocAE();/* TW 9/22/93 - change prod[] to *prod */
-
-  assert_not_null_nv(prod);	/* TW 9/22/93 - change prod[] to *prod */
+  Alg_element prod;
 
 #if 0
   lineCnt = 0;			/* TW 9/19/93 - support for view */
@@ -677,10 +675,9 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
 #if 0
     lineCnt += 2;		/* TW 9/19/93 - support for view */
 #endif
-    InitAE(prod);
     for (i = 1; i <= dim; i++) {
       for (j = 1; j <= dim; j++) {
-        ZeroOutAE(prod);	/* TW 9/22/93 - change prod[] to *prod */
+        prod.clear();
         Mult2basis(i, j, 1, prod);	/* TW 9/22/93 - change prod[] to *prod */
         if (!IsZeroAE(prod)) {	/* TW 9/22/93 - change prod[] to *prod */
           /* PrintBasis(i); */
@@ -711,18 +708,17 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
       }
     }   
   }
-  DestroyAE(prod);      /* TW 9/23/93 - Shouldn't we free this up? */
 }
  
-void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
+void Print_AE(const Alg_element &ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
 {
   int x; /*,i;*/
   int trmcnt = 0;		/* How many terms have been printed */
   int lnecnt = 0;		/* How many have been printed on current line */
-  map<Basis, Scalar>::const_iterator aei = ae->elements.begin();
+  map<Basis, Scalar>::const_iterator aei = ae.begin();
   
   //for (i = ae->first; i <= ae ->last; i++) {
-  while(aei != ae->elements.end()) {
+  while(aei != ae.end()) {
     //if ( (ae->basis_coef)[i] != 0) {
       //x = ae->basis_coef[i]; 
     if(aei->first != 0 && aei->second != 0) {
