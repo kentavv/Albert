@@ -59,7 +59,7 @@ CreateSubs.o: CreateSubs.cpp CreateSubs.h Build_defs.h CreateMatrix.h \
  Memory_routines.h Po_prod_bst.h PerformSub.h GenerateEquations.h Debug.h
 driver.o: driver.cpp driver.h Build_defs.h Basis_table.h Build.h \
  Id_routines.h Type_table.h Field.h Generators.h Po_parse_exptext.h \
- Get_Command.h Help.h initGlobals.h Memory_routines.h Po_prod_bst.h \
+ Get_Command.h Help.h Memory_routines.h Po_prod_bst.h \
  Po_create_poly.h Po_routines.h Scalar_arithmetic.h Ty_routines.h \
  Mult_table.h Alg_elements.h
 ExtractMatrix.o: ExtractMatrix.cpp ExtractMatrix.h Build_defs.h \
@@ -78,9 +78,6 @@ Get_Command.o: Get_Command.cpp Get_Command.h Memory_routines.h \
 Help.o: Help.cpp Help.h Help_pri.h
 Id_routines.o: Id_routines.cpp Id_routines.h Memory_routines.h \
  Po_prod_bst.h Po_parse_exptext.h Po_routines.h
-initGlobals.o: initGlobals.cpp initGlobals.h Build_defs.h Basis_table.h \
- Memory_routines.h Po_prod_bst.h Mult_table.h Alg_elements.h \
- Scalar_arithmetic.h
 Memory_routines.o: Memory_routines.cpp Memory_routines.h Po_prod_bst.h \
  Po_parse_poly.h Po_parse_exptext.h Id_routines.h
 Multpart.o: Multpart.cpp Multpart.h Build_defs.h CreateSubs.h \

@@ -92,7 +92,6 @@ static Matrix TheMatrix;
 static Name N;
 
 
-
 int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
 {
     Num_unique_basis_pairs = 0;

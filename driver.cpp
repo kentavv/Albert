@@ -42,7 +42,6 @@
 #include "Get_Command.h"
 #include "Help.h"
 #include "Id_routines.h"
-#include "initGlobals.h"
 #include "Memory_routines.h"
 #include "Po_create_poly.h"
 #include "Po_parse_exptext.h"
@@ -204,7 +203,6 @@ int main(int argc, char *argv[])
     }
 
     initHelp();
-    initGlobals();
     /* TW 9/8/93 - END argument handling */
 
     Print_title();
