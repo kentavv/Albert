@@ -12,7 +12,7 @@ CXX=g++
 CFLAGS=-g -O2 -Wall -fopenmp
 #CFLAGS=-g -O3 -flto -Wall
 
-CXXFLAGS=$(CFLAGS)
+CXXFLAGS=$(CFLAGS) -std=c++11
 
 LDFLAGS=-fopenmp
 #LDFLAGS=-g -O3 -flto
