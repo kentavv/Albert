@@ -38,100 +38,24 @@
 
 using std::map;
 
-#if 0
-static Alg_element *CreateAE();
-static void AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
-static void AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3);
-static void AssignNegAE(const Alg_element *p1, Alg_element *p2);
-static void CopyAE(const Alg_element *p1, Alg_element *p2);
-#endif
+static void clearZeros(Alg_element &p2);
 static int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2);
 #if 0
-static Basis Min(Basis x, Basis y);
-static Basis Max(Basis x, Basis y);
-static void PrintAE(const Alg_element *p);
+void PrintAE(const Alg_element *p)
 #endif
 
-static void clearZeros(Alg_element &p2) {
-    map<Basis, Scalar>::iterator p2i;
-    for(p2i = p2.begin(); p2i != p2.end();) {
-      if(p2i->first == 0 || p2i->second == 0) {
-        map<Basis, Scalar>::iterator t = p2i++;
-        p2.erase(t);
-        puts("asdf"); 
+static void clearZeros(Alg_element &p) {
+    map<Basis, Scalar>::iterator i;
+    for(i = p.begin(); i != p.end();) {
+      if(i->first == 0 || i->second == 0) {
+        map<Basis, Scalar>::iterator t = i++;
+        p.erase(t);
+        printf("Zero removed\n"); 
       } else {
-        p2i++;
+        i++;
       } 
     }
 }
-
-#if 0
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     Pointer to newly created Algebraic element.                 */
-/* FUNCTION:                                                       */
-/*     Allocate space for Alg_element.                             */
-/*     Initialize the basis_coef's to 0.                           */
-/*******************************************************************/ 
-Alg_element *CreateAE()
-{
-    Alg_element *p = AllocAE(); 
-    InitAE(p);
-    return p;
-}
-#endif
-
-#if 0
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES:                                                       */ 
-/*     p -- pointer to the Alg_element whose space is to be freed. */
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     Free the space pointed by p.                                */
-/*******************************************************************/ 
-void DestroyAE(Alg_element *p)
-{
-  if(p) delete p;
-}
-
-/*******************************************************************/
-/* MODIFIES:                                                       */
-/*     *p -- Alg_element.                                          */ 
-/* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     Initialize all Basis coefficients to 0's.                   */ 
-/*******************************************************************/ 
-void InitAE(Alg_element *p)
-{
-  if(p) p->elements.clear();
-}
-
-/*******************************************************************/
-/* MODIFIES:                                                       */
-/*     *p -- Alg_element.                                          */ 
-/* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     Zero out the Alg_element pointed by p.                      */ 
-/* NOTE:                                                           */
-/*     Only the basis coefficients between first and last nonzero  */
-/*     basis coefficients are made zeroes for speed.               */
-/*******************************************************************/ 
-void ZeroOutAE(Alg_element *p)
-{
-  InitAE(p);
-}
-#endif
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -177,49 +101,6 @@ void ScalarMultAE(Scalar x, Alg_element &p)
 
     clearZeros(p);
 }
-
-#if 0
-/*******************************************************************/
-/* MODIFIES:                                                       */
-/*     *p3 -- Alg_element.                                         */ 
-/* REQUIRES:                                                       */
-/*     *p1,*p2 -- To be added.                                     */
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     Add Alg_element's *p1 and *p2 and put the result in *p3.    */
-/*     *p3 = *p1 + *p2.                                            */
-/*******************************************************************/ 
-void AssignAddAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
-{
-    CopyAE(p1, p3);
-    AddAE(p2, p3);
-}    
-
-void AssignSubAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
-{
-    Alg_element *np2 = CreateAE();
-
-    assert_not_null_nv(p1);
-    assert_not_null_nv(p2);
-    assert_not_null_nv(p3);
-    assert_not_null_nv(np2);
-
-    AssignNegAE(p2, np2);
-    AssignAddAE(p1, np2, p3);
-    DestroyAE(np2);
-}    
-
-void AssignNegAE(const Alg_element *p1, Alg_element *p2)
-{
-    CopyAE(p1, p2);
-    while(p2) {
-      p2->basis_coef = S_minus(p2->basis_coef);
-      p2 = p2->next;
-    }
-}    
-#endif
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -270,35 +151,6 @@ void AddAE(const Alg_element &p1, Alg_element &p2)
 
     clearZeros(p2);
 }    
-
-#if 0
-/*******************************************************************/
-/* MODIFIES:                                                       */
-/*     *p2 -- Alg_element.                                         */ 
-/* REQUIRES:                                                       */
-/*     *p1 -- To be copied into *p3.                               */ 
-/* RETURNS:                                                        */
-/*     1 if successfull.                                           */
-/*     0 otherwise.                                                */
-/* FUNCTION:                                                       */
-/*     Copy Alg_element *p1 into Alg_element *p2.                  */
-/*     *p2 = *p1.                                                  */
-/*******************************************************************/ 
-void CopyAE(const Alg_element *p1, Alg_element *p2)
-{
-    ZeroOutAE(p2);
-
-    while(p1) {
-      p2->basis = p1->basis;
-      p2->basis_coef = p1->basis_coef;
-      p1 = p1->next;
-      if(p1) {
-        p2->next = AllocAE();
-        p2 = p2->next;
-      }
-    }
-}
-#endif
 
 /*******************************************************************/
 /* MODIFIES:                                                       */
@@ -367,44 +219,6 @@ int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3)
     clearZeros(p3);
     return(status);
 }
-
-#if 0
-Basis Min(Basis x, Basis y)
-{
-    if (x<y)
-        return(x);
-    else
-        return(y);
-}
-
-Basis Max(Basis x, Basis y)
-{
-    if (x>y)
-        return(x);
-    else
-        return(y);
-}
-#endif
-
-#if 0
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     Pointer to newly allocated Algebraic element.               */
-/* FUNCTION:                                                       */
-/*     Allocate space for Alg_element.                             */
-/*******************************************************************/ 
-Alg_element *AllocAE()
-{
-    Alg_element *p = new Alg_element;
-    //assert_not_null(p);
-
-    //InitAE(p);
-
-    return p;
-}
-#endif
 
 #if 0
 /*******************************************************************/
