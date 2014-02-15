@@ -180,8 +180,6 @@ int InitializeStructures(void)
     int Target_degree;
 
     if (status == OK) 
-        status = CreateMultTable();
-    if (status == OK) 
         status = CreateTypeTable(Target_type);
     if (status == OK) { 
         Target_degree = GetDegreeName(TypeToName(Target_type));
