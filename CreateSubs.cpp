@@ -113,6 +113,7 @@ void DoCreateSubs(int row, int col, Basis *Substitution)
     }
 }
 
+#if DEBUG_SUBSTITUTION
 void PrintSubstitution(const Basis *Substitution)
 {
     int i,j;
@@ -126,3 +127,4 @@ void PrintSubstitution(const Basis *Substitution)
         printf("\n");
     }
 }
+#endif
