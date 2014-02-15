@@ -44,7 +44,7 @@ static int Same_type(struct P_type type1, struct P_type type2);
 static void AssignNumbersToTerm(struct term_node *Pntr, int Cln[]);
 static void DestroyTerms(struct term_head *Term_head);
 static void FreeNodes(struct term_node *Term_node);
-static void ExpandTerm(Alg_element &Ans, const struct term_node *W, int *status);
+static bool ExpandTerm(Alg_element &Ans, const struct term_node *W);
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -444,8 +444,6 @@ void FreeNodes(struct term_node *Term_node)
 
 int IsIdentity(struct polynomial *Poly)
 {
-    int status = OK;
-
     Alg_element ae;	/* TW 9/22/93 - change ae to *ae */
     Alg_element result;	/* TW 9/22/93 - change result to *result */
 
@@ -455,44 +453,33 @@ int IsIdentity(struct polynomial *Poly)
     while (temp_head) {
         Scalar alpha = ConvertToScalar(temp_head->coef);
         ae.clear();			/* TW 9/22/93 - change ae to *ae */
-        ExpandTerm(ae,temp_head->term,&status);	/* TW 9/22/93 - change ae
-to *ae */
-        if (status != OK) {
+        if(!ExpandTerm(ae,temp_head->term)) {
             printf("Severe Bug. Cant ExpandTerm. Basis product undefined\n");
             return(0);
         }
         ScalarMultAE(alpha,ae);		/* TW 9/22/93 - change ae to *ae */
-        AddAE(ae,result);	/* TW 9/22/93 - change ae to *ae & result to
-*result */
+        AddAE(ae,result);	/* TW 9/22/93 - change ae to *ae & result to *result */
         temp_head = temp_head->next;
     }
     return IsZeroAE(result);
 }
 
 
-void ExpandTerm(Alg_element &Ans, const struct term_node *W, int *status)
+bool ExpandTerm(Alg_element &Ans, const struct term_node *W)
 {
-    assert_not_null_nv(W);
+    if(!W) return false;
 
-    if(*status != OK){
-      return;
-    }
-
-    if ((W->left == NULL) && (W->right == NULL)) {
+    if(!W->left && !W->right) {
         Basis b = GetBasisNumberofLetter(W->letter);
         SetAE(Ans, b, 1);
-    } else {
-        Alg_element left;
-        Alg_element right;
+        return true;
+    }
 
-        if (*status == OK)
-            ExpandTerm(left, W->left, status);
+    Alg_element left;
+    Alg_element right;
 
-        if (*status == OK)
-            ExpandTerm(right, W->right, status);
-
-        *status = MultAE(left, right, Ans);
-   }
+    return (ExpandTerm(left, W->left) && 
+            ExpandTerm(right, W->right) && 
+            MultAE(left, right, Ans));
 }
-
 
