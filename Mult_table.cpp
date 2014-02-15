@@ -106,7 +106,7 @@ void Print_AE(const Alg_element &ae, FILE *filePtr, int outputType) /* TW 9/19/9
   int lnecnt = 0;		/* How many have been printed on current line */
 
   map<Basis, Scalar>::const_iterator aei;
-  for(aei = ae.begin(); aei != ae.end(), aei++) {
+  for(aei = ae.begin(); aei != ae.end(); aei++) {
     if(aei->first != 0 && aei->second != 0) {
       int x = aei->second; 
       if ((trmcnt > 0) && (trmcnt % 4 == 0)) { 		/* 4 items per line */
