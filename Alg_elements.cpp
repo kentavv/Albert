@@ -30,11 +30,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Build_defs.h"
 #include "Alg_elements.h"
+#include "Build_defs.h"
 #include "Memory_routines.h"
 #include "Mult_table.h"
 #include "Scalar_arithmetic.h"
+
+using std::map;
 
 #if 0
 static Alg_element *CreateAE();
@@ -49,6 +51,19 @@ static Basis Min(Basis x, Basis y);
 static Basis Max(Basis x, Basis y);
 static void PrintAE(const Alg_element *p);
 #endif
+
+static void clearZeros(Alg_element *p2) {
+    map<Basis, Scalar>::iterator p2i;
+    for(p2i = p2->elements.begin(); p2i != p2->elements.end();) {
+      if(p2i->first == 0 || p2i->second == 0) {
+        map<Basis, Scalar>::iterator t = p2i++;
+        p2->elements.erase(t);
+        puts("asdf"); 
+      } else {
+        p2i++;
+      } 
+    }
+}
 
 #if 0
 /*******************************************************************/
@@ -80,11 +95,7 @@ Alg_element *CreateAE()
 /*******************************************************************/ 
 void DestroyAE(Alg_element *p)
 {
-    while(p) {
-      Alg_element *q = p->next;
-      free(p);
-      p = q;
-    }
+  if(p) delete p;
 }
 
 /*******************************************************************/
@@ -99,10 +110,7 @@ void DestroyAE(Alg_element *p)
 /*******************************************************************/ 
 void InitAE(Alg_element *p)
 {
-    if(!p) return;
-    p->basis = 0;
-    p->basis_coef = 0;
-    p->next = NULL;
+  if(p) p->elements.clear();
 }
 
 /*******************************************************************/
@@ -120,10 +128,7 @@ void InitAE(Alg_element *p)
 /*******************************************************************/ 
 void ZeroOutAE(Alg_element *p)
 {
-    if(p) {
-      DestroyAE(p->next);
-      InitAE(p);
-    }
+  InitAE(p);
 }
 
 /*******************************************************************/
@@ -136,9 +141,11 @@ void ZeroOutAE(Alg_element *p)
 /*******************************************************************/ 
 int IsZeroAE(const Alg_element *p)
 {
-  while(p) {
-    if(p->basis != 0 && p->basis_coef != 0) return FALSE;
-    p = p->next;
+  if(p) {
+    map<Basis, Scalar>::const_iterator i;
+    for(i = p->elements.begin(); i != p->elements.end(); i++) {
+      if(i->first != 0 && i->second != 0) return FALSE;
+    }
   }
 
   return TRUE;
@@ -162,12 +169,14 @@ void ScalarMultAE(Scalar x, Alg_element *p)
     } else if (x == S_zero()) {
         ZeroOutAE(p);
     } else {
-        while(p) {
-          p->basis_coef = S_mul(x, p->basis_coef);
-          p = p->next;
-        }
+      map<Basis, Scalar>::iterator i;
+      for(i = p->elements.begin(); i != p->elements.end(); i++) {
+        i->second = S_mul(x, i->second);
+      }
     }
-}    
+
+    clearZeros(p);
+}
 
 #if 0
 /*******************************************************************/
@@ -228,48 +237,41 @@ void AssignNegAE(const Alg_element *p1, Alg_element *p2)
 /*******************************************************************/ 
 void AddAE(const Alg_element *p1, Alg_element *p2)
 {
-    Alg_element *pp2 = p2;
-
     assert_not_null_nv(p1);
     assert_not_null_nv(p2);
 
-    while(p1) {
-      if(!p2) {  /* occurs if max_basis(p2) < max_basis(p1) */
-        Alg_element *t = AllocAE();
-        *t = *p1;
-        t->next = NULL;
-        pp2->next = t;
+      map<Basis, Scalar>::const_iterator p1i = p1->elements.begin();
+      map<Basis, Scalar>::iterator p2i = p2->elements.begin();
+      
+    while(p1i != p1->elements.end()) {
+      if(p2i == p2->elements.end()) {  /* occurs if max_basis(p2) < max_basis(p1) */
+        p2->elements[p1i->first] = p1i->second;
 
-        pp2 = t;
-        p1 = p1->next;
-      } else if(p2->basis == 0) {
-        p2->basis = p1->basis;
-        p2->basis_coef = p1->basis_coef;
+        p1i++;
+#if 0
+      } else if(p2i->first == 0) {
+        p2i->first = p1i->first;
+        p2i->second = p1i->second;
 
-        pp2 = p2;
-        p1 = p1->next;
-        p2 = p2->next;
-      } else if(p2->basis == p1->basis) {
-        p2->basis_coef = S_add(p2->basis_coef, p1->basis_coef);
+        p1i++;
+        p2i++;
+#endif
+      } else if(p2i->first == p1i->first) {
+        p2i->second = S_add(p2i->second, p1i->second);
 
-        pp2 = p2;
-        p1 = p1->next;
-        p2 = p2->next;
-      } else if(p2->basis < p1->basis) {
-        pp2 = p2;
-        p2 = p2->next;
-      } else if(p2->basis > p1->basis) {
-        Alg_element *t = AllocAE();
-        *t = *p2;
-        p2->basis = p1->basis;
-        p2->basis_coef = p1->basis_coef;
-        p2->next = t;
+        p1i++;
+        p2i++;
+      } else if(p2i->first < p1i->first) {
+        p2i++;
+      } else if(p2i->first > p1i->first) {
+        p2->elements[p1i->first] = p1i->second;
 
-        pp2 = p2;
-        p1 = p1->next;
-        p2 = p2->next;
+        p1i++;
+        p2i++;
       }
     }
+
+    clearZeros(p2);
 }    
 
 #if 0
@@ -329,13 +331,14 @@ int LeftTapAE(Scalar x, Basis b, const Alg_element *p1, Alg_element *p2)
     if ((x == zero) || IsZeroAE(p1))
         return(OK);
     else {
-        while(p1) {
-            if (p1->basis_coef != zero) {
+      map<Basis, Scalar>::const_iterator i;
+      for(i = p1->elements.begin(); i != p1->elements.end(); i++) {
+        if(i->second != zero) {
                 if (status == OK)
-                    status = Mult2basis(b, p1->basis, S_mul(x, p1->basis_coef), p2); 
+                    status = Mult2basis(b, i->first, S_mul(x, i->second), p2); 
             }
-            p1 = p1->next;
-            }
+      }
+    clearZeros(p2);
         return(status);
     }
 }
@@ -364,14 +367,15 @@ int MultAE(const Alg_element *p1, const Alg_element *p2, Alg_element *p3)
     if (IsZeroAE(p1) || IsZeroAE(p2))
         return(OK);
     else {
-        while(p1) {
-            if (p1->basis_coef != zero) {
+      map<Basis, Scalar>::const_iterator p1i;
+      for(p1i = p1->elements.begin(); p1i != p1->elements.end(); p1i++) {
+        if(p1i->second != zero) {
                 if (status == OK)
-                    status = LeftTapAE(p1->basis_coef, p1->basis, p2, p3); 
+                    status = LeftTapAE(p1i->second, p1i->first, p2, p3); 
             }
-            p1 = p1->next;
         }
     }
+    clearZeros(p3);
     return(status);
 }
 
@@ -403,10 +407,10 @@ Basis Max(Basis x, Basis y)
 /*******************************************************************/ 
 Alg_element *AllocAE()
 {
-    Alg_element *p = (Alg_element *) Mymalloc(sizeof(Alg_element));
-    assert_not_null(p);
+    Alg_element *p = new Alg_element;
+    //assert_not_null(p);
 
-    InitAE(p);
+    //InitAE(p);
 
     return p;
 }
