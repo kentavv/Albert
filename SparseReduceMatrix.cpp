@@ -290,11 +290,8 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
 
 void SparseInterchange(int Row1, int Row2)
 {
-        NODE_PTR Temp_Row_Ptr;
-
         /* switch the two row pointers */
-
-        Temp_Row_Ptr = Matrix_Base_Ptr[Row1];
+        NODE_PTR Temp_Row_Ptr = Matrix_Base_Ptr[Row1];
         Matrix_Base_Ptr[Row1] = Matrix_Base_Ptr[Row2];
         Matrix_Base_Ptr[Row2] = Temp_Row_Ptr;
 }
