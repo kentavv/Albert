@@ -9,6 +9,8 @@
 /***                    changed Basis_table from array to ptr    ***/
 /*******************************************************************/
 
+#include <stdio.h>
+
 #include "Build_defs.h"
 
 typedef struct {
