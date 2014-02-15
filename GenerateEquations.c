@@ -328,7 +328,6 @@ Eqn_list_node *GetNewEqnListNode(void)
 
 void FreeEqns(Eqn_list_node *L)
 {
-    int n = 0;
     while(L) {
       Eqn_list_node *Ln = L->next;
 
@@ -336,9 +335,7 @@ void FreeEqns(Eqn_list_node *L)
       free(L);
  
       L = Ln;
-      n++;
     }
-    printf("\nn: %d\n", n);
 }
 
 
