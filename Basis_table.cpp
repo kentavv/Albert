@@ -18,6 +18,12 @@
 /***      This module contains routines dealing with Basis Table.***/
 /*******************************************************************/
 
+#include <vector>
+
+using std::vector;
+using std::pair;
+using std::make_pair;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <setjmp.h>
@@ -29,7 +35,6 @@
 #include "Memory_routines.h"
 #include "Type_table.h"
 
-static int InitializeDegtoBasisTable(int Target_degree);
 static void UpdateDegToBasisTable(int Deg, Basis Cur_basis);
 #if 0
 static Basis LeftFactor(Basis B);
@@ -38,34 +43,14 @@ static int GetDeg(Basis B);
 #endif
 static void PrintBasis(Basis b, FILE *filePtr);
 
-static int Nextbasistobefilled;
-static int Deg_of_last_basis;
-Deg_to_basis_rec *Deg_to_basis_table = NULL;
-extern jmp_buf env;
+typedef struct {
+    Basis left_factor;
+    Basis right_factor;
+    Name type;
+} BT_rec;
 
-#if 0
-/* TW 9/25/93 - line counter for view */
-static int lineCnt;
-#endif
-
-static BT_rec *Basis_table; /* TW 9/22/93 - changed Basis_table from array to ptr */
-
-void initBasisTable(void) {
-  Basis_table = (BT_rec *)Mymalloc(sizeof(BT_rec) * (DIMENSION_LIMIT + 1));
-  assert_not_null_nv(Basis_table);
-}
-
-void freeBasisTable(void) {
-  if(Basis_table) {
-    free(Basis_table);
-    Basis_table = NULL;
-  }
-}
-
-int basisTableReady(void) {
-  return Basis_table != NULL;
-}
-
+static vector<BT_rec> Basis_table;
+static vector<pair<Basis, Basis> > Deg_to_basis_table; // maps degree to first and last indices in Basis_table associated with that degree
 
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
@@ -81,48 +66,20 @@ int basisTableReady(void) {
 /*******************************************************************/ 
 int CreateBasisTable(int Target_degree)
 {
-    int i;
-
-    for (i=0;i<(DIMENSION_LIMIT + 1);i++) { 
-          Basis_table[i].left_factor = 0;
-          Basis_table[i].right_factor = 0;
-          Basis_table[i].type = 0; 
+    Basis_table.clear();
+    { // First entry is expected to be zero, but this may not be required
+      BT_rec br;
+      br.left_factor = 0;
+      br.right_factor = 0;
+      br.type = 0; 
+      Basis_table.push_back(br);
     }
 
-    if (Deg_to_basis_table != NULL)
-        free(Deg_to_basis_table);
-
-    if (InitializeDegtoBasisTable(Target_degree) != OK)
-        return(0);
-
-    Nextbasistobefilled = 1;
-    Deg_of_last_basis = 0;
+    Deg_to_basis_table.clear();
 
     return(OK);
 }
     
-
-int InitializeDegtoBasisTable(int Target_degree)
-{
-    int i;
-
-    Deg_to_basis_table = (Deg_to_basis_rec *) (Mymalloc(Target_degree *
-                                          sizeof(Deg_to_basis_rec)));
-    assert_not_null(Deg_to_basis_table);
-
-    /*  
-      5/94 (DPJ):  initialize all of Deg_to_basis_table 
-                   rather than just first entry.
-    */
-
-    for (i=0; i < Target_degree; i++) {			
-       Deg_to_basis_table[i].first_basis = 0;
-       Deg_to_basis_table[i].last_basis = 0;
-    }
-
-    return(OK);
-}
-
 
 /*******************************************************************/
 /* GLOBALS MODIFIED:                                               */
@@ -140,31 +97,28 @@ int InitializeDegtoBasisTable(int Target_degree)
 /*******************************************************************/ 
 Basis EnterBasis(Basis Left_factor, Basis Right_factor, Name Cur_type)
 {
-    int i = Nextbasistobefilled;
+    Basis bn = Basis_table.size();
 
-    if (i > DIMENSION_LIMIT) {
-        fprintf(stderr,"DIMENSION LIMIT %d exceeded. \n",i-1);
-        longjmp(env,1);
-    }
-    Basis_table[i].left_factor = Left_factor;
-    Basis_table[i].right_factor = Right_factor;
-    Basis_table[i].type = Cur_type; 
-    UpdateDegToBasisTable(GetDegreeName(Cur_type),(Basis) i);
-    return(Nextbasistobefilled++);
+    BT_rec br;
+    br.left_factor = Left_factor;
+    br.right_factor = Right_factor;
+    br.type = Cur_type; 
+    Basis_table.push_back(br);
+
+    UpdateDegToBasisTable(GetDegreeName(Cur_type), bn);
+
+    return bn;
 }
 
 
 void UpdateDegToBasisTable(int Deg, Basis Cur_basis)
 {
-    if (Deg > Deg_of_last_basis) {
-        Deg_to_basis_table[Deg-1].first_basis = Cur_basis;
-        Deg_to_basis_table[Deg-1].last_basis = Cur_basis;
-        Deg_of_last_basis = Deg;
+    if(Deg > (int)Deg_to_basis_table.size()) {
+      Deg_to_basis_table.push_back(make_pair(Cur_basis, Cur_basis));
+    } else {
+      Deg_to_basis_table[Deg-1].second++;
     }
-    else
-        (Deg_to_basis_table[Deg-1].last_basis)++;
 }
-
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -174,8 +128,9 @@ void UpdateDegToBasisTable(int Deg, Basis Cur_basis)
 /*******************************************************************/ 
 Basis GetNextBasisTobeFilled(void)
 {
-    return(Nextbasistobefilled);
+    return Basis_table.size();
 }
+
 
 #if 0
 /*******************************************************************/
@@ -220,13 +175,13 @@ int GetDeg(Basis B)
 
 Basis BasisStart(Degree Deg)
 {
-    return(Deg_to_basis_table[Deg-1].first_basis);
+    return(Deg_to_basis_table[Deg-1].first);
 }
 
 
 Basis BasisEnd(Degree Deg)
 {
-    return(Deg_to_basis_table[Deg-1].last_basis);
+    return(Deg_to_basis_table[Deg-1].second);
 }
 
 
@@ -255,12 +210,12 @@ void PrintBasisTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
 {
     int i;
 
-  if(Nextbasistobefilled > 0){
+  if(Basis_table.size() > 1){
     fprintf(filePtr, "Basis Table: \n");
 #if 0
     ++lineCnt;			/* TW 9/19/93 - support for view */
 #endif
-    for (i=1;i<Nextbasistobefilled;i++) {
+    for (i=1; i<(int)Basis_table.size(); i++) {
          fprintf(filePtr, " %3d.   %3d %3d   ",i,Basis_table[i].left_factor,
                              Basis_table[i].right_factor);
          PrintTypeName(Basis_table[i].type, filePtr);

@@ -13,21 +13,6 @@
 
 #include "Build_defs.h"
 
-typedef struct {
-    Basis left_factor;
-    Basis right_factor;
-    Name type;
-} BT_rec; 
-
-typedef struct {
-    Basis first_basis;
-    Basis last_basis;
-} Deg_to_basis_rec; 
-
-void initBasisTable(void);
-void freeBasisTable(void);
-int basisTableReady(void);
-
 int CreateBasisTable(int Target_degree);
 Basis EnterBasis(Basis Left_factor, Basis Right_factor, Name Cur_type);
 Basis GetNextBasisTobeFilled(void);

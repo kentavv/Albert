@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
     char cmd[100];
     char table;
     /*char *myPtr;*/
-    extern Deg_to_basis_rec *Deg_to_basis_table;
     FILE *tableFilePtr = NULL;
 
 /* TW 9/18/93 - end of code to support save, view, & output commands */
@@ -205,9 +204,7 @@ int main(int argc, char *argv[])
     }
 
     initHelp();
-    if(!initGlobals()){
-      printf("Failure in initializing global variables.\n");
-    }
+    initGlobals();
     /* TW 9/8/93 - END argument handling */
 
     Print_title();
@@ -611,7 +608,7 @@ type to show */
 
                  switch(table){
                    case 'b':
-                     if(mtable_status == PRESENT && basisTableReady() && Deg_to_basis_table){
+                     if(mtable_status == PRESENT){
                        sprintf(tableFileName, "/tmp/Basis.table");
                        tableFilePtr = fopen(tableFileName, "w");
                        if(tableFilePtr){
@@ -671,7 +668,7 @@ type to show */
 
                  switch(table){
                    case 'b':
-		     if(mtable_status == PRESENT && basisTableReady() && Deg_to_basis_table){
+		     if(mtable_status == PRESENT){
 		       printf("File Name --> ");
 			fflush(stdout);
 		       fgets(tableFileName,sizeof(tableFileName),stdin);
@@ -736,7 +733,7 @@ type to show */
 
 		 switch(table){
 		   case 'b':
-		     if(mtable_status == PRESENT && basisTableReady() && Deg_to_basis_table){
+		     if(mtable_status == PRESENT){
 		       PrintBasisTable(stdout, 1);
 		     }
 		     else{
@@ -819,7 +816,6 @@ type to show */
    DestroyMultTable();
    free(Command);
    free(Operand);
-   freeGlobals();	/* TW 9/27/93 - forgot to free these up */
 
    return 0;
 }
