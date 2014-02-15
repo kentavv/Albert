@@ -11,11 +11,6 @@
 #include "CreateMatrix.h"
 #include "GenerateEquations.h"
 
-typedef struct basis_pair_node {
-    Basis_pair bp;
-    struct basis_pair_node *next;
-} Basis_pair_node;
-
 int PerformSubs(const Basis *S, const struct polynomial *F, Eqn_list_node *L, int Nv, int Mdv, const int *Dv);
 
 #endif

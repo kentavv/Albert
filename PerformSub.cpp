@@ -39,6 +39,13 @@
 /***      multiplication table. So new basis elements and new      ***/
 /***      products are detrmined by solving these equations.       ***/ 
 /*********************************************************************/
+
+#include <map>
+#include <list>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -52,26 +59,35 @@
 #include "Debug.h"
 #include "Scalar_arithmetic.h"
 
+using namespace std;
+
+class basis_pair_node {
+    Basis_pair bp;
+    struct basis_pair_node *next;
+} Basis_pair_node;
+
 typedef int *Perm;
 
-#if 0
+#define  DEBUG_PERMUTATIONS 0
+#if DEBUG_PERMUTATIONS
 static void PrintPermutationList(void);
 static void PrintPermutation(int Var_num, Perm P);
-#endif
 static void FreePermutationList(Perm *Pl);
+#endif
 static void DoPermutation(int row);
 static int AppendLocalListToTheList(void);
+#if 0
 static Perm GetFirstPermutation(int Permutation_length);
 static int GetIndex(void);
 static Perm GetNextPermutation(Perm P, int Pl);
 static int GetOtherIndexToSwap(int index1);
 static void SortPermutation(int begin_index);
+#endif
 static int Expand(void);
-static void FreeLocalList(Basis_pair_node *Ll);
-static void AppendToLocalList(Basis_pair_node *Rl);
+static void AppendToLocalList(list<Basis_pair> &Rl);
 static int SubstituteWord(const struct term_node *W);
 static void Sub(Alg_element *Ans, const struct term_node *W);
-static Basis_pair_node *GetNewBPNode(void);
+//static Basis_pair_node *GetNewBPNode(void);
 
 
 static const Basis *Substitution = NULL;
@@ -81,13 +97,14 @@ static int Num_vars = 0;
 static const int *Deg_var = NULL;
 static int Max_deg_var = 0;
 
-static Perm *Permutation_list = NULL;
+vector<vector<int> > Permutation_list;
+//static Perm *Permutation_list = NULL;
 
-static Perm Permutation = NULL;
-static int Permutation_length = 0;
+//static Perm Permutation = NULL;
+//static int Permutation_length = 0;
 
-static Basis_pair_node *Local_list = NULL;
-static Basis_pair_node *running_list = NULL;
+static list<Basis_pair> Local_list;
+static list<Basis_pair> running_list;
 
 static int status = OK;
 
@@ -102,10 +119,10 @@ int PerformSubs(const Basis *S, const struct polynomial *F, Eqn_list_node *L, in
 
     status = OK;
 
-    Permutation_list = (Perm *) Mymalloc(Num_vars * sizeof(Perm));
-    assert_not_null(Permutation_list);
+ //   Permutation_list = (Perm *) Mymalloc(Num_vars * sizeof(Perm));
+  //  assert_not_null(Permutation_list);
 
-    Local_list = NULL;
+    Local_list.clear();
 
     DoPermutation(0);    /* Start of recursive call. */
     if (status != OK)
@@ -114,24 +131,28 @@ int PerformSubs(const Basis *S, const struct polynomial *F, Eqn_list_node *L, in
     if (AppendLocalListToTheList() != OK)
         return(0);
 
-    FreeLocalList(Local_list);
-    FreePermutationList(Permutation_list);
-    free(Permutation_list);
+    Local_list.clear();
+    Permutation_list.clear();
+    //FreePermutationList(Permutation_list);
+    //free(Permutation_list);
 
     return(OK);
 }
 
 
-#if 0
+#if DEBUG_PERMUTATIONS
 void PrintPermutationList(void)
 {
     int i;
 
-    assert_not_null_nv(Permutation_list);
+    //assert_not_null_nv(Permutation_list);
 
     printf("Permuatation List is :\n");
     for (i=0;i<Num_vars;i++) {
-        PrintPermutation(i,Permutation_list[i]);
+        printf("%d %d: ", i, Deg_var[i]);
+        for (int j=0; j<Deg_var[i]; j++)
+          printf("%d", Permutation_list[i][j]);
+        //PrintPermutation(i,Permutation_list[i]);
         printf("\n");
     }
 }
@@ -141,6 +162,7 @@ void PrintPermutation(int Var_num, Perm P)
 {
     int i;
 
+    printf("%d %d: ", Var_num, Deg_var[Var_num]);
     for (i=0;i<Deg_var[Var_num];i++)
         printf("%d",P[i]);
 }
@@ -149,17 +171,43 @@ void PrintPermutation(int Var_num, Perm P)
 
 void FreePermutationList(Perm *Pl)
 {
+#if 0
     int i;
 
     assert_not_null_nv(Pl);
 
     for (i=0;i<Num_vars;i++)
         free(Pl[i]);
+#endif
 }
 
 
 void DoPermutation(int row)
 {
+  if(row == 0) {
+    Permutation_list.resize(Num_vars);
+    for(int rr=0; rr<Num_vars; rr++) {
+      Permutation_list[rr].resize(Deg_var[rr]);
+      iota(Permutation_list[rr].begin(), Permutation_list[rr].end(), 1); // 1, 2, ...
+    }
+  }
+
+  if(row == Num_vars) {
+#if DEBUG_PERMUTATIONS
+    PrintPermutationList();
+#endif
+
+/* Do the actual substitution using the current permutations of all variables. */
+
+    status = Expand();
+  } else {
+    do {
+      DoPermutation(row + 1);
+    } while(status == OK && next_permutation(Permutation_list[row].begin(), Permutation_list[row].end()));
+  }
+
+#if 0
+
     Perm pi;
 
     if (status != OK)
@@ -176,73 +224,59 @@ void DoPermutation(int row)
         status = Expand();
     }
     else {
+puts("==================");
         pi = GetFirstPermutation(Deg_var[row]);
         if (pi == NULL)
             status = 0;
-        while ((pi != NULL) && (status == OK)) {
+        while (pi && status == OK) {
             Permutation_list[row] = pi;
             DoPermutation(row+1);
-            pi = GetNextPermutation(pi,Deg_var[row]);
+            pi = GetNextPermutation(pi, Deg_var[row]);
         }
     }
+#endif
 }
         
         
 int AppendLocalListToTheList(void)
 {
-    Eqn_list_node *Temp_list;
-    Basis_pair_node *temp_ll;
-    int ll_length = 1;
-    int i;
-
-    if (!Local_list || !The_list)
+    if (Local_list.empty() || !The_list)
         return(OK);
 
-    temp_ll = Local_list;    
-    while (temp_ll) {
-        ll_length++;
-        temp_ll = temp_ll->next;
+    int ll_length = Local_list.size();
+
+    Eqn_list_node *p_tl = The_list;
+    while (p_tl->next)
+        p_tl = p_tl->next;
+
+    p_tl->basis_pairs = (Basis_pair *) Mymalloc((ll_length + 1) * sizeof(Basis_pair));
+    assert_not_null(p_tl->basis_pairs);
+
+    list<Basis_pair>::const_iterator p_ll = Local_list.begin();
+    for (int i=0; i<ll_length; i++) {
+        p_tl->basis_pairs[i] = *p_ll;
+        p_ll++;
     }
 
-    Temp_list = The_list;
-    while (Temp_list->next)
-        Temp_list = Temp_list->next;
+    p_tl->basis_pairs[ll_length].coef = 0;
+    p_tl->basis_pairs[ll_length].left_basis = 0; 
+    p_tl->basis_pairs[ll_length].right_basis = 0; 
 
-    Temp_list->basis_pairs = (Basis_pair *) (Mymalloc(ll_length * sizeof(Basis_pair)));
-    assert_not_null(Temp_list->basis_pairs);
-
-    temp_ll = Local_list;
-    for (i=0;i<(ll_length-1);i++) {
-        Temp_list->basis_pairs[i].coef = (temp_ll->bp).coef;    
-        Temp_list->basis_pairs[i].left_basis = (temp_ll->bp).left_basis;    
-        Temp_list->basis_pairs[i].right_basis = (temp_ll->bp).right_basis;    
-        temp_ll = temp_ll->next;
-    }
-
-    Temp_list->basis_pairs[i].coef = 0;
-    Temp_list->basis_pairs[i].left_basis = 0; 
-    Temp_list->basis_pairs[i].right_basis = 0; 
-
-    Temp_list->next = GetNewEqnListNode();
-    assert_not_null(Temp_list->next);
+    p_tl->next = GetNewEqnListNode();
+    assert_not_null(p_tl->next);
 
     return(OK);
 }
 
-
+#if 0
 Perm GetFirstPermutation(int Permutation_length)
 {
-    Perm temp_perm = NULL;
+    Perm temp_perm = (int *) Mymalloc(Permutation_length * sizeof(int));
 
-    int i;
-
-    temp_perm = (int *) (Mymalloc(Permutation_length * sizeof(int)));
-
-    if (temp_perm == NULL)
-        return(NULL);
-
-    for (i=0;i<Permutation_length;i++)
+    if (temp_perm) {
+    for (int i=0; i<Permutation_length; i++)
         temp_perm[i] = i+1;
+    }
 
     return(temp_perm);
 } 
@@ -316,6 +350,7 @@ void SortPermutation(int begin_index)
         }
     }
 }
+#endif
 
 /*
  * We are getting to the core of the internals.
@@ -323,31 +358,22 @@ void SortPermutation(int begin_index)
 
 int Expand(void)
 {
-    struct term_head *temp_head;
-
-    int alpha;
-    Scalar salpha;
-
-    Basis_pair_node *temp_list;
-
     if (The_ident == NULL)
         return(OK);
 
-    temp_head = The_ident->terms;
+    term_head *temp_head = The_ident->terms;
 
-    while (temp_head != NULL) {
-        running_list = NULL;
-        alpha = temp_head->coef;
-        salpha = ConvertToScalar(alpha);
+    while (temp_head) {
+        running_list.clear();
+        int alpha = temp_head->coef;
+        Scalar salpha = ConvertToScalar(alpha);
 
         if (SubstituteWord(temp_head->term) != OK)
             return(0);
 
-        temp_list = running_list; 
-
-        while (temp_list != NULL) {
-            temp_list->bp.coef = S_mul(salpha, temp_list->bp.coef);
-            temp_list = temp_list->next;
+        list<Basis_pair>::iterator ii;
+        for(ii = running_list.begin(); ii != running_list.end(); ii++) {
+            ii->coef = S_mul(salpha, ii->coef);
         }
 
         AppendToLocalList(running_list);
@@ -358,33 +384,21 @@ int Expand(void)
 }
 
 
-void FreeLocalList(Basis_pair_node *Ll)
+void AppendToLocalList(list<Basis_pair> &Rl)
 {
-    assert_not_null_nv(Ll);
+   // Basis_pair_node *temp_ll;
 
-    if (Ll->next == NULL)
-        free(Ll);
-    else {
-        FreeLocalList(Ll->next);
-        free(Ll);
-    }
-}
-
-
-void AppendToLocalList(Basis_pair_node *Rl)
-{
-    Basis_pair_node *temp_ll;
-
-    assert_not_null_nv(Rl);
-
-    if (Local_list == NULL)
-        Local_list = Rl; 
-    else {
+//    if (Local_list.empty())
+ //       Local_list = Rl; 
+  //  else {
+        Local_list.splice(Local_list.end(), Rl);
+#if 0 
         temp_ll = Local_list;
         while (temp_ll->next != NULL)
             temp_ll = temp_ll->next;
         temp_ll->next = Rl; 
-    }
+#endif
+   // }
 }
         
 
@@ -399,15 +413,17 @@ int SubstituteWord(const struct term_node *W)
 {
     Alg_element *ae1;	/* TW 9/22/93 - change ae1 to *ae1 */
     Alg_element *ae2;	/* TW 9/22/93 - change ae2 to *ae2 */
-    Alg_element *ae1b;
-    Alg_element *ae2b;
 
     Scalar zero = S_zero();
     /*int i,j;*/
     Scalar alpha,beta;
-    Basis_pair_node *temp_list = NULL;
+    //Basis_pair_node *temp_list = NULL;
 
     if (W == NULL){
+#if 0
+        DestroyAE(ae1);     /* TW 9/23/93 - Can we free this up? */
+        DestroyAE(ae2);     /* TW 9/23/93 - Can we free this up? */
+#endif
         return(OK);
     }
 
@@ -424,16 +440,19 @@ int SubstituteWord(const struct term_node *W)
 /* But now it is time for new basis pairs. */
 /* The equations are nothing but summation of basis pairs. */
 
-    ae1b = ae1;
-    while(ae1b) {
-      if(ae1b->basis != 0) {
-        alpha = ae1b->basis_coef;
+    map<Basis, Scalar>::const_iterator ae1i, ae2i;
+    
+    ae1i = ae1->elements.begin();
+    while(ae1i != ae1->elements.end()) {
+      if(ae1i->first != 0) {
+        alpha = ae1i->second;
         if (alpha != zero) { /* TW 9/22/93 - change ae1 to *ae1 */
-          ae2b = ae2;
-          while(ae2b) {
-            if(ae2b->basis != 0) {
-                beta = ae2b->basis_coef; /* TW 9/22/93 - change ae2 to *ae2 */
+          ae2i = ae2->elements.begin();
+          while(ae2i != ae2->elements.end()) {
+            if(ae2i->first != 0) {
+                beta = ae2i->second; /* TW 9/22/93 - change ae2 to *ae2 */
                 if(beta != zero) { /* TW 9/22/93 - change ae2 to *ae2 */
+#if 0
                     if (running_list == NULL) {
                         running_list = GetNewBPNode(); 
                         temp_list = running_list;
@@ -443,16 +462,19 @@ int SubstituteWord(const struct term_node *W)
                         temp_list = temp_list->next;
                     }
                         assert_not_null(temp_list);
-                    temp_list->bp.coef = S_mul(alpha,beta);
-                    temp_list->bp.left_basis = ae1b->basis;
-                    temp_list->bp.right_basis = ae2b->basis;
+#endif
+                    Basis_pair bp;
+                    bp.coef = S_mul(alpha, beta);
+                    bp.left_basis = ae1i->first;
+                    bp.right_basis = ae2i->first;
+                    running_list.push_back(bp);
                 }
             }
-            ae2b = ae2b->next;
+            ae2i++;
         }
       }
       }
-            ae1b = ae1b->next;
+      ae1i++;
     }
 
     DestroyAE(ae1);
@@ -471,6 +493,9 @@ void Sub(Alg_element *Ans, const struct term_node *W)
         int var_number = GetVarNumber(W->letter) - 1;
 
         int var_occurrence_number = W->number - 1;
+#if DEBUG_PERMUTATIONS
+printf("vn:%d on:%d\n", var_number, var_occurrence_number);
+#endif
         int perm_number = Permutation_list[var_number][var_occurrence_number] - 1;
 
         Basis b = Substitution[var_number*Max_deg_var + perm_number];
@@ -496,6 +521,7 @@ void Sub(Alg_element *Ans, const struct term_node *W)
 }
 
 
+#if 0
 Basis_pair_node *GetNewBPNode(void)
 {
     Basis_pair_node *temp_node = (Basis_pair_node *) Mymalloc(sizeof(Basis_pair_node));
@@ -509,4 +535,4 @@ Basis_pair_node *GetNewBPNode(void)
 
     return temp_node;
 }
-
+#endif
