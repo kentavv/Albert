@@ -1,0 +1,12 @@
+git clone https://github.com/kentavv/Albert.git
+
+git status
+
+git pull
+
+git commit *.cpp *.h
+
+git push -u origin master
+
+git tag -a v4.0a_opt3
+git push -u origin master --tags
