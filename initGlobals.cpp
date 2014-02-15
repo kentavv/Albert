@@ -8,11 +8,11 @@
 #include "Mult_table.h"
 
 //extern char *Pair_present;
-extern Mt_block ***Mt_block_index;
+//extern Mt_block ***Mt_block_index;
 
 int initGlobals(void)
 {
-  int i;
+  //int i;
 
   initBasisTable();
 
@@ -31,6 +31,7 @@ int initGlobals(void)
 #endif
 #endif
 
+#if 0
   MTB_INDEX_SIZE = (DIMENSION_LIMIT/MTB_SIZE) + 1;
   Mt_block_index = (Mt_block ***)Mymalloc(sizeof(Mt_block **) * MTB_INDEX_SIZE);
   assert_not_null(Mt_block_index);
@@ -38,6 +39,7 @@ int initGlobals(void)
     Mt_block_index[i] = (Mt_block **)Mymalloc(sizeof(Mt_block *) * MTB_INDEX_SIZE);
     assert_not_null(Mt_block_index[i]);
   }
+#endif
 
   return(1);
 }
@@ -46,7 +48,7 @@ int initGlobals(void)
 /* TW 9/27/93 - forgot to free these up */
 void freeGlobals(void)
 {
-  int i;
+  //int i;
 
   freeBasisTable();
 
@@ -63,6 +65,7 @@ void freeGlobals(void)
   }
 #endif
 
+#if 0
   if(Mt_block_index) {
     for(i = 0; i < MTB_INDEX_SIZE; ++i){
       if(Mt_block_index[i]) {
@@ -73,4 +76,5 @@ void freeGlobals(void)
     free(Mt_block_index);
     Mt_block_index = NULL;
   }
+#endif
 }
