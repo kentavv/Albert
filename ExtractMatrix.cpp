@@ -17,8 +17,12 @@
 /***  MODULE DESCRIPTION:                                        ***/
 /*******************************************************************/
 
+#include <vector>
+
 #include <stdio.h>
 #include <stdlib.h>
+
+using namespace std;
 
 #include "ExtractMatrix.h"
 #include "Basis_table.h"
@@ -226,26 +230,30 @@ void ProcessIndependentBasis(void)
 {
     int j;
     Basis n,b1,b2;
-    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+//    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+    vector<pair<Basis, Scalar> > tl;
 
-    assert_not_null_nv(tl);		/* TW 9/22/93 - Terms_list change */
+ //   assert_not_null_nv(tl);		/* TW 9/22/93 - Terms_list change */
     
     if (Num_cols == 0)
         return;
+
+    tl.resize(1);
 
     for (j=0;j<Num_cols;j++) {
         if (!Dependent[j]) {
             b1 = ColtoBP[j].left_basis;
             b2 = ColtoBP[j].right_basis;
             n = EnterBasis(b1,b2,TypeToName(Cur_type));
-            tl[0].coef = 1;
-            tl[0].word = n;
-            tl[1].coef = tl[1].word = 0;
-            EnterProduct(b1,b2,tl);
+  //          tl[0].coef = 1;
+   //         tl[0].word = n;
+    //        tl[1].coef = tl[1].word = 0;
+            tl[0] = make_pair(n, 1);
+            EnterProduct(b1, b2, tl);
             BasisNames[j] = n;
         }
     }
-    free(tl);				/* TW 9/27/93 - forgot to free it up */
+//    free(tl);				/* TW 9/27/93 - forgot to free it up */
 }
 
              
@@ -254,10 +262,11 @@ void ProcessDependentBasis(void)
 {
     int j,row,k;
     Basis /*n,*/b1,b2;
-    int tl_index;
-    Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+    //int tl_index;
+    //Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+    vector<pair<Basis, Scalar> > tl;
 
-    assert_not_null_nv(tl);		/* TW 9/22/93 - Terms_list change */
+    //assert_not_null_nv(tl);		/* TW 9/22/93 - Terms_list change */
 
     if (Num_cols == 0)
         return;
@@ -269,19 +278,21 @@ void ProcessDependentBasis(void)
                     break;
             b1 = ColtoBP[j].left_basis;
             b2 = ColtoBP[j].right_basis;
-            tl_index = 0;
+          //  tl_index = 0;
+tl.clear();
             for (k=j+1;k<Num_cols;k++) {
                 if (TheMatrix[row*Num_cols + k] != 0) {
-                    tl[tl_index].coef = S_minus(TheMatrix[row*Num_cols + k]);
-                    tl[tl_index].word = BasisNames[k];
-                    tl_index++;
+                    //tl[tl_index].coef = S_minus(TheMatrix[row*Num_cols + k]);
+                    //tl[tl_index].word = BasisNames[k];
+tl.push_back(make_pair(BasisNames[k], S_minus(TheMatrix[row*Num_cols + k])));
+           //         tl_index++;
                 }
             }
-            tl[tl_index].coef = tl[tl_index].word = 0;  
-            EnterProduct(b1,b2,tl);
+            //tl[tl_index].coef = tl[tl_index].word = 0;  
+            EnterProduct(b1, b2, tl);
         }
     }
-    free(tl);				/* TW 9/27/93 - forgot to free it up */
+    //free(tl);				/* TW 9/27/93 - forgot to free it up */
 }
 
 /* Again this is virtually identical to the sister routine of 
@@ -299,10 +310,11 @@ void SparseProcessDependentBasis(void)
 
    int j/*,Row*/,k;
    Basis /*n,*/b1,b2;
-   int tl_index;
-   Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+   //int tl_index;
+  // Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+    vector<pair<Basis, Scalar> > tl;
 
-   assert_not_null_nv(tl);			/* TW 9/22/93 - Terms_list change */
+  // assert_not_null_nv(tl);			/* TW 9/22/93 - Terms_list change */
 
     if (Num_cols == 0)
         return;
@@ -313,7 +325,8 @@ void SparseProcessDependentBasis(void)
        j=Tmp_Ptr->column;
        b1 = ColtoBP[j].left_basis;
        b2 = ColtoBP[j].right_basis;
-       tl_index = 0;
+ //      tl_index = 0;
+ tl.clear();
        q=NULL;
        if (Tmp_Ptr->Next_Node != NULL)
        {
@@ -323,26 +336,29 @@ void SparseProcessDependentBasis(void)
        {
            k=q->column;
 	   S_temp=Get_Matrix_Element(TheSparseMatrix,rowid,k);
-           tl[tl_index].coef = S_minus(S_temp);
-           tl[tl_index].word = BasisNames[k];
-           tl_index++;
+           //tl[tl_index].coef = S_minus(S_temp);
+           //tl[tl_index].word = BasisNames[k];
+           //tl_index++;
+           tl.push_back(make_pair(BasisNames[k], S_minus(S_temp)));
 	   q = q->Next_Node;	
     	 }
-       tl[tl_index].coef = tl[tl_index].word = 0;  
-       EnterProduct(b1,b2,tl);
+       //tl[tl_index].coef = tl[tl_index].word = 0;  
+       EnterProduct(b1, b2, tl);
 	    rowid++;
     	 Tmp_Ptr = TheSparseMatrix[rowid];
     }
-    free(tl);				/* TW 9/27/93 - forgot to free it up */
+//    free(tl);				/* TW 9/27/93 - forgot to free it up */
 }
 
 void ProcessOtherIndependentBasis(int J)
 {
    int i,deg,save,/*num_bp,*/j;
    Basis m1,m2,n1,n2,n;
-   Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+   //Term *tl = Alloc_Terms_list();	/* TW 9/22/93 - Terms_list change */
+    vector<pair<Basis, Scalar> > tl;
 
-   assert_not_null_nv(tl);			/* TW 9/22/93 - Terms_list change */
+   //assert_not_null_nv(tl);			/* TW 9/22/93 - Terms_list change */
+tl.resize(1);
 
     if (Cur_type_len == J) {
         deg = GetDegree(T1);
@@ -358,10 +374,11 @@ void ProcessOtherIndependentBasis(int J)
                     for (j=n1;j<=n2;j++) {
                         if (GetCol(i,j) == -1) {
                             n = EnterBasis(i,j,TypeToName(Cur_type));
-                            tl[0].coef = 1;
-                            tl[0].word = n;
-                            tl[1].coef = tl[1].word = 0;
-                            EnterProduct(i,j,tl);
+//                            tl[0].coef = 1;
+ //                           tl[0].word = n;
+  //                          tl[1].coef = tl[1].word = 0;
+  tl[0] = make_pair(n, 1);
+                            EnterProduct(i, j, tl);
                         }
                     }
                 }
@@ -376,5 +393,5 @@ void ProcessOtherIndependentBasis(int J)
             T1[i] = save;
         }
     }
-    free(tl);				/* TW 9/27/93 - forgot to free it up */
+    //free(tl);				/* TW 9/27/93 - forgot to free it up */
 } 

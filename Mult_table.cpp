@@ -24,6 +24,9 @@
 /***      elements.                                              ***/
 /*******************************************************************/
 
+#include <map>
+#include <vector>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,23 +39,35 @@
 #include "Scalar_arithmetic.h"
 #include "Basis_table.h"
 
+//using std::map;
+using namespace std;
+
+map<pair<Basis, Basis>, vector<pair<Basis, Scalar> > > mult_table;
+
+#if 0
 static int TermsListLength(Term Tl[]);
 static Term *RetrieveProduct(Basis B1, Basis B2);
 static int FreeTermsBlocks(Terms_block *P, int *X);
-#if 0
 static int TransAETL(Alg_element *P, Term *Q);
 static int TransTLAE(Term *P, Alg_element *Q);
 static int PrintMT(void);
 static int PrintMTBlock(Mt_block *P);
 static int PrintTL(Term *P);
 #endif
+
+
+#if 0
 static Mt_block *Alloc_Mt_block();
 static Terms_block *Alloc_Terms_block(void);
+#endif
 static void Print_AE(Alg_element *ae, FILE *filePtr, int outputType);
+#if 0
 static Mt_block *getMtBlock(int row, int col);
 static void setMtBlock(int row, int col, Mt_block *val);
+#endif
 
 
+#if 0
 #define  DEBUG_DESTROY_MT  0
 
 /* Table of pointers to table of pointers to Term_lists. */
@@ -74,8 +89,9 @@ static int Cur_offset = 0;
 /* TW 9/18/93 - line counter for view */
 int lineCnt = 0;
 #endif
+#endif
 
-
+#if 0
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
 /*     Mt_block_index -- Translation table.                        */ 
@@ -96,6 +112,7 @@ int lineCnt = 0;
 /*******************************************************************/ 
 int CreateMultTable(void)
 {
+#if 0
     int i,j;
 
 /* There are Mt_blocks initially. */
@@ -111,11 +128,14 @@ int CreateMultTable(void)
     assert_not_null(First_terms_block);
 
     Cur_offset = 0;
+#endif
 
     return(OK);
 }
+#endif
 
     
+#if 0
 /*******************************************************************/
 /* GLOBALS MODIFIED:                                               */
 /*     Mt_block_index -- If space is allocated for new Mt_block.   */ 
@@ -132,8 +152,29 @@ int CreateMultTable(void)
 /*     Enter the product of Basis B1 and B2 in the Multiplication  */
 /*     table as Terms_list.                                        */
 /*******************************************************************/ 
-int EnterProduct(Basis B1, Basis B2, Term Tl[])
+int EnterProduct(Basis B1, Basis B2, const vector<pair<Basis, Scalar> > &tl)
 {
+  const pair<Basis, Basis> bb = make_pair(B1, B2);
+
+  if(mult_table.find(bb) == mult_table.end()) {
+    mult_table[bb] = tl;
+#if 0
+    const int tl_length = tl.size(); //TermsListLength(Tl); /* Find the number of terms that need to be copied. */
+
+    vector<pair<Basis, Scalar> > &tv = mult_table[bb];
+    tv.resize(tl_length);
+
+    for(int i=0; i<tl_length; i++) {/* Copy the Terms_list into Cur_terms_block. */
+        tv[i] = make_pair(tl[i].first, tl[i].second);
+    }
+#endif
+  } else {
+    puts("already present");
+  }
+
+    return(OK);
+
+#if 0
     Terms_block  *new_terms_block;
 
     Mt_block *cur_mt_block;
@@ -189,10 +230,13 @@ int EnterProduct(Basis B1, Basis B2, Term Tl[])
         (Cur_terms_block->terms[Cur_offset]).word = Tl[i].word; 
         Cur_offset++;
     }
-    return(OK);
-}
-        
 
+    return(OK);
+#endif
+}
+#endif    
+
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -202,19 +246,21 @@ int EnterProduct(Basis B1, Basis B2, Term Tl[])
 /*******************************************************************/ 
 int TermsListLength(Term Tl[])
 {
-    int length = 1;
+ //   int length = 1;
     int i = 0;
 
     assert_not_null(Tl);
 
     while (Tl[i].coef != 0) {
-        length++;
+  //      length++;
         i++;
     }
-    return(length);
+
+    return i+1; //(length);
 } 
+#endif
 
-
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -248,8 +294,9 @@ Term *RetrieveProduct(Basis B1, Basis B2)
     mtb_col = (B2 - 1) % MTB_SIZE;
     return((*MTBlock)[mtb_row][mtb_col]);	/* TW 9/23/93 */
 }
+#endif
 
-
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES:                                                       */
@@ -259,10 +306,28 @@ Term *RetrieveProduct(Basis B1, Basis B2)
 /*******************************************************************/ 
 int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
 {
-    Term *tl;
-    Basis w;
-
     assert_not_null(P);
+    
+  const pair<Basis, Basis> bb = make_pair(B1, B2);
+
+  map<pair<Basis, Basis>, vector<pair<Basis, Scalar> > >::const_iterator ii = mult_table.find(bb);
+  if(ii == mult_table.end()) {
+    return 0;
+  }
+ 
+  vector<pair<Basis, Scalar> >::const_iterator jj;
+  for(jj = ii->second.begin(); jj != ii->second.end(); jj++) {
+    const Basis w = jj->first;
+    const Scalar coef = jj->second;
+    SetAE(P, w, S_add(GetAE(P, w), S_mul(x, coef)));
+    //AccumAE(P, w, S_mul(x, coef));
+  } 
+
+    return(OK);
+
+#if 0
+    Basis w;
+    Term *tl;
 
     tl = RetrieveProduct(B1,B2);
     if (tl == NULL)
@@ -270,12 +335,16 @@ int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
 
     while (tl->coef != 0) {
         w = tl->word;
-        SetAE(P, w, S_add(GetAE(P, w), S_mul(x, tl->coef)));
+        //SetAE(P, w, S_add(GetAE(P, w), S_mul(x, tl->coef)));
+        AccumAE(P, w, S_mul(x, tl->coef));
         tl++;
     }
 
     return(OK);
+#endif
 }
+#endif
+
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* GLOBALS REQUIRED:                                               */
@@ -288,8 +357,10 @@ int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element *P)
 /*     Free the memory occupaid by Multiplication table and        */
 /*     all the Terms_blocks.                                       */
 /*******************************************************************/ 
-int DestroyMultTable(void)
+void DestroyMultTable(void)
 {
+  mult_table.clear();
+#if 0
     int TB_count = 1; /* Num. of Terms_block's allocated. For Stats. */
     int MT_count = 1; /* Num. of MT_block's allocated. For Stats. */
 
@@ -331,10 +402,12 @@ int DestroyMultTable(void)
     i = MTB_SIZE * MTB_SIZE; 
     printf("MT_count = %d Each MT size = %d\n",MT_count,i);
 #endif
+#endif
 
-    return(OK);
+    //return(OK);
 }
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /*     P -- Pointer to First_terms_block.                          */
@@ -365,6 +438,7 @@ int FreeTermsBlocks(Terms_block *P, int *X /* For Stats. */)
     }
     return(OK);
 }
+#endif
 
 #if 0
 /*******************************************************************/
@@ -500,6 +574,7 @@ int PrintTL(Term *P)
 #endif
 
 
+#if 0
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES: None.                                                 */
@@ -522,8 +597,9 @@ Mt_block *Alloc_Mt_block()
           (*new_mt_block)[i][j] = NULL;
     return(new_mt_block);
 }
+#endif
 
-
+#if 0
 /* TW 9/22/93 - Terms_list change; added dynamic allocation */
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -556,14 +632,21 @@ Terms_block *Alloc_Terms_block(void)
     assert_not_null(new_terms_block);
 
     /* TW 9/22/93 - change of terms from array to ptr */
-    new_terms_block->terms = (Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT);
+    new_terms_block->terms = ((Term *) Mymalloc(sizeof(Term) * DIMENSION_LIMIT));
     assert_not_null(new_terms_block->terms);
 
     memset(new_terms_block->terms, 0, sizeof(Term) * DIMENSION_LIMIT);
+#if 0
+    for (i=0;i<DIMENSION_LIMIT;i++) {
+        new_terms_block->terms[i].coef = 0; 
+        new_terms_block->terms[i].word = 0; 
+    }
+#endif
     new_terms_block->next = NULL;
 
     return(new_terms_block);
 }
+#endif
 
 /*******************************************************************/
 /* GLOBALS MODIFIED:                                               */
@@ -636,12 +719,14 @@ void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - ad
   int x; /*,i;*/
   int trmcnt = 0;		/* How many terms have been printed */
   int lnecnt = 0;		/* How many have been printed on current line */
+  map<Basis, Scalar>::const_iterator aei = ae->elements.begin();
+  
   //for (i = ae->first; i <= ae ->last; i++) {
-  while(ae) {
+  while(aei != ae->elements.end()) {
     //if ( (ae->basis_coef)[i] != 0) {
       //x = ae->basis_coef[i]; 
-    if(ae->basis != 0 && ae->basis_coef != 0) {
-      x = ae->basis_coef; 
+    if(aei->first != 0 && aei->second != 0) {
+      x = aei->second; 
       if ((trmcnt > 0) && (trmcnt % 4 == 0)) { 		/* 4 items per line */
         fprintf(filePtr, "\n");	
 #if 0
@@ -653,19 +738,20 @@ void Print_AE(Alg_element *ae, FILE *filePtr, int outputType) /* TW 9/19/93 - ad
         lnecnt = 0;
       }
       if (lnecnt == 0){
-	fprintf(filePtr, "   %3d b%-4d", x, ae->basis);
+	fprintf(filePtr, "   %3d b%-4d", x, aei->first);
       }
       else{
-        fprintf(filePtr, "+  %3d b%-4d", x, ae->basis);
+        fprintf(filePtr, "+  %3d b%-4d", x, aei->first);
       }
       trmcnt++;
       lnecnt++;
     }
-    ae = ae->next;
+    aei++;
   }
 }
 
 
+#if 0
 /* TW 9/23/93 - added in order to dynamically allocate Mt_block_index */
 
 Mt_block *getMtBlock(int row, int col)
@@ -684,3 +770,4 @@ void setMtBlock(int row, int col, Mt_block *val)
   assert_not_null_nv(rowPtr);
   rowPtr[col] = val;
 }
+#endif
