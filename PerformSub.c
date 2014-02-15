@@ -195,16 +195,17 @@ int AppendLocalListToTheList(void)
     int ll_length = 1;
     int i;
 
-    if ((Local_list == NULL) || (The_list == NULL))
+    if (!Local_list || !The_list)
         return(OK);
 
     temp_ll = Local_list;    
-    while (temp_ll != NULL) {
+    while (temp_ll) {
         ll_length++;
         temp_ll = temp_ll->next;
     }
+
     Temp_list = The_list;
-    while (Temp_list->next != NULL)
+    while (Temp_list->next)
         Temp_list = Temp_list->next;
 
     Temp_list->basis_pairs = (Basis_pair *) (Mymalloc(ll_length * sizeof(Basis_pair)));
@@ -217,11 +218,14 @@ int AppendLocalListToTheList(void)
         Temp_list->basis_pairs[i].right_basis = (temp_ll->bp).right_basis;    
         temp_ll = temp_ll->next;
     }
+
     Temp_list->basis_pairs[i].coef = 0;
     Temp_list->basis_pairs[i].left_basis = 0; 
     Temp_list->basis_pairs[i].right_basis = 0; 
+
     Temp_list->next = GetNewEqnListNode();
     assert_not_null(Temp_list->next);
+
     return(OK);
 }
 
