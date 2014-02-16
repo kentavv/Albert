@@ -38,10 +38,10 @@
 static void SparseMultRow(int Row, Scalar Factor);
 static void SparseAddRow(Scalar Factor, int Row1, int Row2);
 static void SparseInterchange(int Row1, int Row2);
-static void SparseKnockOut(int row, int col);
+static void SparseKnockOut(int row, int col, int nRows);
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
-static void Print_Rows(int Row1, int Row2);
+static void Print_Rows(int Row1, int Row2, int nCols);
 static void Print_SLList(Node *SLHead_Ptr);
 static void Print_Node(NODE_PTR Prt_Node);
 #endif
@@ -56,21 +56,17 @@ extern long num_elements;
 extern long max_num_elements;
 
 static MAT_PTR Matrix_Base_Ptr = NULL;
-static int Num_rows = 0;
-static int Num_cols = 0;
 
 
-int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int Rows, int Cols, int *Rank)
+int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int nRows, int nCols, int *Rank)
 {
     int i,j;
     int nextstairrow = 0;
     Scalar x;
 
     Matrix_Base_Ptr = *Matrix_BPtr;
-    Num_rows = Rows;
-    Num_cols = Cols;
 
-    if ((Rows == 0) || (Cols == 0))
+    if(nRows == 0 || nCols == 0)
     {
         return(OK);
     }
@@ -80,9 +76,9 @@ int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int Rows, int Cols, int *Rank)
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
-    for (i=0;i<Num_cols;i++)
+    for (i=0;i<nCols;i++)
     {
-        for (j=nextstairrow;j < Num_rows;j++)
+        for (j=nextstairrow;j < nRows;j++)
         {
             if ((x=Get_Matrix_Element(Matrix_Base_Ptr,j,i)) != S_zero())
             {
@@ -93,10 +89,10 @@ int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int Rows, int Cols, int *Rank)
         /* When found interchange and then try  to knockout any nonzero
            elements in the same column */
 
-        if (j < Num_rows)
+        if (j < nRows)
         {
            SparseInterchange(nextstairrow,j);
-           SparseKnockOut(nextstairrow,i);
+           SparseKnockOut(nextstairrow,i, nRows);
            nextstairrow++;
         }
     }
@@ -109,18 +105,11 @@ int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int Rows, int Cols, int *Rank)
 
 void SparseMultRow(int Row, Scalar Factor)
 {
-   NODE_PTR PMR_Ptr;
-        
    /* Get the first node in the row */
-
-   PMR_Ptr = Matrix_Base_Ptr[Row];
-
    /* Step thru row ... multiplying each element by the factor */
 
-   while (PMR_Ptr != NULL)
-   {
+   for(NODE_PTR PMR_Ptr = Matrix_Base_Ptr[Row]; PMR_Ptr; PMR_Ptr=PMR_Ptr->Next_Node) {
       PMR_Ptr->element=S_mul(PMR_Ptr->element,Factor);
-      PMR_Ptr=PMR_Ptr->Next_Node;
    }
 }
 
@@ -138,13 +127,6 @@ void SparseMultRow(int Row, Scalar Factor)
 /*********************************************************************/
 void SparseAddRow(Scalar Factor, int Row1, int Row2)
 {
-    Scalar TmpRow2_S_Sum;
-    NODE_PTR Row1_Ptr;
-    /*NODE_PTR Row2_Ptr;*/
-    NODE_PTR Prev_Ptr;
-    NODE_PTR Temp_Ptr;
-    NODE_PTR Look_Ahead_Ptr;
-
     /* check for zero factor */
 
    if (Factor == S_zero())
@@ -154,15 +136,18 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
 
    /* get the beginning of the two rows to work with */
 
-   Row1_Ptr = Matrix_Base_Ptr[Row1];
-   /*Row2_Ptr = Matrix_Base_Ptr[Row2];*/
-   Temp_Ptr = Matrix_Base_Ptr[Row2];
+   NODE_PTR Row1_Ptr = Matrix_Base_Ptr[Row1];
+   NODE_PTR Temp_Ptr = Matrix_Base_Ptr[Row2];
+
+    Scalar TmpRow2_S_Sum;
+    NODE_PTR Prev_Ptr;
+    NODE_PTR Look_Ahead_Ptr;
 
 
   /* Process the linked list representing the row to be multiplied and
      to be added */
 
-   while (Row1_Ptr != NULL)
+   while (Row1_Ptr)
    {
          /* go ahead and perform the scalar multiplication */
 
@@ -180,7 +165,7 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
          /* if there is no previous and the row is not empty then 
             we want to work on the first node in the row */
 
-      if ((Prev_Ptr == NULL) && (!Row_empty(Matrix_Base_Ptr,Row2)))
+      if (!Prev_Ptr && !Row_empty(Matrix_Base_Ptr,Row2))
       {
           Look_Ahead_Ptr=Matrix_Base_Ptr[Row2];
       }
@@ -197,7 +182,7 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
         /* Row is not empty so we must be before the node we want to
            work with so if there is a next node that is the one we want*/
 
-            if (Prev_Ptr->Next_Node != NULL)
+            if (Prev_Ptr->Next_Node)
             {
                 Look_Ahead_Ptr=Prev_Ptr->Next_Node;
             }
@@ -213,7 +198,7 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
     }
 
 
-    if (Look_Ahead_Ptr != NULL)
+    if (Look_Ahead_Ptr)
     {
     /* Row wasn't empty */
 
@@ -283,7 +268,6 @@ void SparseAddRow(Scalar Factor, int Row1, int Row2)
       }
                         
       Row1_Ptr=Row1_Ptr->Next_Node;
-
    }
 }
 
@@ -297,7 +281,7 @@ void SparseInterchange(int Row1, int Row2)
 }
 
 
-void SparseKnockOut(int row, int col)
+void SparseKnockOut(int row, int col, int nRows)
 {
     Scalar x;
 
@@ -315,21 +299,12 @@ void SparseKnockOut(int row, int col)
     /* try to knockout elements in column in the rows above */ 
 
 #pragma omp parallel for schedule(dynamic, 10)
-    for (j=0;j < Num_rows;j++)
+    for (j=0;j < nRows;j++)
     {
       if(j != row) {
         SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr, j, col)), row, j);
       }
     }
-
-#if 0
-    /* try to knockout elements in column in the rows below */ 
-
-    for (j=row+1;j < Num_rows;j++)
-    {
-        SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr,j,col)),row,j);
-    }
-#endif
 }
 
 #if 0
@@ -392,7 +367,7 @@ void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c)
 }
 
 
-void Print_Rows(int Row1, int Row2)
+void Print_Rows(int Row1, int Row2, int nCols)
 {
     int i,row,col;
     NODE_PTR Row1_Ptr;
@@ -400,7 +375,7 @@ void Print_Rows(int Row1, int Row2)
 
     Row1_Ptr = Matrix_Base_Ptr[Row1];
     Row2_Ptr = Matrix_Base_Ptr[Row2];
-    for (col=0;(col < Num_cols);col++)
+    for (col=0;(col < nCols);col++)
     {
         if (Row1_Ptr != NULL)
         {
@@ -421,7 +396,7 @@ void Print_Rows(int Row1, int Row2)
         }
     }
     printf("\n");
-    for (col=0;(col < Num_cols);col++)
+    for (col=0;(col < nCols);col++)
     {
         if (Row2_Ptr != NULL)
         {
@@ -604,17 +579,9 @@ void Delete_Node(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr)
 }
 };
 
-int Row_empty(MAT_PTR Sparse_Matrix, int row)
+bool Row_empty(MAT_PTR Sparse_Matrix, int row)
 {
-    if (Sparse_Matrix[row]==NULL)
-    {               
-        return(1);
-    }
-    else
-    {
-        return(0);
-    }
-
+    return Sparse_Matrix[row] == NULL;
 }
 
 /**************************************************************************/
