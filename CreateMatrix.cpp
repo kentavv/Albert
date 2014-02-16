@@ -68,8 +68,6 @@ static int SparseFillTheMatrix(void);
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
 static void PrintTheMatrix(void);
-static char getPairPresent(int row, int col);
-static void setPairPresent(int row, int col, char val);
 #endif
 
 /* Added by DCL 8/92. These are variables used for gathering density stats */
@@ -77,11 +75,6 @@ static void setPairPresent(int row, int col, char val);
 extern int gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
-
-#if 0
-char *Pair_present = NULL;
-static char BIT_VECTOR[8]={'\200','\100','\040','\020','\010','\004','\002','\001'};
-#endif
 
 static int Num_unique_basis_pairs;
 static int Num_equations;
@@ -181,84 +174,32 @@ void DestroyTheMatrix(void)
 
 void ZeroOutPairPresent(void)
 {
-#if 1
   pp_clear();
-#else
-#if 1
-    {
-    int i,j;
-    int n =0;
-    for (i=0;i<DIMENSION_LIMIT;i++) {
-        for (j=0;j<PP_COL_SIZE;j++) {
-          if(getPairPresent(i, j) != 0) {
-            n++;
-          }
-        } 
-    }
-    printf("%d %d %f\n", n, DIMENSION_LIMIT * PP_COL_SIZE * 8, n / (double) (DIMENSION_LIMIT * PP_COL_SIZE * 8));
-    }
-    memset(Pair_present, 0, sizeof(Pair_present[0]) * DIMENSION_LIMIT * PP_COL_SIZE);
-#else
-    int i,j;
-    for (i=0;i<DIMENSION_LIMIT;i++)
-        for (j=0;j<PP_COL_SIZE;j++)
-/*            Pair_present[i][j] = 0;*/
-	    setPairPresent(i, j, 0);	/* 9/93 - TW - new Pair_present routine */
-#endif
-#endif
 }
 
 
 void FillPairPresent(void)
 {
-    Eqn_list_node *temp;
-    int i;
+    Eqn_list_node *temp = First_eqn_list_node;
 
-    temp = First_eqn_list_node;
-    while (temp != NULL) {
-        i = 0;
-        /*assert_not_null_nv(temp->basis_pairs);*/
+    while (temp) {
+        int i = 0;
         if(!temp->basis_pairs) break;
+
         while (temp->basis_pairs[i].coef != 0) {
-#if 1
             pp_set(temp->basis_pairs[i].left_basis,
-                      temp->basis_pairs[i].right_basis);
-#else
-            EnterPair(temp->basis_pairs[i].left_basis,
-                      temp->basis_pairs[i].right_basis);
-#endif
+                   temp->basis_pairs[i].right_basis);
             i++;
         }
+
         Num_equations++;
         temp = temp->next;
     }
+
     Num_unique_basis_pairs = pp_count();
 }
-                
-#if 0
-void EnterPair(Basis i, Basis j)
-{
-#if 1
-  pp_set(i, j);
-  Num_unique_basis_pairs = pp_count();
-#else
-    int row_byte,col_byte,col_bit;
 
-    row_byte = i-1;
-    col_byte = (j-1)/8;
-    col_bit = (j-1)%8;
-
-/*    if (!(Pair_present[row_byte][col_byte] & BIT_VECTOR[col_bit])) {
-        Pair_present[row_byte][col_byte] |= BIT_VECTOR[col_bit];*/
-    if(!(getPairPresent(row_byte, col_byte) & BIT_VECTOR[col_bit])){	/* 9/93 - TW - new Pair_present routines */
-	setPairPresent(row_byte, col_byte, getPairPresent(row_byte, col_byte) | BIT_VECTOR[col_bit]);
-        Num_unique_basis_pairs++;
-    }
-#endif
-}
-#endif
-
-
+              
 int CreateColtoBP(void)
 {
     int col_to_bp_index = 0;
@@ -644,42 +585,3 @@ void PrintTheMatrix(void)
 }
 #endif
 
-
-#if 0
-/****************************************************************/
-/* MODIFIES: None.                                              */
-/* REQUIRES: row - the desired row in Pair_present              */
-/*           col - the desired column in Pair_present           */
-/* RETURNS:  the value of Pair_present[row][col]                */
-/* FUNCTION: return the desired value from Pair_present         */
-/****************************************************************/
-char getPairPresent(int row, int col)
-{
-#if 1
-  return Pair_present[row * PP_COL_SIZE + col];
-#else
-  char *rowPtr = Pair_present[row];
-
-  return(rowPtr[col]);
-#endif
-}
-
-/****************************************************************/
-/* MODIFIES: Pair_present[row][col]                             */
-/* REQUIRES: row - the desired row in Pair_present              */
-/*           col - the desired column in Pair_present           */
-/*           val - the value to be placed in Pair_present[r][c] */
-/* RETURNS:  None                                               */
-/* FUNCTION: set the desired value within Pair_present          */
-/****************************************************************/
-void setPairPresent(int row, int col, char val)
-{
-#if 1
-  Pair_present[row * PP_COL_SIZE + col] = val;
-#else
-  char *rowPtr = Pair_present[row];
-
-  rowPtr[col] = val;
-#endif
-}
-#endif
