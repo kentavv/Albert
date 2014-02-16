@@ -55,15 +55,15 @@
 #include "pair_present.h"
 
 static void ZeroOutPairPresent(void);
-static void FillPairPresent(void);
+static void FillPairPresent(int &Num_unique_basis_pairs, int &Num_equations);
 #if 0
 static void EnterPair(Basis i, Basis j);
 #endif
-static int CreateColtoBP(void);
+static int CreateColtoBP(int Num_unique_basis_pairs);
 static int AreBasisElements(Degree d);
 static void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr);
-static int FillTheMatrix(void);
-static int SparseFillTheMatrix(void);
+static int FillTheMatrix(int Num_unique_basis_pairs, int Num_equations);
+static int SparseFillTheMatrix(int Num_unique_basis_pairs, int Num_equations);
 #if 0
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
@@ -76,8 +76,8 @@ extern int gather_density_flag;
 extern long num_elements;
 extern long max_num_elements;
 
-static int Num_unique_basis_pairs;
-static int Num_equations;
+//static int Num_unique_basis_pairs;
+//static int Num_equations;
 static Unique_basis_pair_list ColtoBP;
 static Eqn_list_node *First_eqn_list_node = NULL;
 static MAT_PTR TheSparseMatrix;
@@ -87,8 +87,6 @@ static Name N;
 
 int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
 {
-    Num_unique_basis_pairs = 0;
-    Num_equations = 0;
     ColtoBP = NULL;
     TheMatrix = NULL;
     N = n;
@@ -102,18 +100,22 @@ int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, 
         return(OK);
 
     ZeroOutPairPresent();
-    FillPairPresent();
+
+    int Num_unique_basis_pairs, Num_equations;
+    FillPairPresent(Num_unique_basis_pairs, Num_equations);
 /*
     PrintPairPresent();	
 */
-    if (CreateColtoBP() != OK)
+    if (CreateColtoBP(Num_unique_basis_pairs) != OK)
         return(0);
-    if (FillTheMatrix() != OK)
+    if (FillTheMatrix(Num_unique_basis_pairs, Num_equations) != OK)
         return(0);
+
     *Mptr = TheMatrix;
     *BPCptr = ColtoBP;
     *Rows = Num_equations;
     *Cols = Num_unique_basis_pairs; 
+
     return(OK);
 }
 
@@ -124,8 +126,6 @@ int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, 
 
 int SparseCreateTheMatrix(Eqn_list_node *Eq_list, MAT_PTR *SMptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
 {
-    Num_unique_basis_pairs = 0;
-    Num_equations = 0;
     ColtoBP = NULL;
     TheSparseMatrix = NULL;
     N = n;
@@ -139,13 +139,15 @@ int SparseCreateTheMatrix(Eqn_list_node *Eq_list, MAT_PTR *SMptr, int *Rows, int
         return(OK);
 
     ZeroOutPairPresent();
-    FillPairPresent();
+
+    int Num_unique_basis_pairs, Num_equations;
+    FillPairPresent(Num_unique_basis_pairs, Num_equations);
 /*
     PrintPairPresent();
 */
-    if (CreateColtoBP() != OK)
+    if (CreateColtoBP(Num_unique_basis_pairs) != OK)
         return(0);
-    if (SparseFillTheMatrix() != OK)
+    if (SparseFillTheMatrix(Num_unique_basis_pairs, Num_equations) != OK)
         return(0);
 
     /* pass locally derived values back to the calling routine */
@@ -154,6 +156,7 @@ int SparseCreateTheMatrix(Eqn_list_node *Eq_list, MAT_PTR *SMptr, int *Rows, int
     *BPCptr = ColtoBP;
     *Rows = Num_equations;
     *Cols = Num_unique_basis_pairs; 
+
     return(OK);
 }
 
@@ -178,8 +181,11 @@ void ZeroOutPairPresent(void)
 }
 
 
-void FillPairPresent(void)
+void FillPairPresent(int &Num_unique_basis_pairs, int &Num_equations)
 {
+    Num_unique_basis_pairs = 0;
+    Num_equations = 0;
+
     Eqn_list_node *temp = First_eqn_list_node;
 
     while (temp) {
@@ -200,7 +206,7 @@ void FillPairPresent(void)
 }
 
               
-int CreateColtoBP(void)
+int CreateColtoBP(int Num_unique_basis_pairs)
 {
     int col_to_bp_index = 0;
 
@@ -258,24 +264,12 @@ void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr)
                 ColtoBP[*col_to_bp_index_ptr].right_basis = j; 
                 (*col_to_bp_index_ptr)++;
             }
-
-#if 0
-            row = i - 1;
-            col = (j-1)/8;
-            col_bit = (j-1)%8;
-/*            if (Pair_present[row][col] & BIT_VECTOR[col_bit]) {*/
-	    if(getPairPresent(row, col) & BIT_VECTOR[col_bit]){	/* 9/93 - TW - new Pair_present routine */
-                ColtoBP[*col_to_bp_index_ptr].left_basis = i; 
-                ColtoBP[*col_to_bp_index_ptr].right_basis = j; 
-                (*col_to_bp_index_ptr)++;
-            }
-#endif
         }
     }
 }
             
 
-int FillTheMatrix(void)
+int FillTheMatrix(int Num_unique_basis_pairs, int Num_equations)
 {
     Eqn_list_node *temp;
     int i,j;
@@ -327,7 +321,7 @@ int FillTheMatrix(void)
     return(OK);
 }
 
-int SparseFillTheMatrix(void)
+int SparseFillTheMatrix(int Num_unique_basis_pairs, int Num_equations)
 {
     Eqn_list_node *temp;
     int i;
@@ -492,14 +486,16 @@ int SparseFillTheMatrix(void)
 
 int GetCol(Basis Left_basis, Basis Right_basis)
 {
-    int low,high,middle;
+    int Num_unique_basis_pairs = pp_count();
 
-    if ((Num_unique_basis_pairs == 0) || (Num_equations == 0))
-        return(-1);
-    low = 0;
-    high = Num_unique_basis_pairs - 1;
+    //if (Num_unique_basis_pairs == 0 || Num_equations == 0)
+    //    return(-1);
+
+    int low = 0;
+    int high = Num_unique_basis_pairs - 1;
+
     while (low <= high) {
-        middle = (low + high)/2; 
+        int middle = (low + high)/2; 
         if (Left_basis < ColtoBP[middle].left_basis)
             high = middle - 1;
         else
@@ -515,6 +511,7 @@ int GetCol(Basis Left_basis, Basis Right_basis)
                 return(middle);
         }
     }
+
     return(-1);
 }
 
