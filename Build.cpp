@@ -47,9 +47,9 @@ static int InitializeStructures(void);
 static void DestroyStructures(void);
 static long ElapsedTime(void);
 static void PrintProgress(int i, int n);
-static int ProcessDegree(int i);
+static int ProcessDegree(int i, const id_queue_node *First_id_node);
 static void InstallDegree1(void);
-static int ProcessType(Name n);
+static int ProcessType(Name n, const id_queue_node *First_id_node);
 static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n);
 
 /*****************************
@@ -64,7 +64,6 @@ static long matrix_size;
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 static Type Target_type;
-static struct id_queue_node *First_id_node;
 
 static time_t Start_time; 
 static Basis Current_dimension;
@@ -101,8 +100,6 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
 
     Target_type = Ttype;
 
-    First_id_node = Idq_node;
-
     status = InitializeStructures();
 
     Target_degree = GetDegreeName(TypeToName(Target_type));
@@ -113,7 +110,7 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
 	if (i == Target_degree)
            gather_density_flag = TRUE;	
 		
-            status = ProcessDegree(i);
+            status = ProcessDegree(i, Idq_node);
 	    if(sigIntFlag == 1){
 /*	      printf("Returning from Build().\n");*/
 	      return(-1);
@@ -127,13 +124,15 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
     PrintBasisTable();
 #endif
 
-/*#if PRINT_TYPE_TABLE
+/*
+#if PRINT_TYPE_TABLE
     PrintTypetable();
 #endif
 
 #if DEBUG_MT
     PrintMT();
-#endif*/
+#endif
+*/
 
 #if PRINT_MULT_TABLE
     Print_MultTable();
@@ -212,7 +211,7 @@ void PrintProgress(int i, int n)
 /* FUNCTION:                                                       */
 /*     Process all Types of degree i.                              */
 /*******************************************************************/
-int ProcessDegree(int i)
+int ProcessDegree(int i, const id_queue_node *First_id_node)
 {
    Name n;
    int status = OK;
@@ -235,8 +234,8 @@ int ProcessDegree(int i)
        n = FirstTypeDegree(i);
        while ((status == OK) && (n != -1)) {
            begin_basis = GetNextBasisTobeFilled();
-           printf("\tProcessing(%2d/%2d, begin_basis:%d)...", (nn1++)+1, nn2, begin_basis); fflush(NULL);
-           status = ProcessType(n);
+           printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis); fflush(NULL);
+           status = ProcessType(n, First_id_node);
 	   if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
 /*	     printf("Returning from ProcessDegree().\n");*/
 	     return(-1);
@@ -297,21 +296,17 @@ void InstallDegree1(void)
 /*     other basis pairs in terms of existing basis.               */ 
 /*******************************************************************/
 /* Process type t for degree i */
-int ProcessType(Name n)
+int ProcessType(Name n, const id_queue_node *First_id_node)
 {
     int status = OK;
-    Eqn_list_node *L;               /* Header record of linked list */
-    struct polynomial *f;
-    struct id_queue_node *temp_id_node;
+    Eqn_list_node *L = GetNewEqnListNode();               /* Header record of linked list */
 
-    L = GetNewEqnListNode();
     assert_not_null(L);
 
-    temp_id_node = First_id_node;
-
     printf("Generating..."); fflush(NULL);
+    const id_queue_node *temp_id_node = First_id_node;
     while (temp_id_node && status == OK) {
-        f = temp_id_node->identity;
+        polynomial *f = temp_id_node->identity;
         if ((status == OK) && (f->degree <= GetDegreeName(n)))
             status = GenerateEquations(f,n,L);
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
