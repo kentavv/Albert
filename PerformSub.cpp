@@ -85,7 +85,7 @@ static void SortPermutation(int begin_index);
 #endif
 static int Expand(void);
 static void AppendToLocalList(list<Basis_pair> &Rl);
-static int SubstituteWord(const struct term_node *W);
+static int SubstituteWord(const struct term_node *W, list<Basis_pair> &running_list);
 static void Sub(Alg_element &Ans, const struct term_node *W);
 //static Basis_pair_node *GetNewBPNode(void);
 
@@ -104,7 +104,6 @@ vector<vector<int> > Permutation_list;
 //static int Permutation_length = 0;
 
 static list<Basis_pair> Local_list;
-static list<Basis_pair> running_list;
 
 static int status = OK;
 
@@ -364,11 +363,12 @@ int Expand(void)
     term_head *temp_head = The_ident->terms;
 
     while (temp_head) {
-        running_list.clear();
+        list<Basis_pair> running_list;
+
         int alpha = temp_head->coef;
         Scalar salpha = ConvertToScalar(alpha);
 
-        if (SubstituteWord(temp_head->term) != OK)
+        if (SubstituteWord(temp_head->term, running_list) != OK)
             return(0);
 
         list<Basis_pair>::iterator ii;
@@ -409,7 +409,7 @@ void AppendToLocalList(list<Basis_pair> &Rl)
  * identity. 
  */
 
-int SubstituteWord(const struct term_node *W)
+int SubstituteWord(const struct term_node *W, list<Basis_pair> &running_list)
 {
     Alg_element ae1;
     Alg_element ae2;
