@@ -448,9 +448,7 @@ printf("Matrix(%4d X %4d)...", rows, cols); fflush(NULL);
    PrintDependent();
 #endif
 
-   DestroyBPtoCol();     /* Make sure not null before malloc */
-   if (status == OK) 
-   {
+   DestroyBPtoCol();
       if (!sparse)
       {
          DestroyTheMatrix();
@@ -459,7 +457,6 @@ printf("Matrix(%4d X %4d)...", rows, cols); fflush(NULL);
       {
          DestroySparseMatrix(Sparse_Matrix);
       }
-   }
 /* 
    DestroyDependent(); 
      This array was already freed!  This resulted in
