@@ -147,11 +147,9 @@ Type GetNewType(void)
 
 void NameToType(Name N, Type T)
 {
-    int i;
-
     assert_not_null_nv(T);
 
-    for (i=0;i<Target_type_len;i++)
+    for (int i=0;i<Target_type_len;i++)
         T[i] = Type_table[N].type[i];
 }
 
