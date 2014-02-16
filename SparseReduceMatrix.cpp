@@ -62,7 +62,6 @@ int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int nRows, int nCols, int *Rank)
 {
     int i,j;
     int nextstairrow = 0;
-    Scalar x;
 
     Matrix_Base_Ptr = *Matrix_BPtr;
 
@@ -80,13 +79,13 @@ int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int nRows, int nCols, int *Rank)
     {
         for (j=nextstairrow;j < nRows;j++)
         {
-            if ((x=Get_Matrix_Element(Matrix_Base_Ptr,j,i)) != S_zero())
+            if(Get_Matrix_Element(Matrix_Base_Ptr,j,i) != S_zero())
             {
                 break;
             }
         }
    
-        /* When found interchange and then try  to knockout any nonzero
+        /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
         if (j < nRows)
@@ -299,8 +298,7 @@ void SparseKnockOut(int row, int col, int nRows)
     /* try to knockout elements in column in the rows above */ 
 
 #pragma omp parallel for schedule(dynamic, 10)
-    for (j=0;j < nRows;j++)
-    {
+    for (j=0;j < nRows;j++) {
       if(j != row) {
         SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr, j, col)), row, j);
       }
@@ -424,7 +422,7 @@ Scalar Get_Matrix_Element(MAT_PTR Sparse_Matrix, int i, int j)
 {
     /* either return the element at location i,j or return a zero */
     NODE_PTR Tmp_Ptr = Sparse_Matrix[i];
-        while ((Tmp_Ptr != NULL) && (Tmp_Ptr->column <= j))
+        while (Tmp_Ptr && Tmp_Ptr->column <= j)
         {
             if (Tmp_Ptr->column == j)
             {       
