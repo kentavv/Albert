@@ -66,9 +66,6 @@ static void sigCatch(int x);
 Scalar Field = DEFAULT_FIELD;          /* Build_defs.h */
 int sparse = TRUE;
 
-int DIMENSION_LIMIT;
-int PP_COL_SIZE;
-
 /* Size of the Translation table: i.e from basis to Mt_block. */
 /* Used To save memory.  */
 int MTB_INDEX_SIZE;
@@ -116,7 +113,6 @@ int main(int argc, char *argv[])
 
     /* TW 9/8/93 - BEGIN argument handling */
     char dir[100];
-    char *str, *str2;
     int argPos;
     /*FILE *fp;*/
 
@@ -155,39 +151,6 @@ int main(int argc, char *argv[])
                 printf("%s does not exist.\n", dir);
               }*//* TW - check this in Get_Command() */
               break;
-            case 'd':
-	      if(argPos){
-		str = argv[i] + argPos;
-	      }
-	      else{
-		++i;
-		str = argv[i];
-	      }
-              for(str2 = str; *str2; ++str2){
-                if(!isdigit(*str2)){
-                  printf("Argument for -d flag is not a valid integer.\n");
-                  usage();
-                  exit(-1);
-                }
-              }
-              DIMENSION_LIMIT = atoi(str);
-              if(DIMENSION_LIMIT < DIM_LIM_MIN){
-                printf("Limit is less than the minimum bound.\n");
-                printf("Setting dimension limit to %d\n", DIM_LIM_MIN);
-                DIMENSION_LIMIT = DIM_LIM_MIN;
-              }
-              if(DIMENSION_LIMIT > DIM_LIM_MAX){
-                printf("Limit is more than the maximum bound.\n");
-                printf("Setting dimension limit to %d\n", DIM_LIM_MAX);
-                DIMENSION_LIMIT = DIM_LIM_MAX;
-              }
-	      /* make sure that DIMENSION_LIMIT is a multiple of DIM_LIM_INCR */
-	      /* if it isn't, set it to the next incremental level */
-	      if((int)(DIMENSION_LIMIT % DIM_LIM_INCR)){
-		DIMENSION_LIMIT += DIM_LIM_INCR;
-		DIMENSION_LIMIT -= (int)(DIMENSION_LIMIT % DIM_LIM_INCR);
-	      }
-              break;
             default:
               printf("%c is an invalid flag type.\n", argv[i][1]);
               usage();
@@ -197,9 +160,6 @@ int main(int argc, char *argv[])
       if(!strlen(dir)){
 	strcpy(dir, ".albert");
       }
-    }
-    if(!DIMENSION_LIMIT){
-      DIMENSION_LIMIT = DIM_LIM_DEFAULT;
     }
 
     initHelp();
@@ -823,7 +783,6 @@ void Print_title(void)
     printf("\n\n         ((Albert)), Version 4.0, 2008\n");
     printf("Dept. of Computer Science, Clemson University\n\n");
     printf("\n");
-    printf("Dimension Limit: %d.\n", DIMENSION_LIMIT);
 }
 
 /* Called from S_init() of Scalar_arithmetic.c Used to build the inverse
