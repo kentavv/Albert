@@ -23,22 +23,6 @@
 #define assert_not_null(p) if ((p) == NULL) return(NULL_PTR_ERR)
 #define assert_not_null_nv(p) if ((p) == NULL) return;
 
-/* TW - used in dimension limit cmd line parameters */
-#define DIM_LIM_MIN     500
-#define DIM_LIM_MAX     200000
-#define DIM_LIM_INCR	500
-#define DIM_LIM_DEFAULT	50000
-
-/* number of rows and columns in Mt_block. */
-#define MTB_SIZE	100
-
-/* TW 9/22/93 - switch from #define to globals */
-extern int DIMENSION_LIMIT;
-
-/* Size of the Translation table: i.e from basis to Mt_block. */
-/* Used To save memory.  */
-extern int MTB_INDEX_SIZE;
-
 typedef unsigned char Scalar;
 typedef int Basis;
 typedef char Degree;
