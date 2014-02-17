@@ -24,6 +24,12 @@
 /***      in the SolveEquations routine.                        ***/
 /******************************************************************/
 
+#include <list>
+#include <vector>
+
+using std::list;
+using std::vector;
+
 #include <stdio.h>
 #include <time.h>
 
@@ -33,33 +39,25 @@
 #include "ExtractMatrix.h"
 #include "GenerateEquations.h"
 #include "Mult_table.h"
-#include "node_mgt.h"
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
 #include "ReduceMatrix.h"
-#include "Sparse_structs.h"
-#include "Sparse_defs.h"
 #include "SparseReduceMatrix.h"
 #include "Debug.h"
 
 static int InitializeStructures(void);
-static void DestroyStructures(void);
 static long ElapsedTime(void);
 static void PrintProgress(int i, int n);
-static int ProcessDegree(int i, const id_queue_node *First_id_node);
+static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
 static void InstallDegree1(void);
-static int ProcessType(Name n, const id_queue_node *First_id_node);
+static int ProcessType(Name n, const list<id_queue_node> &First_id_node);
 static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n);
 
 /*****************************
  These variables are for the sparse implementation
 ******************************/
 extern int sparse;
-int gather_density_flag;
-long num_elements;
-long max_num_elements;
-static long matrix_size;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
@@ -82,34 +80,23 @@ static Basis Current_dimension;
 /*     For each degree, New Basis are created and New Products are */
 /*     entered.                                                    */ 
 /*******************************************************************/
-int Build(struct id_queue_node *Idq_node, Type Ttype)
+int Build(list<id_queue_node> &Idq_node, Type Ttype)
 {
-    char *convtime;
-
-    int Target_degree;
-
     int status = OK;
     int i;
 
-    double density;
-
     Start_time = time(NULL);
-    convtime = ctime(&Start_time);
-    printf("\nBuild begun at %s\n",convtime);
+    const char *convtime = ctime(&Start_time);
+    printf("\nBuild begun at %s\n", convtime);
     printf("Degree    Current Dimension   Elapsed Time(in seconds) \n");
 
     Target_type = Ttype;
 
     status = InitializeStructures();
 
-    Target_degree = GetDegreeName(TypeToName(Target_type));
-
-    gather_density_flag = FALSE;	
+    int Target_degree = GetDegreeName(TypeToName(Target_type));
     if (status == OK) {
         for (i=1; i <= Target_degree; i++)  {
-	if (i == Target_degree)
-           gather_density_flag = TRUE;	
-		
             status = ProcessDegree(i, Idq_node);
 	    if(sigIntFlag == 1){
 /*	      printf("Returning from Build().\n");*/
@@ -138,26 +125,9 @@ int Build(struct id_queue_node *Idq_node, Type Ttype)
     Print_MultTable();
 #endif
 
-    DestroyStructures();
-    density= 100 * ((double)max_num_elements/(double)matrix_size);
     if (status == OK)
     {
-        printf("Build completed. ");
-        if (density > 0.00)
-        {
-            printf("Last Matrix %2.2f%% dense.\n",density);
-        }
-        else
-        {
-           if (matrix_size==0)
-           {
-              printf("No Matrix.\n");
-           }
-           else
-           {
-             printf("Last Matrix %f%%dense.\n",density);
-           }
-        }
+        printf("Build completed.\n");
     }
     else
         printf("Build incomplete\n");
@@ -176,21 +146,14 @@ int InitializeStructures(void)
 {
     int status = OK; 
 
-    int Target_degree;
+    status = CreateTypeTable(Target_type);
 
-    if (status == OK) 
-        status = CreateTypeTable(Target_type);
     if (status == OK) { 
-        Target_degree = GetDegreeName(TypeToName(Target_type));
+        int Target_degree = GetDegreeName(TypeToName(Target_type));
         status = CreateBasisTable(Target_degree);
     }
+
     return (status);
-}
-
-
-void DestroyStructures(void)
-{
-     /*DestroyTypeTable();*/ /* if we delete this we will not be able to use the 'v b' command */
 }
 
 
@@ -211,7 +174,7 @@ void PrintProgress(int i, int n)
 /* FUNCTION:                                                       */
 /*     Process all Types of degree i.                              */
 /*******************************************************************/
-int ProcessDegree(int i, const id_queue_node *First_id_node)
+int ProcessDegree(int i, const list<id_queue_node> &First_id_node)
 {
    Name n;
    int status = OK;
@@ -296,7 +259,7 @@ void InstallDegree1(void)
 /*     other basis pairs in terms of existing basis.               */ 
 /*******************************************************************/
 /* Process type t for degree i */
-int ProcessType(Name n, const id_queue_node *First_id_node)
+int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 {
     int status = OK;
     Eqn_list_node *L = GetNewEqnListNode();               /* Header record of linked list */
@@ -304,19 +267,18 @@ int ProcessType(Name n, const id_queue_node *First_id_node)
     assert_not_null(L);
 
     printf("Generating..."); fflush(NULL);
-    const id_queue_node *temp_id_node = First_id_node;
-    while (temp_id_node && status == OK) {
-        polynomial *f = temp_id_node->identity;
-        if ((status == OK) && (f->degree <= GetDegreeName(n)))
+
+    list<id_queue_node>::const_iterator ii = First_id_node.begin();
+    for(; ii != First_id_node.end() && status == OK; ii++) {
+        const polynomial *f = ii->identity;
+
+        if(status == OK && f->degree <= GetDegreeName(n))
             status = GenerateEquations(f,n,L);
+
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
-	  if(L != NULL){
-	    FreeEqns(L);
-	  }
-/*	  printf("Returning from ProcessType().\n");*/
+	  if(L) FreeEqns(L);
 	  return(-1);
 	}
-        temp_id_node = temp_id_node->next;
     }
 
 #if DEBUG_EQNS
@@ -352,20 +314,11 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
     int rows = 0;              /* Size of matrix */
     int cols = 0;              /* Size of matrix */
     Matrix mptr = NULL;        /* Pointer to matrix */
-    MAT_PTR Sparse_Matrix = NULL;
-    Unique_basis_pair_list BPCptr = NULL; /* pointer to BPtoCol */
+    vector<list<Node> > SM;
+    vector<Unique_basis_pair> BPCptr; /* pointer to BPtoCol */
     int rank = 0;
     int status = OK;
 
-
-   /* this flag is only set on the last degree of the generator */
-
-   if (gather_density_flag)
-   {
-      num_elements=0;
-      max_num_elements=0;
-      matrix_size=0;
-   }
 /* CreateMatrix will initialize rows, cols, m, BP
    and fill in matrix and BPtoCol */
 
@@ -373,22 +326,15 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
 
    if (!sparse)
    {
-     status = CreateTheMatrix(L, &mptr, &rows, &cols, &BPCptr, n);
+     status = CreateTheMatrix(L, &mptr, &rows, &cols, BPCptr, n);
    }
    else
    {
-     status = SparseCreateTheMatrix(L, &Sparse_Matrix, &rows, &cols, &BPCptr, n);
+     status = SparseCreateTheMatrix(L, SM, &rows, &cols, BPCptr, n);
    }
 
    /* make sure that we get the correct information from creating the 
       matrix for our statistics */
-
-   if (gather_density_flag)
-   {
-      max_num_elements=num_elements;
-      matrix_size=rows*cols;
-   }
-
 
 #if DEBUG_MATRIX
    PrintColtoBP();
@@ -401,29 +347,14 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
    if (status == OK)
    {
 /* determine the matrix structure */
+printf("Matrix:(%4d X %4d)", rows, cols); fflush(NULL);
       if (!sparse)
       {
-#if 0
-{
-  int i, j, n=0;
-  for(i=0; i<rows; i++) {
-    for(j=0; j<cols; j++) {
-      if(mptr[i * cols + j] != 0) {
-        n++;
-      }
-    }
-  }
-printf("Matrix:(%4d X %4d, %d %d %f%%)", rows, cols, n, rows*cols, n/(double)(rows*cols)*100); fflush(NULL);
-}
-#else
-printf("Matrix:(%4d X %4d)", rows, cols); fflush(NULL);
-#endif
          status = ReduceTheMatrix(mptr, rows, cols, &rank);
       }
       else
       {
-printf("Matrix(%4d X %4d)...", rows, cols); fflush(NULL);
-         status = SparseReduceMatrix(&Sparse_Matrix,rows,cols,&rank);
+         status = SparseReduceMatrix(SM,rows,cols,&rank);
       }
    }
 
@@ -437,32 +368,21 @@ printf("Matrix(%4d X %4d)...", rows, cols); fflush(NULL);
 /* determine the matrix structure */
      if (!sparse)
      {
-        status = ExtractFromTheMatrix(mptr, rows, cols, rank, n,BPCptr);	
+        status = ExtractFromTheMatrix(mptr, rows, cols, rank, n, BPCptr);	
      }
      else
      {
-	status =SparseExtractFromMatrix(Sparse_Matrix,rows,cols,rank,n,BPCptr);
+	status = SparseExtractFromMatrix(SM,rows,cols,rank,n, BPCptr);
      }
  }
 #if DEBUG_MATRIX
    PrintDependent();
 #endif
 
-   DestroyBPtoCol();
       if (!sparse)
       {
          DestroyTheMatrix();
       }
-      else
-      {
-         DestroySparseMatrix(Sparse_Matrix);
-      }
-/* 
-   DestroyDependent(); 
-     This array was already freed!  This resulted in
-     an error in which the same memory was freed, allocatted, freed
-     and allocated, thus begin allocated to two different functions.
-     This was discovered in June, 1993 by Sekhar.
-*/
+
    return(status);
 }
