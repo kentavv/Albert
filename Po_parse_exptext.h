@@ -19,12 +19,12 @@
  * polynomial is used in the routines parse_exptext() and print_poly().
  *
  */
-typedef struct polynomial {
+struct polynomial {
     int       degree;
     short     deg_letter[NUM_LETTERS];
     struct    term_head  *terms;
-} polynomial;	
-	
+};
+
 /* 
  * Each term_head has a term_node as child and another term_head as sibling.  
  * So term_head has a child which is the root of a binary tree of term_node's. 
