@@ -6,19 +6,18 @@
 /***  AUTHOR:    Sekhar Muddana                                  ***/
 /*******************************************************************/
 
-typedef struct id_queue_node {
+#include <list>
+
+#include "Po_parse_exptext.h"
+
+struct id_queue_node {
     char *user_str;
-    struct polynomial *identity;
-    struct id_queue_node *next;
-} id_queue_node;
+    polynomial *identity;
+};
 
-typedef struct id_queue_head{
-    struct id_queue_node *first;
-} id_queue_head; 
-
-int Add_id(struct polynomial *Id, char Str[], struct id_queue_head *Id_queue);
-int Remove_id(int Id_no, struct id_queue_head *Id_queue);
-void Remove_all_ids(struct id_queue_head *Id_queue);
-void Print_ids(struct id_queue_head Id_queue);
+int Add_id(struct polynomial *Id, const char *Str, std::list<id_queue_node> &Id_queue);
+bool Remove_id(int Id_no, struct std::list<id_queue_node> &Id_queue);
+void Remove_all_ids(struct std::list<id_queue_node> &Id_queue);
+void Print_ids(const std::list<id_queue_node> &Id_queue);
 
 #endif

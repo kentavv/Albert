@@ -12,6 +12,12 @@
 /***      identities in the Id_queue.                             ***/
 /********************************************************************/
 
+#include <list>
+#include <iterator>
+
+using std::list;
+using std::advance;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,33 +44,16 @@
 /*     This routine is called when the command "i identity" is      */
 /*     issued.                                                      */
 /********************************************************************/
-int Add_id(struct polynomial *Id, char Str[], struct id_queue_head *Id_queue)
+int Add_id(struct polynomial *Id, const char *Str, list<id_queue_node> &Id_queue)
 {
-    struct id_queue_node *pntr;
-    struct id_queue_node *temp;
-    int id_no = 1;
-    
-    pntr = Id_queue_node_alloc();
- 
-    pntr->identity = Id;
-    pntr->user_str = (char*) Mymalloc(strlen(Str)+1);
-    strcpy(pntr->user_str,Str);
-    pntr->next = NULL;
+    id_queue_node idn; 
+    idn.identity = Id;
+    idn.user_str = (char*) Mymalloc(strlen(Str)+1);
+    strcpy(idn.user_str, Str);
 
-    if (Id_queue->first == NULL) {
-        Id_queue->first = pntr;
-        return(1);
-    }
-    else {
-        temp = Id_queue->first;
-        id_no++;
-        while (temp->next != NULL) {
-            temp = temp->next;
-            id_no++;
-        }
-        temp->next = pntr;
-        return(id_no);
-   }
+    Id_queue.push_back(idn);
+
+    return Id_queue.size();
 }
 
 
@@ -83,39 +72,20 @@ int Add_id(struct polynomial *Id, char Str[], struct id_queue_head *Id_queue)
 /* NOTE:                                                            */
 /*     This routine is called when the command "r number" is issued.*/
 /********************************************************************/ 
-int Remove_id(int Id_no, struct id_queue_head *Id_queue)
+bool Remove_id(int Id_no, list<id_queue_node> &Id_queue)
 {
-    struct id_queue_node *pntr1,*pntr2;
+  if(0 < Id_no && Id_no < (int)Id_queue.size() + 1) {
+    list<id_queue_node>::iterator ii = Id_queue.begin();
+    advance(ii, Id_no - 1);
 
-    pntr1 = Id_queue->first;
+    free(ii->user_str);
+    DestroyPoly(ii->identity);
+    Id_queue.erase(ii);
 
-    if (pntr1 != NULL)
-        pntr2 = pntr1->next;
-    else
-        return(0);    /* No elements in the queue! */
+    return true;
+  }
 
-    if (Id_no == 1) {
-        Id_queue->first = pntr1->next;
-        free(pntr1->user_str);
-        DestroyPoly(pntr1->identity);
-        free(pntr1);
-        return(1);
-    }
-    else {
-        while ((--Id_no > 1) && (pntr2 != NULL)) {
-            pntr1 = pntr2;
-            pntr2 = pntr2->next; 
-        }
-        if (pntr2 == NULL)
-            return(0);
-        else {
-            pntr1->next = pntr2->next;
-            free(pntr2->user_str);
-            DestroyPoly(pntr2->identity);
-            free(pntr2);
-            return(1);
-        }
-    }
+  return false;
 }
 
 
@@ -129,9 +99,12 @@ int Remove_id(int Id_no, struct id_queue_head *Id_queue)
 /* NOTE:                                                            */
 /*     This routine is called when the command "r *" is issued.     */
 /********************************************************************/ 
-void Remove_all_ids(struct id_queue_head *Id_queue)
+void Remove_all_ids(list<id_queue_node> &Id_queue)
 {
-    while (Remove_id(1,Id_queue));
+    for(list<id_queue_node>::iterator ii=Id_queue.begin(); ii!=Id_queue.end(); ii++) {
+      free(ii->user_str);
+      DestroyPoly(ii->identity);
+    }
 }
 
 
@@ -146,15 +119,11 @@ void Remove_all_ids(struct id_queue_head *Id_queue)
 /* NOTE:                                                            */
 /*     This routine is called when the command "d" is issued.       */
 /********************************************************************/ 
-void Print_ids(struct id_queue_head Id_queue)
+void Print_ids(const list<id_queue_node> &Id_queue)
 {
-    struct id_queue_node *pntr;
     int i = 1;
-    
-    pntr = Id_queue.first;
-
-    while (pntr != NULL) {
-        printf("  %d. %s \n",i++,pntr->user_str);
-        pntr = pntr->next;
+   
+    for(list<id_queue_node>::const_iterator ii=Id_queue.begin(); ii!=Id_queue.end(); ii++) {
+        printf("  %d. %s \n", i++, ii->user_str);
     }
 }
