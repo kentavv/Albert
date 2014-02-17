@@ -5,16 +5,7 @@
 
 #include "Build_defs.h"
 
-int S_init(void);
-#if 0
-Scalar ConvertToScalar(int i);
-Scalar S_zero(void);
-Scalar S_one(void);
-Scalar S_minus(Scalar x);
-Scalar S_add(Scalar x, Scalar y);
-Scalar S_mul(Scalar x, Scalar y);
-Scalar S_inv(Scalar x);
-#endif
+void S_init(void);
 
 inline Scalar S_zero(void)
 {
