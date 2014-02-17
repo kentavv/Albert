@@ -280,7 +280,7 @@ int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_
 
   int eq_number = 0;
   for(const Eqn_list_node *temp = Eq_list; temp && temp->basis_pairs; temp = temp->next, eq_number++) {
-    list<Node> &t_row = SM[eq_number];
+    SparseRow &t_row = SM[eq_number];
 
     for(int i=0; temp->basis_pairs[i].coef != 0; i++) {
       int col = GetCol(ColtoBP,
