@@ -36,11 +36,6 @@ using std::make_pair;
 #include "Type_table.h"
 
 static void UpdateDegToBasisTable(int Deg, Basis Cur_basis);
-#if 0
-static Basis LeftFactor(Basis B);
-static Basis RightFacto(Basis B);
-static int GetDeg(Basis B);
-#endif
 static void PrintBasis(Basis b, FILE *filePtr);
 
 typedef struct {
@@ -132,47 +127,6 @@ Basis GetNextBasisTobeFilled(void)
 }
 
 
-#if 0
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES:                                                       */
-/*     B -- Basis element.                                         */
-/* RETURNS:                                                        */
-/*     Left factor of the Basis element.                           */ 
-/*******************************************************************/ 
-Basis LeftFactor(Basis B)
-{
-    return(Basis_table[B].left_factor);
-}
-
-
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES:                                                       */
-/*     B -- Basis element.                                         */
-/* RETURNS:                                                        */
-/*     Right factor of the Basis element.                          */ 
-/*******************************************************************/ 
-Basis RightFacto(Basis B)
-{
-    return(Basis_table[B].right_factor);
-}
-
-
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES:                                                       */
-/*     B -- Basis element.                                         */
-/* RETURNS:                                                        */
-/*     Degree of the Basis element.                                */ 
-/*******************************************************************/ 
-int GetDeg(Basis B)
-{
-    return(GetDegreeName(Basis_table[B].type));
-}
-#endif
-
-
 Basis BasisStart(Degree Deg)
 {
     return(Deg_to_basis_table[Deg-1].first);
@@ -208,26 +162,15 @@ Name GetType(Basis B)
 /*******************************************************************/ 
 void PrintBasisTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
-    int i;
-
   if(Basis_table.size() > 1){
     fprintf(filePtr, "Basis Table: \n");
-#if 0
-    ++lineCnt;			/* TW 9/19/93 - support for view */
-#endif
-    for (i=1; i<(int)Basis_table.size(); i++) {
+    for (int i=1; i<(int)Basis_table.size(); i++) {
          fprintf(filePtr, " %3d.   %3d %3d   ",i,Basis_table[i].left_factor,
                              Basis_table[i].right_factor);
          PrintTypeName(Basis_table[i].type, filePtr);
          fprintf(filePtr, "    ");
          PrintBasis(i, filePtr);
          fprintf(filePtr, "\n");
-#if 0
-	 if(outputType == 1){	/* TW 9/19/93 - support for view */
-	   ++lineCnt;
-	   more(&lineCnt);
-	 }
-#endif
     }
   }
 }
@@ -244,9 +187,9 @@ void PrintBasis(Basis b, FILE *filePtr) /* TW 9/19/93 - added param to support v
 {
 
     if ( (Basis_table[b].left_factor == 0) && 
-         (Basis_table[b].right_factor == 0) )
+         (Basis_table[b].right_factor == 0) ) {
         fprintf(filePtr, "%c", GetLetterofBasis(b) );
-    else {
+    } else {
         fprintf(filePtr, "(");
         PrintBasis(Basis_table[b].left_factor, filePtr);
         PrintBasis(Basis_table[b].right_factor, filePtr);
