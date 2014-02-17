@@ -25,6 +25,10 @@
 /***    Gets Command line and executes the command.                  ***/
 /***********************************************************************/
 
+#include <list>
+
+using std::list;
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -66,15 +70,7 @@ static void sigCatch(int x);
 Scalar Field = DEFAULT_FIELD;          /* Build_defs.h */
 int sparse = TRUE;
 
-/* Size of the Translation table: i.e from basis to Mt_block. */
-/* Used To save memory.  */
-int MTB_INDEX_SIZE;
-
 int sigIntFlag = 0;		/* TW 10/8/93 - flag for Ctrl-C */
-
-
-static Type Target_type = NULL;
-
 jmp_buf env;
 
 int main(int argc, char *argv[])
@@ -86,6 +82,8 @@ int main(int argc, char *argv[])
     /*char *myPtr;*/
     FILE *tableFilePtr = NULL;
 
+    Type Target_type = NULL;
+
 /* TW 9/18/93 - end of code to support save, view, & output commands */
 
     char *Command;
@@ -94,7 +92,7 @@ int main(int argc, char *argv[])
     int Operand_len;
     Dalbert_node Dalberthead; /* Head to the list of .albert defs. */
 
-    struct id_queue_head Id_queue; /* head to Queue of identities */
+    list<id_queue_node> Id_queue; /* head to Queue of identities */
     int Cur_id_no;
     struct polynomial *Cur_id;
     struct polynomial *Cur_poly;
@@ -166,8 +164,6 @@ int main(int argc, char *argv[])
     /* TW 9/8/93 - END argument handling */
 
     Print_title();
-
-    Id_queue.first = NULL;
 
     Dalberthead.lhs = NULL;
     Dalberthead.rhs = NULL;
@@ -245,7 +241,7 @@ int main(int argc, char *argv[])
                          AssignNumbersToLetters(Cur_id);
                          Print_poly(Cur_id,Cur_poly_len);
                          printf("\n");
-                         Cur_id_no = Add_id(Cur_id,Operand,&Id_queue);
+                         Cur_id_no = Add_id(Cur_id,Operand, Id_queue);
                          printf("Entered as identity %d.\n",Cur_id_no);
                          if (mtable_status == PRESENT) {
                              DestroyMultTable();
@@ -269,7 +265,7 @@ int main(int argc, char *argv[])
                      break;
                  }
                  if (Operand[0] == '*') {
-                     Remove_all_ids(&Id_queue);
+                     Remove_all_ids(Id_queue);
                      printf("Removed all the identities.\n");
                      if (mtable_status == PRESENT) {
                          DestroyMultTable();
@@ -280,7 +276,7 @@ int main(int argc, char *argv[])
                  else {
                      Cur_id_no = atoi(Operand);
                      if (Cur_id_no > 0) {
-                         if (Remove_id(Cur_id_no,&Id_queue)) {
+                         if (Remove_id(Cur_id_no, Id_queue)) {
                              printf("Identity %d removed.\n",Cur_id_no);
                              if (mtable_status == PRESENT) {
                                  DestroyMultTable();
@@ -411,7 +407,7 @@ int main(int argc, char *argv[])
                      break;
                  }
 
-                 if (Build(Id_queue.first,Target_type) == OK)
+                 if (Build(Id_queue, Target_type) == OK)
                      mtable_status = PRESENT;
                  else
                      mtable_status = NOT_PRESENT;
@@ -431,7 +427,7 @@ int main(int argc, char *argv[])
                      printf("Illegal command.");
                      break;
                  }
-                 if (Id_queue.first != NULL) {
+                 if (!Id_queue.empty()) {
                      printf("Defining identities are:\n");
                      Print_ids(Id_queue);
                  }
