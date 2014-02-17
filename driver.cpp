@@ -839,7 +839,7 @@ int Compatible(struct polynomial *Poly, struct P_type ptype)
 
 void usage(void)
 {
-    printf("Usage:  albert [-d dimlimit] [-a dirname]\n");
+    printf("Usage:  albert [-a dirname]\n");
 }
 
 
