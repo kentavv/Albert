@@ -39,9 +39,9 @@ using std::vector;
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
 
-static void SparseMultRow(vector<list<Node> > &SM, int Row, Scalar Factor);
-static void SparseAddRow(vector<list<Node> > &SM, Scalar Factor, int Row1, int Row2);
-static void SparseKnockOut(vector<list<Node> > &SM, int row, int col, int nRows);
+static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
+static void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2);
+static void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows);
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
 static void Print_Rows(int Row1, int Row2, int nCols);
@@ -53,7 +53,7 @@ static void Print_Node(NODE_PTR Prt_Node);
 #include <time.h>
 #include <sys/times.h>
 
-int SparseReduceMatrix(vector<list<Node> > &SM, int nRows, int nCols, int *Rank)
+int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
 {
     if(nRows == 0 || nCols == 0)
     {
@@ -70,7 +70,7 @@ int SparseReduceMatrix(vector<list<Node> > &SM, int nRows, int nCols, int *Rank)
   for(int i=0; i<nRows; i++) {
     if(SM[i].empty()) nrz++; 
     n += SM[i].size();
-    list<Node>::const_iterator ii;
+    SparseRow::const_iterator ii;
 //  printf("%d %d\n", i, SM[i].size());
     for(ii=SM[i].begin(); ii!=SM[i].end(); ii++) {
       if(i == 2636) {
@@ -130,7 +130,7 @@ int SparseReduceMatrix(vector<list<Node> > &SM, int nRows, int nCols, int *Rank)
   for(int i=0; i<nRows; i++) {
     if(SM[i].empty()) nrz++;
     n += SM[i].size();
-    list<Node>::const_iterator ii;
+    SparseRow::const_iterator ii;
     for(ii=SM[i].begin(); ii!=SM[i].end(); ii++) {
       if(i == 2636) {
         printf("<%d %d>", ii->column, ii->element);
@@ -147,10 +147,10 @@ int SparseReduceMatrix(vector<list<Node> > &SM, int nRows, int nCols, int *Rank)
 }
 
 
-void SparseMultRow(vector<list<Node> > &SM, int Row, Scalar Factor)
+void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor)
 {
    /* Step thru row ... multiplying each element by the factor */
-   for(list<Node>::iterator ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
+   for(SparseRow::iterator ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
       ii->element = S_mul(ii->element, Factor);
    }
 }
@@ -167,7 +167,7 @@ void SparseMultRow(vector<list<Node> > &SM, int Row, Scalar Factor)
       the node.
 */
 /*********************************************************************/
-void SparseAddRow(vector<list<Node> > &SM, Scalar Factor, int Row1, int Row2)
+void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
 {
   /* check for zero factor */
 
@@ -177,11 +177,11 @@ void SparseAddRow(vector<list<Node> > &SM, Scalar Factor, int Row1, int Row2)
 
   /* get the beginning of the two rows to work with */
 
-  const list<Node> &r1 = SM[Row1];
-  list<Node> &r2 = SM[Row2];
+  const SparseRow &r1 = SM[Row1];
+  SparseRow &r2 = SM[Row2];
 
-  list<Node>::const_iterator r1i = r1.begin();
-  list<Node>::iterator r2i = r2.begin();
+  SparseRow::const_iterator r1i = r1.begin();
+  SparseRow::iterator r2i = r2.begin();
 
   for(; r1i != r1.end() && r2i != r2.end();) {
     if(r1i->column == r2i->column) {
@@ -218,7 +218,7 @@ void SparseAddRow(vector<list<Node> > &SM, Scalar Factor, int Row1, int Row2)
   }
 }
 
-void SparseKnockOut(vector<list<Node> > &SM, int row, int col, int nRows)
+void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows)
 {
     Scalar x = Get_Matrix_Element(SM, row, col);
     if(x != S_one())
@@ -350,10 +350,10 @@ void Print_Rows(int Row1, int Row2, int nCols)
 }
 #endif
 
-Scalar Get_Matrix_Element(const vector<list<Node> > &SM, int i, int j)
+Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
 {
     /* either return the element at location i,j or return a zero */
-    for(list<Node>::const_iterator ii = SM[i].begin(); ii != SM[i].end() && ii->column <= j; ii++) {
+    for(SparseRow::const_iterator ii = SM[i].begin(); ii != SM[i].end() && ii->column <= j; ii++) {
       if(ii->column == j) return ii->element;
     }
     return S_zero();

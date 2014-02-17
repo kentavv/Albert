@@ -66,7 +66,7 @@ static int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis
 static int AreBasisElements(Degree d);
 static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr);
 static int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations);
-static int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, vector<list<Node> > &SM);
+static int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, SparseMatrix &SM);
 #if 0
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
@@ -106,7 +106,7 @@ int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, 
    a pointer internal to this module to be altered and then copy it back
    before returning to SolveEquations() in Build.c */
 
-int SparseCreateTheMatrix(Eqn_list_node *Eq_list, vector<list<Node> > &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+int SparseCreateTheMatrix(Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
     if (!Eq_list || !Eq_list->basis_pairs)
         return(OK);
@@ -271,7 +271,7 @@ int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> 
     return(OK);
 }
 
-int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, vector<list<Node> > &SM)
+int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, SparseMatrix &SM)
 {
   if (Num_unique_basis_pairs == 0 || Num_equations == 0)
     return(OK);
@@ -288,7 +288,7 @@ int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_
 		       temp->basis_pairs[i].right_basis);
       Scalar coef = temp->basis_pairs[i].coef;
 
-      list<Node>::iterator ii;
+      SparseRow::iterator ii;
       for(ii = t_row.begin(); ii != t_row.end() && ii->column < col; ii++) {
       }
 

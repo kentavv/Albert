@@ -35,14 +35,14 @@ using namespace std;
 #include "SparseReduceMatrix.h"
 #include "Type_table.h"
 
-static void SparseFillDependent(const vector<list<Node> > &SM, vector<int> &Dependent);
+static void SparseFillDependent(const SparseMatrix &SM, vector<int> &Dependent);
 static void FillDependent(vector<int> &Dependent);
 #if 0
 static void PrintDependent(void);
 #endif
 static void ProcessIndependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
 static void ProcessDependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
-static void SparseProcessDependentBasis(const vector<list<Node> > &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
+static void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
 static void ProcessOtherIndependentBasis(const vector<Unique_basis_pair> &ColtoBP, int J);
 
 static Type Cur_type;
@@ -55,7 +55,7 @@ static int Num_cols;
 static int MatrixRank;
 static Matrix TheMatrix = NULL;
 
-int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
+int ExtractFromTheMatrix(const Matrix Mptr, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
 {
     TheMatrix = Mptr; 
     Num_rows = Rows;
@@ -100,7 +100,7 @@ int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, cons
    Basis(). Operation are performed on a locally visible pointer to the 
    matrix and then that pointer is copied to the one passed in upon exit */
    
-int SparseExtractFromMatrix(vector<list<Node> > &SM, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
+int SparseExtractFromMatrix(const SparseMatrix &SM, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
 {
     Num_rows = Rows;
     Num_cols = Cols;
@@ -139,7 +139,7 @@ int SparseExtractFromMatrix(vector<list<Node> > &SM, int Rows, int Cols, int Ran
 }
 
 
-void SparseFillDependent(const vector<list<Node> > &SM, vector<int> &Dependent)
+void SparseFillDependent(const SparseMatrix &SM, vector<int> &Dependent)
 {
     if ((Num_rows == 0) || (Num_cols == 0))
         return;
@@ -242,7 +242,7 @@ tl.push_back(make_pair(BasisNames[k], S_minus(TheMatrix[row*Num_cols + k])));
    since the first element is each linked list representing a row is
    a nonzero element*/
 
-void SparseProcessDependentBasis(const vector<list<Node> > &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames)
+void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames)
 {
     if (Num_cols == 0)
         return;
@@ -250,12 +250,12 @@ void SparseProcessDependentBasis(const vector<list<Node> > &SM, const vector<Uni
     vector<pair<Basis, Scalar> > tl;
 
     for(int rowId = 0; rowId < MatrixRank; rowId++) {
-       const list<Node> &row = SM[rowId];
+       const SparseRow &row = SM[rowId];
 
        int j=row.begin()->column;
 
        tl.clear();
-       list<Node>::const_iterator ii = row.begin();
+       SparseRow::const_iterator ii = row.begin();
        for(ii++; ii!=row.end(); ii++) {
            int k = ii->column;
 	   Scalar S_temp = Get_Matrix_Element(SM, rowId, k);

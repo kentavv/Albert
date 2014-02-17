@@ -314,7 +314,7 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
     int rows = 0;              /* Size of matrix */
     int cols = 0;              /* Size of matrix */
     Matrix mptr = NULL;        /* Pointer to matrix */
-    vector<list<Node> > SM;
+    SparseMatrix SM;
     vector<Unique_basis_pair> BPCptr; /* pointer to BPtoCol */
     int rank = 0;
     int status = OK;
