@@ -26,9 +26,11 @@
 
 #include <list>
 #include <vector>
+#include <algorithm>
 
 using std::list;
 using std::vector;
+using std::lower_bound;
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +62,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
         return(OK);
     }
 
+#if 0
 {
   putchar('\n');
   int n = 0;
@@ -83,6 +86,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
   }
   printf("A n:%d nz:%d nrz:%d nnz:%d nzc:%d nRows:%d nCols:%d\n", n, nz, nrz, nnz, nzc, nRows, nCols);
 }
+#endif
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
@@ -121,6 +125,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
     }
     *Rank=nextstairrow;
 
+#if 0
 {
   int n = 0;
   int nz = 0;
@@ -142,7 +147,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
   }
   printf("B n:%d nz:%d nrz:%d nnz:%d nzc:%d nRows:%d nCols:%d\n", n, nz, nrz, nnz, nzc, nRows, nCols);
 }
-
+#endif
     return(OK);
 }
 
@@ -167,6 +172,7 @@ void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor)
       the node.
 */
 /*********************************************************************/
+#if 0
 void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
 {
   /* check for zero factor */
@@ -217,6 +223,68 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
     //}
   }
 }
+#else
+void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
+{
+  /* check for zero factor */
+
+  if (Factor == S_zero()) {
+    return;
+  }
+
+  /* get the beginning of the two rows to work with */
+
+  const SparseRow &r1 = SM[Row1];
+  SparseRow &r2 = SM[Row2];
+
+  SparseRow tmp;
+  tmp.reserve(r1.size() + r2.size());
+
+  SparseRow::const_iterator r1i = r1.begin();
+  SparseRow::const_iterator r2i = r2.begin();
+
+  for(; r1i != r1.end() && r2i != r2.end();) {
+    if(r1i->column == r2i->column) {
+      Scalar x = S_add(r2i->element, S_mul(Factor, r1i->element));
+      if(x != S_zero()) {
+        Node n = *r1i;
+        n.element = x;
+        tmp.push_back(n);
+      }
+      r1i++;
+      r2i++;
+    } else if(r1i->column < r2i->column) {
+      Scalar x = S_mul(Factor, r1i->element);
+      //if(x != S_zero()) {
+        Node n = *r1i;
+        n.element = x;
+        tmp.push_back(n);
+      //}
+      r1i++;
+    } else { //if(r1i->column > r2i->column) {
+      tmp.push_back(*r2i);
+      r2i++;
+    }
+  }
+
+  // append r2 with remaining r1 nodes
+  for(; r1i != r1.end(); r1i++) {
+    Scalar x = S_mul(Factor, r1i->element);
+    //if(x != S_zero()) {
+      Node n = *r1i;
+      n.element = x;
+      tmp.push_back(n);
+    //}
+  }
+
+  // append r2 with remaining r1 nodes
+  for(; r2i != r2.end(); r2i++) {
+    tmp.push_back(*r2i);
+  }
+
+  r2 = tmp; 
+}
+#endif
 
 void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows)
 {
@@ -350,6 +418,30 @@ void Print_Rows(int Row1, int Row2, int nCols)
 }
 #endif
 
+#if 0
+static bool cmp_column(const Node &n1, const Node &n2) { return n1.column < n2.column; }
+
+#if 0
+struct A {
+  bool operator()(const Node &n1, const Node &n2) const { return n1.column < n2.column; }
+};
+#endif
+
+Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
+{
+  Node n;
+  n.column = j;
+
+  SparseRow::const_iterator ii = lower_bound(SM[i].begin(), SM[i].end(), n, cmp_column);
+  //SparseRow::const_iterator ii = lower_bound(SM[i].begin(), SM[i].end(), n, A());
+  //SparseRow::const_iterator ii = lower_bound(SM[i].begin(), SM[i].end(), n);
+  if(ii != SM[i].end() && ii->column == j) {
+    return ii->element;
+  }
+
+  return S_zero();
+}
+#else
 Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
 {
     /* either return the element at location i,j or return a zero */
@@ -358,7 +450,7 @@ Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
     }
     return S_zero();
 }
-
+#endif
 
 #if 0
 void Print_SLList(Node *SLHead_Ptr)
