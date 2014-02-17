@@ -27,6 +27,10 @@
 /***      position.                                              ***/
 /*******************************************************************/
 
+#include <vector>
+
+using std::vector;
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -36,24 +40,16 @@
 #include "Memory_routines.h"
 
 static void EnterBeginBasis(int TTindex, Basis basis);
-#if 0
-static int SameType(Type T1, Type T2);
-#endif
-static int InitStoreblocksizes(void);
-static int FillTypecount(int Cur_scan_pos);
+static void InitStoreblocksizes(void);
+static void FillTypecount(int Cur_scan_pos);
 static int InitTypetable(void);
-static int FillTypetable(int Cur_scan_pos, int *Temp_dttt_index);
+static int FillTypetable(int Cur_scan_pos, vector<int> &Temp_dttt_index);
 static int GetIndex(Type Pntr);
-#if 0
-static int NumberOfBasis(Name n);
-static void PrintTypecount(void);
-#endif
 static void PrintType(Type Pntr, FILE *filePtr);
 #if 0
 static void PrintTypetable(void);
 static void PrintTypetableindex(void);
 #endif
-/*static void PrintSbsizes(void);*/
 
 static Type Target_type = 0;                /* Input from higher level module. */
 static int Target_type_len = 0;             /* Computed from Target_type.      */
@@ -63,7 +59,7 @@ static TT_node *Type_table = NULL;          /* Heart of the matter.            *
 static int *Type_table_index = NULL;        /* Map type to Type_table.         */
 static int Tot_subtypes = 0;                /* Computed from Type_count. Size of Type_table. */
 static int *Deg_to_type_table_index = NULL; /* Map Degree to Type_table.*/
-static int *Store_block_sizes = NULL;       /* To find offset into Type_table. */
+static vector<int> Store_block_sizes;       /* To find offset into Type_table. */
 
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
@@ -102,8 +98,7 @@ int CreateTypeTable(Type Cur_type)
 
     Target_type_deg = GetDegree(Target_type); 
 
-    if (InitStoreblocksizes() != OK)
-        return(0);
+    InitStoreblocksizes();
 
     Type_count = (int *) (Mymalloc((Target_type_deg + 1) * sizeof(int)));
     assert_not_null(Type_count);
@@ -196,16 +191,13 @@ Name TypeToName(Type T)
 }
 
 
-int IsSubtype(Name n1, Name n2)
+bool IsSubtype(Name n1, Name n2)
 {
-    int is_sub_type = TRUE;
-    int i;
-
-    for (i=0;i<Target_type_len;i++)
+    for (int i=0; i<Target_type_len; i++)
         if (Type_table[n1].type[i] > Type_table[n2].type[i])
-            is_sub_type = FALSE;
+          return false;
 
-    return(is_sub_type);
+    return true;
 }
 
 
@@ -226,19 +218,6 @@ void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis)
     EnterEndBasis(n,End_basis);
 }
 
-#if 0
-int SameType(Type T1, Type T2)
-{
-    int i;
-
-    for (i=0;i<Target_type_len;i++)
-        if (T1[i] != T2[i])
-            return(0);
-
-    return(1);
-}
-#endif
-
 
 /*******************************************************************/
 /* GLOBALS FILLED:                                                 */
@@ -251,20 +230,14 @@ int SameType(Type T1, Type T2)
 /* FUNCTION:                                                       */
 /*     Fill the Store_block_sizes[].                               */ 
 /*******************************************************************/ 
-int InitStoreblocksizes(void)
+void InitStoreblocksizes(void)
 {
-    int i;
-
-    Store_block_sizes = (int *) (Mymalloc(Target_type_len * sizeof(int)));
-    assert_not_null(Store_block_sizes);
+    Store_block_sizes.resize(Target_type_len);
 
     Store_block_sizes[Target_type_len - 1] = 1;
-    for (i=Target_type_len - 2;i>=0;i--)
+    for (int i=Target_type_len - 2; i>=0; i--) {
         Store_block_sizes[i] = (Target_type[i+1] + 1) * Store_block_sizes[i+1]; 
-
-/*    PrintSbsizes();   */
-
-    return(OK);
+    }
 }
 
 
@@ -282,27 +255,22 @@ int InitStoreblocksizes(void)
 /* FUNCTION:                                                       */
 /*     Count all subtypes of the given Target_type.                */
 /*******************************************************************/ 
-int FillTypecount(int Cur_scan_pos)
+void FillTypecount(int Cur_scan_pos)
 {
-    int save;
-    int i = 0;
-    int d;
-
     if (Cur_scan_pos > Target_type_len) {    
-        d = 0;
-        for (i=0;i<Target_type_len;i++)
+        int d = 0;
+        for (int i=0; i<Target_type_len; i++) {
             d += Target_type[i];
+        }
         Type_count[d]++;
-    }
-    else {
-        for (i=0;i<=Target_type[Cur_scan_pos];i++) {
-            save = Target_type[Cur_scan_pos];
+    } else {
+        for (int i=0;i<=Target_type[Cur_scan_pos];i++) {
+            int save = Target_type[Cur_scan_pos];
             Target_type[Cur_scan_pos] = i;
             FillTypecount(Cur_scan_pos + 1);
             Target_type[Cur_scan_pos] = save;
         }
     }
-    return(OK);
 }
 
 
@@ -350,15 +318,12 @@ int InitTypetable(void)
     Type_table_index = (int *) Mymalloc(Tot_subtypes * sizeof(int));
     assert_not_null(Type_table_index);
     { 
-      int *Temp_dttt_index = (int *) Mymalloc((Target_type_deg + 1) * sizeof(int));         /* Used to fill Type_table_index.  */
-      assert_not_null(Temp_dttt_index);
+      vector<int> Temp_dttt_index(Target_type_deg + 1);         /* Used to fill Type_table_index.  */
 
       for (i=0; i<=Target_type_deg; i++)
           Temp_dttt_index[i] = Deg_to_type_table_index[i]; 
     
       FillTypetable(0, Temp_dttt_index);
-
-      free(Temp_dttt_index);
     }
 
     return OK;
@@ -382,10 +347,7 @@ void DestroyTypeTable(void)
       Type_table_index = NULL;
     }
 
-    if(Store_block_sizes) {
-      free(Store_block_sizes);
-      Store_block_sizes = NULL;
-    }
+    Store_block_sizes.clear();
 }
 
 
@@ -406,23 +368,21 @@ void DestroyTypeTable(void)
 /* FUNCTION:                                                       */
 /*     Fill the Type_table.                                        */ 
 /*******************************************************************/ 
-int FillTypetable(int Cur_scan_pos, int *Temp_dttt_index)
+int FillTypetable(int Cur_scan_pos, vector<int> &Temp_dttt_index)
 {
-    int save;
-    int i = 0;
-    int d = 0;
-
     if (Cur_scan_pos > Target_type_len) {    
-        for (i=0;i<Target_type_len;i++)
+        int d = 0;
+        for (int i=0;i<Target_type_len;i++)
             d += Target_type[i];
-        for (i=0;i<=Target_type_len;i++)
+
+        for (int i=0;i<=Target_type_len;i++)
             Type_table[Temp_dttt_index[d]].type[i] = Target_type[i];
+
         Type_table_index[GetIndex(Target_type)] = Temp_dttt_index[d];
         Temp_dttt_index[d]++;
-    }
-    else {
-        for (i=0;i<=Target_type[Cur_scan_pos];i++) {
-            save = Target_type[Cur_scan_pos];
+    } else {
+        for (int i=0;i<=Target_type[Cur_scan_pos];i++) {
+            int save = Target_type[Cur_scan_pos];
             Target_type[Cur_scan_pos] = i;
             FillTypetable(Cur_scan_pos + 1, Temp_dttt_index);
             Target_type[Cur_scan_pos] = save;
@@ -443,12 +403,11 @@ int FillTypetable(int Cur_scan_pos, int *Temp_dttt_index)
 /*******************************************************************/ 
 int GetIndex(Type Pntr)
 {
-    int i;
-    int result = 0;
-
     assert_not_null(Pntr);
 
-    for (i=0;i<Target_type_len;i++) 
+    int result = 0;
+
+    for (int i=0;i<Target_type_len;i++) 
         result += Pntr[i] * Store_block_sizes[i];
 
     return(result);
@@ -535,23 +494,6 @@ Basis EndBasis(Name n)
     return(Type_table[n].end_basis);
 }
 
-
-#if 0
-int NumberOfBasis(Name n)
-{
-    return(Type_table[n].end_basis - Type_table[n].begin_basis + 1);
-}
-
-void PrintTypecount(void)
-{
-    int i;
-
-    for (i=0;i<=Target_type_deg;i++)
-        printf("Degree %d subtypes = %d\n",i,Type_count[i]);
-}
-#endif
-
-
 void PrintType(Type Pntr, FILE *filePtr)
 {
     int i;
@@ -595,14 +537,3 @@ void PrintTypetableindex(void)
 }
 #endif
 
-/*
-void PrintSbsizes(void)
-{
-    int i;
-
-    printf("Store Block sizes are :");
-    for (i=0;i<Target_type_len;i++)
-        printf("%d",Store_block_sizes[i]);
-    printf("\n");
-}
-*/

@@ -23,7 +23,7 @@ void SubtractTypeName(Name n1, Name n2, Name *res_name);
 int GetDegree(Type Pntr);
 int GetDegreeName(Name n);
 Name TypeToName(Type T);
-int IsSubtype(Name n1, Name n2);
+bool IsSubtype(Name n1, Name n2);
 void EnterEndBasis(int TTindex, Basis basis);
 void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis);
 void DestroyTypeTable(void);
