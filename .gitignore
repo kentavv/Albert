@@ -39,3 +39,5 @@ callgrind.out.*
 getchar.o
 pair_present.o
 *.openss
+*.gcda
+*.swp
