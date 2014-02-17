@@ -7,8 +7,15 @@
 /***  DATE WRITTEN: May 1990                                     ***/
 /*******************************************************************/
 
-#include "Sparse_structs.h"
-#include "Sparse_defs.h"
+#include <list>
+#include <vector>
+
+#include "Build_defs.h"
+
+struct Node {
+  int column;
+  Scalar element;
+};
 
 typedef Scalar *Matrix;
 
@@ -21,17 +28,16 @@ typedef struct {
 typedef struct {
     Basis left_basis;
     Basis right_basis;
-} Unique_basis_pair,*Unique_basis_pair_list;
+} Unique_basis_pair;
 
-typedef struct eqn_list_node{
+struct Eqn_list_node{
     Basis_pair *basis_pairs;
-    struct eqn_list_node *next;
-} Eqn_list_node; 
+    Eqn_list_node *next;
+}; 
 
-int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n);
-int SparseCreateTheMatrix(Eqn_list_node *Eq_list, MAT_PTR *SMptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n);
-void DestroyBPtoCol(void);
+int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
+int SparseCreateTheMatrix(Eqn_list_node *Eq_list, std::vector<std::list<Node> > &SM, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
 void DestroyTheMatrix(void);
-int GetCol(Basis Left_basis, Basis Right_basis);
+int GetCol(const std::vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis);
 
 #endif

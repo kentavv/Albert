@@ -39,6 +39,14 @@
 /***         column.                                             ***/ 
 /*******************************************************************/
 
+#include <algorithm>
+#include <list>
+#include <vector>
+
+using std::fill;
+using std::list;
+using std::vector;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,71 +56,45 @@
 #include "Build_defs.h"
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
-#include "Sparse_structs.h"
-#include "Sparse_defs.h"
 #include "SparseReduceMatrix.h"
 #include "Type_table.h"
 #include "pair_present.h"
 
 static void ZeroOutPairPresent(void);
-static void FillPairPresent(int &Num_unique_basis_pairs, int &Num_equations);
-#if 0
-static void EnterPair(Basis i, Basis j);
-#endif
-static int CreateColtoBP(int Num_unique_basis_pairs);
+static void FillPairPresent(const Eqn_list_node *Eq_list, int &Num_unique_basis_pairs, int &Num_equations);
+static int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis_pair> &ColtoBP);
 static int AreBasisElements(Degree d);
-static void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr);
-static int FillTheMatrix(int Num_unique_basis_pairs, int Num_equations);
-static int SparseFillTheMatrix(int Num_unique_basis_pairs, int Num_equations);
+static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr);
+static int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations);
+static int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, vector<list<Node> > &SM);
 #if 0
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
 static void PrintTheMatrix(void);
 #endif
 
-/* Added by DCL 8/92. These are variables used for gathering density stats */
-
-extern int gather_density_flag;
-extern long num_elements;
-extern long max_num_elements;
-
-//static int Num_unique_basis_pairs;
-//static int Num_equations;
-static Unique_basis_pair_list ColtoBP;
-static Eqn_list_node *First_eqn_list_node = NULL;
-static MAT_PTR TheSparseMatrix;
 static Matrix TheMatrix;
-static Name N;
 
-
-int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
+int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
-    ColtoBP = NULL;
     TheMatrix = NULL;
-    N = n;
 
-    First_eqn_list_node = Eq_list;
-
-    if (Eq_list == NULL)
-        return(OK);
-
-    if (Eq_list->basis_pairs == NULL)
+    if (!Eq_list || !Eq_list->basis_pairs)
         return(OK);
 
     ZeroOutPairPresent();
 
     int Num_unique_basis_pairs, Num_equations;
-    FillPairPresent(Num_unique_basis_pairs, Num_equations);
+    FillPairPresent(Eq_list, Num_unique_basis_pairs, Num_equations);
 /*
     PrintPairPresent();	
 */
-    if (CreateColtoBP(Num_unique_basis_pairs) != OK)
+    if (CreateColtoBP(n, Num_unique_basis_pairs, ColtoBP) != OK)
         return(0);
-    if (FillTheMatrix(Num_unique_basis_pairs, Num_equations) != OK)
+    if (FillTheMatrix(Eq_list, ColtoBP, Num_unique_basis_pairs, Num_equations) != OK)
         return(0);
 
     *Mptr = TheMatrix;
-    *BPCptr = ColtoBP;
     *Rows = Num_equations;
     *Cols = Num_unique_basis_pairs; 
 
@@ -124,47 +106,29 @@ int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, 
    a pointer internal to this module to be altered and then copy it back
    before returning to SolveEquations() in Build.c */
 
-int SparseCreateTheMatrix(Eqn_list_node *Eq_list, MAT_PTR *SMptr, int *Rows, int *Cols, Unique_basis_pair_list *BPCptr, Name n)
+int SparseCreateTheMatrix(Eqn_list_node *Eq_list, vector<list<Node> > &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
-    ColtoBP = NULL;
-    TheSparseMatrix = NULL;
-    N = n;
-
-    First_eqn_list_node = Eq_list;
-
-    if (Eq_list == NULL)
-        return(OK);
-
-    if (Eq_list->basis_pairs == NULL)
+    if (!Eq_list || !Eq_list->basis_pairs)
         return(OK);
 
     ZeroOutPairPresent();
 
     int Num_unique_basis_pairs, Num_equations;
-    FillPairPresent(Num_unique_basis_pairs, Num_equations);
+    FillPairPresent(Eq_list, Num_unique_basis_pairs, Num_equations);
 /*
     PrintPairPresent();
 */
-    if (CreateColtoBP(Num_unique_basis_pairs) != OK)
+    if (CreateColtoBP(n, Num_unique_basis_pairs, ColtoBP) != OK)
         return(0);
-    if (SparseFillTheMatrix(Num_unique_basis_pairs, Num_equations) != OK)
+    if (SparseFillTheMatrix(Eq_list, ColtoBP, Num_unique_basis_pairs, Num_equations, SM) != OK)
         return(0);
 
     /* pass locally derived values back to the calling routine */
 
-    *SMptr= TheSparseMatrix;
-    *BPCptr = ColtoBP;
     *Rows = Num_equations;
     *Cols = Num_unique_basis_pairs; 
 
     return(OK);
-}
-
-
-void DestroyBPtoCol(void)
-{
-    assert_not_null_nv(ColtoBP);
-    free(ColtoBP);
 }
 
 
@@ -181,12 +145,12 @@ void ZeroOutPairPresent(void)
 }
 
 
-void FillPairPresent(int &Num_unique_basis_pairs, int &Num_equations)
+void FillPairPresent(const Eqn_list_node *Eq_list, int &Num_unique_basis_pairs, int &Num_equations)
 {
     Num_unique_basis_pairs = 0;
     Num_equations = 0;
 
-    Eqn_list_node *temp = First_eqn_list_node;
+    const Eqn_list_node *temp = Eq_list;
 
     while (temp) {
         int i = 0;
@@ -206,7 +170,7 @@ void FillPairPresent(int &Num_unique_basis_pairs, int &Num_equations)
 }
 
               
-int CreateColtoBP(int Num_unique_basis_pairs)
+int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis_pair> &ColtoBP)
 {
     int col_to_bp_index = 0;
 
@@ -216,8 +180,7 @@ int CreateColtoBP(int Num_unique_basis_pairs)
     if (Num_unique_basis_pairs == 0)
         return(OK);
 
-    ColtoBP = (Unique_basis_pair_list) Mymalloc(Num_unique_basis_pairs * sizeof(Unique_basis_pair));
-    assert_not_null(ColtoBP);
+    ColtoBP.resize(Num_unique_basis_pairs);
 
     d = GetDegreeName(N);
      
@@ -225,7 +188,7 @@ int CreateColtoBP(int Num_unique_basis_pairs)
         /*  	This check added 5/94   (DPJ)    */
         if ( AreBasisElements(i) && AreBasisElements(d-i) ) 
         {
-            Process(i,d-i,&col_to_bp_index);
+            Process(ColtoBP, i,d-i,&col_to_bp_index);
         }
     return(OK);
 }
@@ -245,7 +208,7 @@ int AreBasisElements(Degree d)
 }
 
 
-void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr)
+void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr)
 {
     Basis b1,b2,b3,b4;
     /*Basis row,col;*/
@@ -269,9 +232,8 @@ void Process(Degree d1, Degree d2, int *col_to_bp_index_ptr)
 }
             
 
-int FillTheMatrix(int Num_unique_basis_pairs, int Num_equations)
+int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations)
 {
-    Eqn_list_node *temp;
     int i,j;
     int eq_number = 0;
     int col;
@@ -287,32 +249,20 @@ int FillTheMatrix(int Num_unique_basis_pairs, int Num_equations)
         for (j=0;j<Num_unique_basis_pairs;j++) 
             TheMatrix[i * Num_unique_basis_pairs + j] = 0;
 
-    temp = First_eqn_list_node;
-    while (temp != NULL) {
+    const Eqn_list_node *temp = Eq_list;
+    while (temp) {
         i = 0;
         if (temp->basis_pairs == NULL)
 			{
             return(OK);
 			}
         while (temp->basis_pairs[i].coef != 0) {
-            col = GetCol(temp->basis_pairs[i].left_basis,
+            col = GetCol(ColtoBP,
+                         temp->basis_pairs[i].left_basis,
                          temp->basis_pairs[i].right_basis);
             thematrix_index = eq_number * Num_unique_basis_pairs + col;
             x = TheMatrix[thematrix_index];
             TheMatrix[thematrix_index] = S_add(x, temp->basis_pairs[i].coef);
-
-            /* gather density statistics here...DCL 8/21/92 */
-            if (gather_density_flag) 
-            {
-               if ((x== S_zero()) && (TheMatrix[thematrix_index] != S_zero()))
-               {
-                  num_elements++;
-               }   
-               if ((x != S_zero()) && (TheMatrix[thematrix_index] == S_zero()))
-               {
-                  num_elements--;
-               }
-	   }
             i++;
         }
         eq_number++;
@@ -321,170 +271,65 @@ int FillTheMatrix(int Num_unique_basis_pairs, int Num_equations)
     return(OK);
 }
 
-int SparseFillTheMatrix(int Num_unique_basis_pairs, int Num_equations)
+int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, vector<list<Node> > &SM)
 {
-    Eqn_list_node *temp;
-    int i;
-    int eq_number = 0;
-    int col;
-	 
-    Scalar Tmp_S_Sum;
-    NODE_PTR Prev_Ptr;
-    NODE_PTR Look_Ahead_Ptr;
-
-    if ((Num_unique_basis_pairs == 0) || (Num_equations == 0))
-        return(OK);
-	
-    /* Allocate the row pointers */
-
-    TheSparseMatrix = (MAT_PTR) (Mymalloc(Num_equations*sizeof(NODE_PTR)));
-
-
-    assert_not_null(TheSparseMatrix);
-
-    /* initialize the pointers */
-
-    for (i=0;i < Num_equations;i++)
- 	TheSparseMatrix[i]=NULL;
-
-
-    temp = First_eqn_list_node;
-    while (temp != NULL) 
-    {
-       i = 0;
-       if (temp->basis_pairs == NULL)
-           return(OK);
-       while (temp->basis_pairs[i].coef != 0) 
-       {
-            col = GetCol(temp->basis_pairs[i].left_basis,
-                         temp->basis_pairs[i].right_basis);
-            Tmp_S_Sum = S_zero();
-
-
-            /* since using a singly linked list we need ptr from the node
-               before this row,col value which is what Locate_Node will
-               return. Locate_Node will try to return the one just before
-               the column node that we want */ 
-
-	    Prev_Ptr = (NODE_PTR) Locate_Node(TheSparseMatrix,eq_number,col);
-
-            /* if there is not one and the row is not empty this row,col
-               value must be the first one in the row */
-
-            if ((Prev_Ptr == NULL) && (!Row_empty(TheSparseMatrix,eq_number)))
-            {
-		Look_Ahead_Ptr=TheSparseMatrix[eq_number];
-            }	
-            else
-            {
-                if (Row_empty(TheSparseMatrix,eq_number))
-                {
-                   /* the row is empty */
-
-                   Look_Ahead_Ptr=NULL;
-		}
-		else
-		{
-                   /* There is node after this one so we know that is
-                      that we want to work with */
-
-                   if (Prev_Ptr->Next_Node!=NULL)
-                   {		
-			Look_Ahead_Ptr=Prev_Ptr->Next_Node;
-                   }
-                   else
-                   {
-                   /* there is not a node after this one so this is
-                      the one that we want */
-
-			Look_Ahead_Ptr=Prev_Ptr;
-                   }
-		}
-           }
-
-           /* Look_Ahead Ptr will only be null if there are NO nodes
-              in the row */
-
-           if (Look_Ahead_Ptr != NULL)
-           {
-             
-              if (Look_Ahead_Ptr->column != col)
-	      {	
-              /* Here we should add a node since there is no node in 
-                 the row with the column value we are looking for */
-
-
-  	 	Tmp_S_Sum=S_add(S_zero(),temp->basis_pairs[i].coef);
-                if (Tmp_S_Sum != S_zero())
-                {
-                   Insert_Element(TheSparseMatrix,eq_number,Tmp_S_Sum, 
-                                col,Prev_Ptr);
-
-                /* if the flag is set increment # of elements for stat purpose*/
-
-                   if (gather_density_flag)
-                      num_elements++;
-                }
-	      }
-
-	      else
-              {
-              /* There is a node here with the same column value we are
-                 looking for so add the new value to this one */
-
-	  	Tmp_S_Sum=S_add(Look_Ahead_Ptr->element, 
-                                  temp->basis_pairs[i].coef);
-
-		if (Tmp_S_Sum==S_zero())
-		{
-                /* If the result is zero then we will want to delete
-                   this node */
-
-                   Delete_Element(TheSparseMatrix,eq_number,Prev_Ptr);
-
-                   /* gather statistical information */
-
-                   if (gather_density_flag)
-                      num_elements--;
-		}
-     
-		else
-		{
-                /* the result was nonzero and we just change the node element
-                   field to the result */
-
-                    Change_Element(Look_Ahead_Ptr,Tmp_S_Sum);
-		}
-	      }
-	   }
-
-           /* We know that there were no nonzero elements in the row
-              so lets add one */ 
-           else
-	   {
-	      Tmp_S_Sum=S_add(S_zero(),temp->basis_pairs[i].coef);
-
-
-              /* don't even add one if the result is zero*/
-
-              if (Tmp_S_Sum != S_zero())
-              Insert_Element(TheSparseMatrix,eq_number,Tmp_S_Sum,col,Prev_Ptr);
-
-              /* gather statistics */
-
-              if (gather_density_flag)
-               num_elements++;
-           }	
-           i++;
-        }
-        eq_number++;
-        temp = temp->next;
-    }
+  if (Num_unique_basis_pairs == 0 || Num_equations == 0)
     return(OK);
+	
+  SM.resize(Num_equations);
+
+  int eq_number = 0;
+  for(const Eqn_list_node *temp = Eq_list; temp && temp->basis_pairs; temp = temp->next, eq_number++) {
+    list<Node> &t_row = SM[eq_number];
+
+    for(int i=0; temp->basis_pairs[i].coef != 0; i++) {
+      int col = GetCol(ColtoBP,
+                       temp->basis_pairs[i].left_basis,
+		       temp->basis_pairs[i].right_basis);
+      Scalar coef = temp->basis_pairs[i].coef;
+
+      list<Node>::iterator ii;
+      for(ii = t_row.begin(); ii != t_row.end() && ii->column < col; ii++) {
+      }
+
+      if(ii == t_row.end() || ii->column != col) {
+	  /* Here we should add a node since there is no node in 
+	     the row with the column value we are looking for */
+
+          Scalar t = S_add(S_zero(), coef);
+
+          if(t != S_zero()) {
+            Node node;
+            node.column = col;
+            node.element = t;
+            //if(ii == r_row.end()) {
+            //  t_row.push_back(node);
+            //} else {
+            //}
+            t_row.insert(ii, node);
+          }
+      } else {
+          /* There is a node here with the same column value we are
+               looking for so add the new value to this one */
+
+          Scalar t = S_add(ii->element, coef);
+
+          if(t == S_zero()) {
+            /* If the result is zero then we will want to delete this node */
+            t_row.erase(ii);
+          } else {
+            /* the result was nonzero and we just change the node element field to the result */
+            ii->element = t;
+          }
+      }
+        }
+  }
+
+  return OK;
 }
 
 
-int GetCol(Basis Left_basis, Basis Right_basis)
+int GetCol(const vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis)
 {
     int Num_unique_basis_pairs = pp_count();
 
