@@ -41,6 +41,10 @@
 /***                                                               ***/
 /*********************************************************************/
 
+#include <vector>
+
+using std::vector;
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,13 +57,12 @@
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-static void DoCreateSubs(int row, int col, Basis *Substitution);
+static void DoCreateSubs(const struct polynomial *F, int row, int col, vector<Basis> &Substitution);
 #if DEBUG_SUBSTITUTION
-static void PrintSubstitution(const Basis *Substitution);
+static void PrintSubstitution(const vector<Basis> &Substitution);
 #endif
 
 static const int *Deg_var = NULL;
-static const struct polynomial *The_ident = NULL;
 static Eqn_list_node *The_list = NULL;
 static int Num_vars = 0;
 static Name *Set_partitions = NULL;
@@ -69,7 +72,6 @@ static int status = OK;
 int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Name *Type_lists, const int *Deg_var_types)
 {
     The_list = L;
-    The_ident = F;
     Num_vars = Nv;
     Set_partitions = Type_lists;
     Deg_var = Deg_var_types;
@@ -77,17 +79,14 @@ int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Na
 
     status = OK;
    
-    Basis *Substitution = (Basis *) Mymalloc(Num_vars * Max_deg_var * sizeof(Basis));
-    assert_not_null(Substitution);
+    vector<Basis> Substitution(Num_vars * Max_deg_var);
 
-    DoCreateSubs(0,0, Substitution);  /* Start of recursive call. */
-
-    free(Substitution);
+    DoCreateSubs(F, 0, 0, Substitution);  /* Start of recursive call. */
 
     return(status);
 }
 
-void DoCreateSubs(int row, int col, Basis *Substitution)
+void DoCreateSubs(const struct polynomial *F, int row, int col, vector<Basis> &Substitution)
 {
     if (status != OK)
         return;
@@ -99,22 +98,22 @@ void DoCreateSubs(int row, int col, Basis *Substitution)
 
 /* Now for each substitution records, perform the substitution. */
 
-        status = PerformSubs(Substitution, The_ident, The_list, Num_vars, Max_deg_var, Deg_var);
+        status = PerformSubs(Substitution, F, The_list, Num_vars, Max_deg_var, Deg_var);
     }
     else if (col >= Deg_var[row])
-        DoCreateSubs(row+1, 0, Substitution);
+        DoCreateSubs(F, row+1, 0, Substitution);
     else {
         Basis b = FirstBasis(Set_partitions[col*Num_vars + row]); 
         while ((b != 0) && (status == OK)) {
             Substitution[row*Max_deg_var + col] = b;
-            DoCreateSubs(row, col+1, Substitution);
+            DoCreateSubs(F, row, col+1, Substitution);
             b = NextBasisSameType(b);
         }
     }
 }
 
 #if DEBUG_SUBSTITUTION
-void PrintSubstitution(const Basis *Substitution)
+void PrintSubstitution(const vector<Basis> &Substitution)
 {
     int i,j;
     static int count = 1;
