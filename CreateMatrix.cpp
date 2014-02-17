@@ -51,6 +51,8 @@ using std::vector;
 #include <stdlib.h>
 #include <string.h>
 
+#include <omp.h>
+
 #include "CreateMatrix.h"
 #include "Basis_table.h"
 #include "Build_defs.h"
@@ -278,8 +280,12 @@ int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_
 	
   SM.resize(Num_equations);
 
-  int eq_number = 0;
-  for(const Eqn_list_node *temp = Eq_list; temp && temp->basis_pairs; temp = temp->next, eq_number++) {
+#pragma omp parallel for schedule(dynamic, 10)
+  for(int eq_number=0; eq_number < Num_equations; eq_number++) {
+    const Eqn_list_node *temp = Eq_list;
+    for(int j=0; j<eq_number; j++) {
+      temp = temp->next;
+    }
     SparseRow &t_row = SM[eq_number];
 
     for(int i=0; temp->basis_pairs[i].coef != 0; i++) {
