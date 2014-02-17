@@ -50,7 +50,7 @@ int Parse_generator_word(char Str[], struct P_type *Pntr)
    
    i = 0;
        
-   while ((!error) && (i<strlen(Str))) {
+   while (!error && i<(int)strlen(Str)) {
        if (islower(Str[i])) {
            if (cur_deg == 0) {
                Pntr->degrees[Str[i]-'a'] += 1;
