@@ -85,7 +85,7 @@
 #include "Type_table.h"
 
 static void InitSeqSubtypes(void);
-static int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight);
+static int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L);
 #if DEBUG_SEQ_SUBTYPES
 static void PrintSeqSubtypes(void);
 #endif
@@ -103,15 +103,9 @@ static int *Deg_vars = NULL;
 static int *Cur_deg_vars = NULL;
 static int Whatsleft = 0;
 static const struct polynomial *The_ident = NULL;
-static Eqn_list_node *The_list = NULL;
 static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
-
-#if 0
-static int depth = 0;
-static int mdepth = 0;
-#endif
 
 int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
 {
@@ -120,7 +114,6 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
     if (L == NULL)
         return(OK);
 
-    The_list = L;
     The_ident = F;
 
     Target_type_len = GetTargetLen(); 
@@ -150,14 +143,7 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
             Deg_vars[j++] = The_ident->deg_letter[i];
 
     InitSeqSubtypes();
-#if 0
-depth = 0;
-mdepth = 0;
-#endif
-    GenerateSeqSubtypes(0,0,0); /* Starting of deep recursive calls */
-#if 0
-printf("\nmdepth: %d\n", mdepth);
-#endif
+    GenerateSeqSubtypes(0,0,0, L); /* Starting of deep recursive calls */
 
     if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
       free(Seq_sub_types);
@@ -184,7 +170,7 @@ void InitSeqSubtypes(void)
 }
 
 
-int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
+int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
 {
     int whatsave;
     int tsave,csave;
@@ -193,21 +179,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight)
 #if DEBUG_SEQ_SUBTYPES
     static int count = 1;
 #endif
-
-#if 0
-printf("GenerateSeqSubtypes %d %d %d   %d %d %d   %d %d %d %d\n", 
-Cur_col, Target_type_len, Cur_col == Target_type_len, 
-Cur_row, (Num_vars - 1), Cur_row == (Num_vars - 1),
-Cur_deg_vars[Cur_row], Whatsleft, Deg_vars[Cur_row], (Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]); fflush(NULL);
-depth++;
-if(mdepth < depth) {
-  mdepth = depth;
-}
-#endif
     if(status != OK) {
-#if 0
-depth--;
-#endif
         return -1;
     }
 
@@ -219,12 +191,9 @@ depth--;
 
 /* Now we are jumping into another module while inside a recursive call */
 
-        status = PerformMultiplePartition(The_ident, The_list, Num_vars, Seq_sub_types, Deg_vars);
+        status = PerformMultiplePartition(The_ident, L, Num_vars, Seq_sub_types, Deg_vars);
         if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
 /*          printf("Returning from PerformMultiplePartition().\n");*/
-#if 0
-depth--;
-#endif
           return(-1);
         }
     }
@@ -241,12 +210,8 @@ depth--;
             if ((Cur_col < (Target_type_len - 1)) ||
                ((Cur_col == (Target_type_len - 1)) && 
                (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
-                 GenerateSeqSubtypes(0,Cur_col+1,0);
+                 GenerateSeqSubtypes(0,Cur_col+1,0, L);
                  if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
-/*                   printf("Returning from PerformMultiplePartition().\n");*/
-#if 0
-depth--;
-#endif
                    return(-1);
                  }
 	    }
@@ -258,9 +223,6 @@ depth--;
     }
     else {
         if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
-#if 0
-printf("is:%d\n", i=Target_type[Cur_col] - Weight);
-#endif
             for (i=Target_type[Cur_col] - Weight;i>=0;i--) {
                 csave = Cur_deg_vars[Cur_row];
                 whatsave = Whatsleft;
@@ -273,12 +235,8 @@ printf("is:%d\n", i=Target_type[Cur_col] - Weight);
                 if ((Cur_col < (Target_type_len - 1)) ||
                    ((Cur_col == (Target_type_len - 1)) && 
                    (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
-                     GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i);
+                     GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i, L);
                      if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
-/*                       printf("Returning from PerformMultiplePartition().\n");*/
-#if 0
-depth--;
-#endif
                        return(-1);
                      }
 		}
@@ -290,9 +248,6 @@ depth--;
         }
     }
 
-#if 0
-depth--;
-#endif
     return 1;
 }
 
@@ -342,12 +297,9 @@ void FreeEqns(Eqn_list_node *L)
 #if DEBUG_SEQ_SUBTYPES
 void PrintSeqSubtypes(void)
 {
-#if DEBUG_SEQ_SUBTYPES
     static int count = 1;
-#endif
 
     int i,j;
-
 
     for (i=0;i<Num_vars;i++) {
         printf("    ");
