@@ -288,8 +288,8 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
     printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
     if (status == OK) 
         status = SolveEquations(L,n);			
-    if (L != NULL)
-        FreeEqns(L);
+    //if (L != NULL)
+    //    FreeEqns(L);
 
     printf("(%lds)\n", ElapsedTime());
 
@@ -333,8 +333,7 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
      status = SparseCreateTheMatrix(L, SM, &rows, &cols, BPCptr, n);
    }
 
-   /* make sure that we get the correct information from creating the 
-      matrix for our statistics */
+   if(L) FreeEqns(L);
 
 #if DEBUG_MATRIX
    PrintColtoBP();
