@@ -61,6 +61,10 @@
 /***                                                               ***/
 /*********************************************************************/
 
+#include <vector>
+
+using std::vector;
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -73,55 +77,43 @@
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-static void SplitJthType(int j);
-static void Gen(Name n, int d, int j);
-static void AddSetPartition(Name n, int j);
+static void SplitJthType(const vector<Name> &Var_types, int j, Eqn_list_node *List);
+static void Gen(const vector<Name> &Var_types, Name n, int d, int j, Eqn_list_node *List);
+static void AddSetPartition(int nVars, Name n, int j);
 static void DeleteSetPartition(Name j);
-static int OKSetPartitions(void);
+static int OKSetPartitions(int nVars);
 #if DEBUG_SET_PARTITIONS
 static void PrintVarTypes(void);
 static void PrintSetPartitions(void);
 #endif
 
-
-static int Num_vars = 0;
-static Name *Var_types = NULL;
 static const int *Deg_var_types = NULL;
 static Name *Set_partitions = NULL;
 static int *Cur_index_var = NULL;
 static const struct polynomial *The_ident = NULL;
-static Eqn_list_node *The_list = NULL;
 static int Max_deg_var = 0;
 static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 
-int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, int Nvars, Type Types, const int *Deg_var)
+int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, int nVars, Type Types, const int *Deg_var)
 {
     int i,j;
 
     The_ident = Id;
-    The_list = List;
-    Num_vars = Nvars;
     Deg_var_types = Deg_var;
 
     status = OK;
 
-    Var_types = (Name *) Mymalloc(Num_vars * sizeof(Name));
-    assert_not_null(Var_types);
+    vector<Name> Var_types(nVars);
     {
         int target_type_len = GetTargetLen();
 
         Type temp_type = (Type) Mymalloc(target_type_len * sizeof(Degree)); 
         assert_not_null(temp_type);
 
-#if 0
-        for (i=0;i<target_type_len;i++)
-            temp_type[i] = 0;
-#endif
-
-        for (i=0;i<Num_vars;i++) {
+        for (i=0;i<nVars;i++) {
             for (j=0;j<target_type_len;j++)
                 temp_type[j] = Types[i*target_type_len + j];
             Var_types[i] = TypeToName(temp_type);
@@ -131,25 +123,25 @@ int PerformMultiplePartition(const struct polynomial *Id, Eqn_list_node *List, i
     }
 
     Max_deg_var = Deg_var_types[0];
-    for (i=1;i<Num_vars;i++)
+    for (i=1;i<nVars;i++)
         if (Deg_var_types[i] > Max_deg_var)
             Max_deg_var = Deg_var_types[i];
 
-    Set_partitions = (Name *) Mymalloc(Max_deg_var * Num_vars * sizeof(Name));
+    Set_partitions = (Name *) Mymalloc(Max_deg_var * nVars * sizeof(Name));
     assert_not_null(Set_partitions);
 
-    Cur_index_var = (int *) Mymalloc(Num_vars * sizeof(int));
+    Cur_index_var = (int *) Mymalloc(nVars * sizeof(int));
     assert_not_null(Cur_index_var);
     
     for (i=0;i<Max_deg_var;i++)
-        for (j=0;j<Num_vars;j++)
-            Set_partitions[i*Num_vars + j] = 0;
+        for (j=0;j<nVars;j++)
+            Set_partitions[i*nVars + j] = 0;
 
-    for (i=0;i<Num_vars;i++)
+    for (i=0;i<nVars;i++)
          Cur_index_var[i] = 0;
 
 #if 0
-printf("mp: %d %d %d %d\n", Num_vars, NUM_LETTERS, target_type_len, Max_deg_var);
+printf("mp: %d %d %d %d\n", nVars, NUM_LETTERS, target_type_len, Max_deg_var);
 #endif
 
 #if DEBUG_SET_PARTITIONS
@@ -157,16 +149,14 @@ printf("mp: %d %d %d %d\n", Num_vars, NUM_LETTERS, target_type_len, Max_deg_var)
 #endif
   
     if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
-      free(Var_types);
       free(Set_partitions);
       free(Cur_index_var);
 /*      printf("Returning from PerformMultiplePartition().\n");*/
       return(-1);
     }
 
-    SplitJthType(0);     /* Start a recursive call. */
+    SplitJthType(Var_types, 0, List);     /* Start a recursive call. */
 
-    free(Var_types);
     free(Set_partitions);
     free(Cur_index_var);
 
@@ -178,34 +168,38 @@ printf("mp: %d %d %d %d\n", Num_vars, NUM_LETTERS, target_type_len, Max_deg_var)
  * SplitJthType() and Gen() call each other recursively.
  */
 
-void SplitJthType(int j)
+void SplitJthType(const vector<Name> &Var_types, int j, Eqn_list_node *List)
 {
     if (status != OK)
         return;
 
-    if (j < Num_vars) {
-        Gen(Var_types[j],Deg_var_types[j],j);
-    } else if (OKSetPartitions()) {
+    int nVars = Var_types.size();
+
+    if (j < nVars) {
+        Gen(Var_types, Var_types[j],Deg_var_types[j],j, List);
+    } else if (OKSetPartitions(nVars)) {
 #if DEBUG_SET_PARTITIONS
         PrintSetPartitions();
 #endif
 
 /* Now create a substitution record for current set partition. */
-        status = CreateSubs(The_list, The_ident, Num_vars, Max_deg_var, Set_partitions, Deg_var_types);
+        status = CreateSubs(List, The_ident, nVars, Max_deg_var, Set_partitions, Deg_var_types);
     }
 }
 
 
-void Gen(Name n, int d, int j)
+void Gen(const vector<Name> &Var_types, Name n, int d, int j, Eqn_list_node *List)
 {
     int i,degn,lower,upper;
     Name n1,n_minus_n1;
 
+    int nVars = Var_types.size();
+
     if (status != OK)
         return;
     if (d == 1) {
-        AddSetPartition(n,j);
-        SplitJthType(j+1);
+        AddSetPartition(nVars, n,j);
+        SplitJthType(Var_types, j+1, List);
         DeleteSetPartition(j);
     }
     else {
@@ -219,9 +213,9 @@ void Gen(Name n, int d, int j)
             n1 = FirstTypeDegree(i);
             while ((n1 != -1) && (status == OK)) {
                 if (IsSubtype(n1,n)) {
-                    AddSetPartition(n1,j);
+                    AddSetPartition(nVars, n1,j);
                     SubtractTypeName(n,n1,&n_minus_n1);
-                    Gen(n_minus_n1,d-1,j);
+                    Gen(Var_types, n_minus_n1,d-1,j, List);
                     DeleteSetPartition(j);
                 }
                 n1 = NextTypeSameDegree(n1);
@@ -231,9 +225,9 @@ void Gen(Name n, int d, int j)
 }
 
 
-void AddSetPartition(Name n, int j)
+void AddSetPartition(int nVars, Name n, int j)
 {
-    Set_partitions[Cur_index_var[j]*Num_vars + j] = n;
+    Set_partitions[Cur_index_var[j] * nVars + j] = n;
     Cur_index_var[j]++;
 }
 
@@ -244,13 +238,13 @@ void DeleteSetPartition(Name j)
 }
 
 
-int OKSetPartitions(void)
+int OKSetPartitions(int nVars)
 {
     int i,j;
 
-    for (j=0;j<Num_vars;j++)
+    for (j=0;j<nVars;j++)
         for (i=0;i<(Deg_var_types[j]-1);i++)
-            if (Set_partitions[i*Num_vars + j] < Set_partitions[(i+1)*Num_vars + j])
+            if (Set_partitions[i*nVars + j] < Set_partitions[(i+1)*nVars + j])
                 return(0);
 
     return(1);
