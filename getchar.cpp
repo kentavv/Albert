@@ -15,7 +15,7 @@ int getchar(void)
 {
    char c;
    fflush(stdout);
-   return ((read(0,&c,1) == 1) ? (unsigned char) c:EOF);
+   return read(0, &c, 1) == 1 ? (unsigned char) c : EOF;
 }
 
 /*
@@ -25,10 +25,10 @@ int getchar(void)
 
 int my_getline(char s[], int lim)
 {
-    int c,i;
+    int i;
 
     for (i=0; i < lim-1; i++) {
-        c=getchar(); 
+        int c = getchar(); 
         if(c == EOF || c == '\n' || c == '\r') {
           break;
         }
@@ -39,5 +39,4 @@ int my_getline(char s[], int lim)
 
     return i ;
 }
-
 
