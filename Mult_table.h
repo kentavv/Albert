@@ -21,7 +21,7 @@ extern std::map<std::pair<Basis, Basis>, std::vector<std::pair<Basis, Scalar> > 
 void DestroyMultTable(void);
 void Print_MultTable(FILE *filePtr, int outputType);
 
-inline int EnterProduct(Basis B1, Basis B2, const std::vector<std::pair<Basis, Scalar> > &tl)
+inline bool EnterProduct(Basis B1, Basis B2, const std::vector<std::pair<Basis, Scalar> > &tl)
 {
   const std::pair<Basis, Basis> bb = std::make_pair(B1, B2);
 
@@ -31,16 +31,16 @@ inline int EnterProduct(Basis B1, Basis B2, const std::vector<std::pair<Basis, S
     puts("already present");
   }
 
-    return(OK);
+  return true;
 }
 
-inline int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element &P)
+inline bool Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element &P)
 {
   const std::pair<Basis, Basis> bb = std::make_pair(B1, B2);
 
   std::map<std::pair<Basis, Basis>, std::vector<std::pair<Basis, Scalar> > >::const_iterator ii = mult_table.find(bb);
   if(ii == mult_table.end()) {
-    return 0;
+    return false;
   }
 
   std::vector<std::pair<Basis, Scalar> >::const_iterator jj;
@@ -51,7 +51,7 @@ inline int Mult2basis(Basis B1, Basis B2, Scalar x, Alg_element &P)
     //AccumAE(P, w, S_mul(x, coef));
   }
 
-    return(OK);
+  return true;
 }
 
 #endif
