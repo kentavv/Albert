@@ -30,14 +30,6 @@ static void PrintTheRMatrix(void);
 static void CreateRandomMatrix(void);
 #endif
 
-
-/*********************
-These are for density measurement on last matrix. 
-*********************/
-extern int gather_density_flag;
-extern long num_elements;
-extern long max_num_elements;
-
 static Matrix TheMatrix = NULL;
 static int Num_rows = 0;
 static int Num_cols = 0;
@@ -122,40 +114,15 @@ void MultRow(int Row, Scalar Factor)
 
 void AddRow(Scalar Factor, int Row1, int Row2)
 {
-    Scalar before;
-    Scalar after;
-
-    int j;
-    int row1_start,row2_start;
-   
     if (Factor == S_zero())
         return;
 
-    row1_start = Row1 * Num_cols; 
-    row2_start = Row2 * Num_cols; 
+    const int row1_start = Row1 * Num_cols; 
+    const int row2_start = Row2 * Num_cols; 
 
-    for (j=0;j<Num_cols;j++)
-	 {
-        before = TheMatrix[row2_start+j];
-        TheMatrix[row2_start + j] = S_add(TheMatrix[row2_start + j],
-                                       S_mul(Factor,TheMatrix[row1_start + j])); 
-        if (gather_density_flag)
-        {
-           after = TheMatrix[row2_start+j];
-           if ((before==S_zero()) && (after != S_zero()))
-           {
-              num_elements++;
-              if (num_elements > max_num_elements)
-              {
-                 max_num_elements=num_elements;
-              }
-           }
-           if ((before!=S_zero()) && (after == S_zero()))
-              num_elements--;
-       }
-	 }
-		
-		
+    for (int j=0;j<Num_cols;j++) {
+        TheMatrix[row2_start + j] = S_add(TheMatrix[row2_start + j], S_mul(Factor, TheMatrix[row1_start + j]));
+    }
 }
     
 
