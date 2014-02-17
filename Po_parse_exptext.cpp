@@ -87,7 +87,7 @@ struct polynomial *Parse_exptext(char Poly_str[])
     }
 
     term_str = (char*) Mymalloc(strlen(Poly_str)+1);
-    while (poly_str_indx < strlen(Poly_str)) {
+    while (poly_str_indx < (int)strlen(Poly_str)) {
         if((Poly_str[poly_str_indx] != '+') && (Poly_str[poly_str_indx] != '-'))
             term_str[term_str_indx++] = Poly_str[poly_str_indx++];
         else {
@@ -137,7 +137,7 @@ struct polynomial *Parse_exptext(char Poly_str[])
 /*******************************************************************/ 
 void Parse_term(struct term_node *Root, char String[], int *Strptr)
 {
-    if (*Strptr < strlen(String)) {
+    if (*Strptr < (int)strlen(String)) {
         if (String[*Strptr] == '(') {
              (*Strptr)++;
              CreateLR(Root);

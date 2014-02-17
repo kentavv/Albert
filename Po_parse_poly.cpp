@@ -278,7 +278,7 @@ int Get_next_token(char Poly_str[], int *Poly_str_indx_ptr, char *Current_letter
 {
     int i;
 
-    if (*Poly_str_indx_ptr < strlen(Poly_str)) {
+    if (*Poly_str_indx_ptr < (int)strlen(Poly_str)) {
 		
         switch(Poly_str[(*Poly_str_indx_ptr)++]) {
 
@@ -370,7 +370,7 @@ int Get_next_token(char Poly_str[], int *Poly_str_indx_ptr, char *Current_letter
             case '8':
             case '9':
                 i = *Poly_str_indx_ptr  - 1;
-                while ((i<strlen(Poly_str)) && isdigit(Poly_str[i])) 
+                while (i<(int)strlen(Poly_str) && isdigit(Poly_str[i])) 
                     *Current_int_ptr = (*Current_int_ptr * 10) + (Poly_str[i++] - '0');
                 *Poly_str_indx_ptr  = i;
                 if ((*Current_int_ptr) == 0) {
