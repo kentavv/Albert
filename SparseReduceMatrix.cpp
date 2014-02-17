@@ -23,6 +23,13 @@
 /***                   in row canonical form. This code is      ***/
 /***                   similar to the code in ReduceMatrix.c    ***/
 /******************************************************************/
+
+#include <list>
+#include <vector>
+
+using std::list;
+using std::vector;
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -31,84 +38,120 @@
 #include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
-#include "Sparse_structs.h"
-#include "Sparse_defs.h"
-#include "node_mgt.h"
 
-static void SparseMultRow(int Row, Scalar Factor);
-static void SparseAddRow(Scalar Factor, int Row1, int Row2);
-static void SparseInterchange(int Row1, int Row2);
-static void SparseKnockOut(int row, int col, int nRows);
+static void SparseMultRow(vector<list<Node> > &SM, int Row, Scalar Factor);
+static void SparseAddRow(vector<list<Node> > &SM, Scalar Factor, int Row1, int Row2);
+static void SparseKnockOut(vector<list<Node> > &SM, int row, int col, int nRows);
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
 static void Print_Rows(int Row1, int Row2, int nCols);
 static void Print_SLList(Node *SLHead_Ptr);
 static void Print_Node(NODE_PTR Prt_Node);
 #endif
-static void Insert_Node(MAT_PTR Sparse_Matrix, int matrow, NODE_PTR New_Node, NODE_PTR Prev_Ptr);
-static void Delete_Node(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr);
-static NODE_PTR Locate_Element(NODE_PTR Tmp_Ptr, int row, int col);
-
-/* These external variables are for measuring density of last generated matrix*/
-
-extern int gather_density_flag;
-extern long num_elements;
-extern long max_num_elements;
-
-static MAT_PTR Matrix_Base_Ptr = NULL;
 
 
-int SparseReduceMatrix(MAT_PTR *Matrix_BPtr, int nRows, int nCols, int *Rank)
+#include <time.h>
+#include <sys/times.h>
+
+int SparseReduceMatrix(vector<list<Node> > &SM, int nRows, int nCols, int *Rank)
 {
-    int i,j;
-    int nextstairrow = 0;
-
-    Matrix_Base_Ptr = *Matrix_BPtr;
-
     if(nRows == 0 || nCols == 0)
     {
         return(OK);
     }
 
-    assert_not_null(Matrix_BPtr);
-
+{
+  putchar('\n');
+  int n = 0;
+  int nz = 0;
+  int nnz = 0;
+  int nrz = 0;
+  int nzc = 0;
+  for(int i=0; i<nRows; i++) {
+    if(SM[i].empty()) nrz++; 
+    n += SM[i].size();
+    list<Node>::const_iterator ii;
+//  printf("%d %d\n", i, SM[i].size());
+    for(ii=SM[i].begin(); ii!=SM[i].end(); ii++) {
+      if(i == 2636) {
+        printf("<%d %d>", ii->column, ii->element);
+      }
+      if(ii->element == 0) nz++;
+      if(ii->element != 0) nnz++;
+      if(ii->column == 0) nzc++;
+    }
+  }
+  printf("A n:%d nz:%d nrz:%d nnz:%d nzc:%d nRows:%d nCols:%d\n", n, nz, nrz, nnz, nzc, nRows, nCols);
+}
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
-    for (i=0;i<nCols;i++)
+    int nextstairrow = 0;
+    for (int i=0;i<nCols;i++)
     {
-        for (j=nextstairrow;j < nRows;j++)
+//struct tms aa, bb, cc;
+//times(&aa);
+        int j;
+        for (j=nextstairrow; j < nRows; j++)
         {
-            if(Get_Matrix_Element(Matrix_Base_Ptr,j,i) != S_zero())
+            if(Get_Matrix_Element(SM, j,i) != S_zero())
             {
                 break;
             }
         }
-   
+//times(&bb);
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
         if (j < nRows)
         {
-           SparseInterchange(nextstairrow,j);
-           SparseKnockOut(nextstairrow,i, nRows);
+           SM[nextstairrow].swap(SM[j]);
+           SparseKnockOut(SM, nextstairrow, i, nRows);
            nextstairrow++;
         }
+//times(&cc);
+//long uaa=aa.tms_utime;
+//long ubb=bb.tms_utime;
+//long ucc=cc.tms_utime;
+//long saa=aa.tms_stime;
+//long sbb=bb.tms_stime;
+//long scc=cc.tms_stime;
+//printf("%ld %ld %ld  %ld %ld %ld\t\t", uaa, ubb, ucc, ubb-uaa, ucc-uaa, ucc-ubb);
+//printf("%ld %ld %ld  %ld %ld %ld\n", saa, sbb, scc, sbb-saa, scc-saa, scc-sbb);
     }
     *Rank=nextstairrow;
-    *Matrix_BPtr = Matrix_Base_Ptr;
+
+{
+  int n = 0;
+  int nz = 0;
+  int nnz = 0;
+  int nrz = 0;
+  int nzc = 0;
+  for(int i=0; i<nRows; i++) {
+    if(SM[i].empty()) nrz++;
+    n += SM[i].size();
+    list<Node>::const_iterator ii;
+    for(ii=SM[i].begin(); ii!=SM[i].end(); ii++) {
+      if(i == 2636) {
+        printf("<%d %d>", ii->column, ii->element);
+      }
+      if(ii->element == 0) nz++;
+      if(ii->element != 0) nnz++;
+      if(ii->column == 0) nzc++;
+    }
+  }
+  printf("B n:%d nz:%d nrz:%d nnz:%d nzc:%d nRows:%d nCols:%d\n", n, nz, nrz, nnz, nzc, nRows, nCols);
+}
 
     return(OK);
 }
 
 
-void SparseMultRow(int Row, Scalar Factor)
+void SparseMultRow(vector<list<Node> > &SM, int Row, Scalar Factor)
 {
-   /* Get the first node in the row */
    /* Step thru row ... multiplying each element by the factor */
-
-   for(NODE_PTR PMR_Ptr = Matrix_Base_Ptr[Row]; PMR_Ptr; PMR_Ptr=PMR_Ptr->Next_Node) {
-      PMR_Ptr->element=S_mul(PMR_Ptr->element,Factor);
+   for(list<Node>::iterator ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
+      ii->element = S_mul(ii->element, Factor);
    }
 }
 
@@ -124,183 +167,72 @@ void SparseMultRow(int Row, Scalar Factor)
       the node.
 */
 /*********************************************************************/
-void SparseAddRow(Scalar Factor, int Row1, int Row2)
+void SparseAddRow(vector<list<Node> > &SM, Scalar Factor, int Row1, int Row2)
 {
-    /* check for zero factor */
+  /* check for zero factor */
 
-   if (Factor == S_zero())
-   {
-      return;
-   }
+  if (Factor == S_zero()) {
+    return;
+  }
 
-   /* get the beginning of the two rows to work with */
+  /* get the beginning of the two rows to work with */
 
-   NODE_PTR Row1_Ptr = Matrix_Base_Ptr[Row1];
-   NODE_PTR Temp_Ptr = Matrix_Base_Ptr[Row2];
+  const list<Node> &r1 = SM[Row1];
+  list<Node> &r2 = SM[Row2];
 
-    Scalar TmpRow2_S_Sum;
-    NODE_PTR Prev_Ptr;
-    NODE_PTR Look_Ahead_Ptr;
+  list<Node>::const_iterator r1i = r1.begin();
+  list<Node>::iterator r2i = r2.begin();
 
-
-  /* Process the linked list representing the row to be multiplied and
-     to be added */
-
-   while (Row1_Ptr)
-   {
-         /* go ahead and perform the scalar multiplication */
-
-      Scalar TmpRow1_S_Product = S_mul(Factor,Row1_Ptr->element);
-
-         /* Try to get the previous node to the one that we really want 
-            which is the one that would match the column value of the
-            one that we wish to add */
-
-      
-      Prev_Ptr = Locate_Element(Temp_Ptr,Row2,Row1_Ptr->column);
-      Temp_Ptr = Prev_Ptr;
-  
-     
-         /* if there is no previous and the row is not empty then 
-            we want to work on the first node in the row */
-
-      if (!Prev_Ptr && !Row_empty(Matrix_Base_Ptr,Row2))
-      {
-          Look_Ahead_Ptr=Matrix_Base_Ptr[Row2];
+  for(; r1i != r1.end() && r2i != r2.end();) {
+    if(r1i->column == r2i->column) {
+      Scalar x = S_add(r2i->element, S_mul(Factor, r1i->element));
+      if(x == S_zero()) {
+        r1i++;
+        r2i = r2.erase(r2i);
+      } else {
+        r2i->element = x;
+        r1i++;
+        r2i++;
       }
-      else
-      {
-         if (Row_empty(Matrix_Base_Ptr,Row2))
-         {
-             /* Row is empty */
-
-             Look_Ahead_Ptr=NULL;
-         }
-         else
-         {
-        /* Row is not empty so we must be before the node we want to
-           work with so if there is a next node that is the one we want*/
-
-            if (Prev_Ptr->Next_Node)
-            {
-                Look_Ahead_Ptr=Prev_Ptr->Next_Node;
-            }
-
-            /* there is not another one in the row so we want to work
-               with this one */
-
-            else
-            {
-                Look_Ahead_Ptr=Prev_Ptr;
-            }
-        }
+    } else if(r1i->column < r2i->column) {
+      Scalar x = S_mul(Factor, r1i->element);
+      //if(x != S_zero()) {
+        Node n = *r1i;
+        n.element = x;
+        r2i = r2.insert(r2i, n);
+      //}
+      r1i++;
+    } else { //if(r1i->column > r2i->column) {
+      r2i++;
     }
+  }
 
-
-    if (Look_Ahead_Ptr)
-    {
-    /* Row wasn't empty */
-
-       if (Look_Ahead_Ptr->column != Row1_Ptr->column)
-       {
-       /* The row doesn't have a node representing the actual 
-          column that we want so lets add one */
-
-          TmpRow2_S_Sum = TmpRow1_S_Product;
-          Insert_Element(Matrix_Base_Ptr,Row2,TmpRow2_S_Sum,
-          Row1_Ptr->column,Prev_Ptr);
-     
-          /* gather statistics */
-
-          if (gather_density_flag)
-          {
-            num_elements++;
-            if (num_elements > max_num_elements)
-               max_num_elements = num_elements;
-          }
-       }
-       else
-       {
-          /* the column we want is there */
-
-          TmpRow2_S_Sum = S_add(Look_Ahead_Ptr->element,TmpRow1_S_Product);
-          if (TmpRow2_S_Sum == S_zero())
-          {
-          /* the result is zero so we must delete it */
-
-             Delete_Element(Matrix_Base_Ptr,Row2,Prev_Ptr);
-
-             /* statistics */
-
-             if (gather_density_flag)
-               num_elements--;
-          }
-          else
-          {
-          /* the result is not zero and column is present so change value */
-
-             Change_Element(Look_Ahead_Ptr,TmpRow2_S_Sum);
-          }
-       }
-      }
-
-      else
-      {
-      /* We know the row is empty and we will add a node if the
-         result is nonzero */
-
-          TmpRow2_S_Sum = TmpRow1_S_Product;
-       
-          /* the result is nonzero so insert node */
-
-          Insert_Element(Matrix_Base_Ptr,Row2,TmpRow2_S_Sum,
-                                         Row1_Ptr->column,Prev_Ptr);
-
-          /*statistics */
-
-          if (gather_density_flag)
-          {
-             num_elements++;
-             if (num_elements > max_num_elements)
-             max_num_elements = num_elements;
-          }
-      }
-                        
-      Row1_Ptr=Row1_Ptr->Next_Node;
-   }
+  // append r2 with remaining r1 nodes
+  for(; r1i != r1.end(); r1i++) {
+    Scalar x = S_mul(Factor, r1i->element);
+    //if(x != S_zero()) {
+      Node n = *r1i;
+      n.element = x;
+      r2.push_back(n);
+    //}
+  }
 }
 
-
-void SparseInterchange(int Row1, int Row2)
+void SparseKnockOut(vector<list<Node> > &SM, int row, int col, int nRows)
 {
-        /* switch the two row pointers */
-        NODE_PTR Temp_Row_Ptr = Matrix_Base_Ptr[Row1];
-        Matrix_Base_Ptr[Row1] = Matrix_Base_Ptr[Row2];
-        Matrix_Base_Ptr[Row2] = Temp_Row_Ptr;
-}
-
-
-void SparseKnockOut(int row, int col, int nRows)
-{
-    Scalar x;
-
-    int j;
-    /*int i;*/
-    Scalar one = S_one();
-
-    if ((x=Get_Matrix_Element(Matrix_Base_Ptr,row,col)) !=one)
+    Scalar x = Get_Matrix_Element(SM, row, col);
+    if(x != S_one())
     {
     /* if the rightmost element in the current row is not one then multiply*/
-
-        SparseMultRow(row,S_inv(x));
+        SparseMultRow(SM, row, S_inv(x));
     }
 
     /* try to knockout elements in column in the rows above */ 
 
 #pragma omp parallel for schedule(dynamic, 10)
-    for (j=0;j < nRows;j++) {
+    for (int j=0; j < nRows; j++) {
       if(j != row) {
-        SparseAddRow(S_minus(Get_Matrix_Element(Matrix_Base_Ptr, j, col)), row, j);
+        SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
       }
     }
 }
@@ -418,19 +350,13 @@ void Print_Rows(int Row1, int Row2, int nCols)
 }
 #endif
 
-Scalar Get_Matrix_Element(MAT_PTR Sparse_Matrix, int i, int j)
+Scalar Get_Matrix_Element(const vector<list<Node> > &SM, int i, int j)
 {
     /* either return the element at location i,j or return a zero */
-    NODE_PTR Tmp_Ptr = Sparse_Matrix[i];
-        while (Tmp_Ptr && Tmp_Ptr->column <= j)
-        {
-            if (Tmp_Ptr->column == j)
-            {       
-                return(Tmp_Ptr->element);
-            }
-            Tmp_Ptr=Tmp_Ptr->Next_Node;
-        }
-    return(S_zero());
+    for(list<Node>::const_iterator ii = SM[i].begin(); ii != SM[i].end() && ii->column <= j; ii++) {
+      if(ii->column == j) return ii->element;
+    }
+    return S_zero();
 }
 
 
@@ -460,46 +386,7 @@ void Print_SLList(Node *SLHead_Ptr)
     printf("\n");
     printf("\n");
 }
-#endif
 
-void Insert_Element(MAT_PTR Sparse_Matrix, int matrow, Scalar element, int column, NODE_PTR Prev_Ptr)
-{
-    NODE_PTR New_Node;
-        
-    /* get a new node structure from the memory management system */
-
-#pragma omp critical(record)
-{
-    New_Node =(NODE_PTR) GetRecord();
-}
-
-    /* set the values of the structure */
-
-    New_Node->element=element;
-    New_Node->column=column;
-
-    /* insert it into the correct spot in the matrix */
-
-    Insert_Node(Sparse_Matrix,matrow,New_Node,Prev_Ptr);
-}
-
-void Delete_Element(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr)
-{
-    /* Call primitive to delete element */
-
-    Delete_Node(Sparse_Matrix,RowId,Prev_Ptr);
-}
-
-
-void Change_Element(NODE_PTR Element_Ptr, Scalar value)
-{       
-   /* change the value in the node */
-
-    Element_Ptr->element = value;
-}
-                                        
-
-#if 0
 void Print_Node(NODE_PTR Prt_Node)
 {
     if (Prt_Node == NULL)
@@ -511,137 +398,3 @@ void Print_Node(NODE_PTR Prt_Node)
             Prt_Node->column);
 }
 #endif
-
-
-void Insert_Node(MAT_PTR Sparse_Matrix, int matrow, NODE_PTR New_Node, NODE_PTR Prev_Ptr)
-{
-    NODE_PTR temp_node;
-
-    /* if it is to be the first element of the row */
-
-    if (Prev_Ptr == NULL)
-    {
-        New_Node->Next_Node = Sparse_Matrix[matrow];
-        Sparse_Matrix[matrow] = New_Node;
-    }
-  
-    /* otherwise it has a predessor and possibly a successor*/
-
-    else
-    {
-        temp_node = Prev_Ptr->Next_Node;
-        Prev_Ptr->Next_Node = New_Node;
-        New_Node->Next_Node = temp_node;
-    }
-};
-
-
-void Delete_Node(MAT_PTR Sparse_Matrix, int RowId, NODE_PTR Prev_Ptr)
-{
-    NODE_PTR Bad_Node;
-   
-    /* It is the first element node in the row */     
-
-    if (Prev_Ptr == NULL)
-    {
-        Bad_Node=(NODE_PTR) &(*Sparse_Matrix[RowId]);
-
-        /* it is not the only one in the row */
-
-        if (Bad_Node->Next_Node != NULL)
-        {
-            Sparse_Matrix[RowId]=Bad_Node->Next_Node;
-        }
-
-        /* it is the only one in the row */
-
-        else
-        {
-            Sparse_Matrix[RowId]=NULL;
-        }
-    }
-   
-    /* There are other nodes before and after this one */
-
-    else
-    {
-        Bad_Node = Prev_Ptr->Next_Node;
-        Prev_Ptr->Next_Node=Bad_Node->Next_Node;
-    }
-
-    /* send the node back to the memory management system */
-
-#pragma omp critical(record)
-{
-    PutRecord(Bad_Node);
-}
-};
-
-bool Row_empty(MAT_PTR Sparse_Matrix, int row)
-{
-    return Sparse_Matrix[row] == NULL;
-}
-
-/**************************************************************************/
-/* Locate_Node() either returns NULL or the node pointer to the node
-   before the one we want. If it returns NULL then we know that 
-   Either:
-      1. Row empty or
-      2. we are before the one we want and we are first or
-      
-   If it is non NULL then 
-   Either:
-      1. We are before the one we want and there is another node after us
-      2. We are before the column we want and there are no nodes after us
-*/
-/**************************************************************************/
-
-NODE_PTR Locate_Node(MAT_PTR Sparse_Matrix, int row, int col)
-{
-    NODE_PTR Prev_Ptr;
-    NODE_PTR Curr_Ptr;
-
-    Prev_Ptr = NULL;
-
-    Curr_Ptr = Sparse_Matrix[row];
-
-    /* We will either be at the end of the linked list or at
-      the node just before the row,col that we want */
-
-    while ((Curr_Ptr != NULL) && (col > Curr_Ptr->column))
-    {
-        Prev_Ptr=Curr_Ptr;
-        Curr_Ptr=Curr_Ptr->Next_Node;
-    }
-
-    return(Prev_Ptr);
-};
-
-NODE_PTR Locate_Element(NODE_PTR Tmp_Ptr, int row, int col)
-{
-    NODE_PTR Prev_Ptr;
-    NODE_PTR Curr_Ptr;
-
-    Prev_Ptr = NULL;
-
-    if (Tmp_Ptr==NULL)
-    {
-       Curr_Ptr=Matrix_Base_Ptr[row];
-    }
-    else
-    {
-       Curr_Ptr = Tmp_Ptr;
-    }
-
-    /* We will either be at the end of the linked list or at
-      the node just before the row,col that we want */
-
-    while ((Curr_Ptr != NULL) && (col > Curr_Ptr->column))
-    {
-        Prev_Ptr=Curr_Ptr;
-        Curr_Ptr=Curr_Ptr->Next_Node;
-    }
-
-    return(Prev_Ptr);
-};
-

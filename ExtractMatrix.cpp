@@ -17,6 +17,7 @@
 /***  MODULE DESCRIPTION:                                        ***/
 /*******************************************************************/
 
+#include <list>
 #include <vector>
 
 #include <stdio.h>
@@ -31,20 +32,18 @@ using namespace std;
 #include "Memory_routines.h"
 #include "Mult_table.h"
 #include "Scalar_arithmetic.h"
-#include "Sparse_structs.h"
-#include "Sparse_defs.h"
 #include "SparseReduceMatrix.h"
 #include "Type_table.h"
 
-static void SparseFillDependent(vector<int> &Dependent);
+static void SparseFillDependent(const vector<list<Node> > &SM, vector<int> &Dependent);
 static void FillDependent(vector<int> &Dependent);
 #if 0
 static void PrintDependent(void);
 #endif
-static void ProcessIndependentBasis(const vector<int> &Dependent, vector<Basis> &BasisNames);
-static void ProcessDependentBasis(const vector<int> &Dependent, vector<Basis> &BasisNames);
-static void SparseProcessDependentBasis(vector<Basis> &BasisNames);
-static void ProcessOtherIndependentBasis(int J);
+static void ProcessIndependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
+static void ProcessDependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
+static void SparseProcessDependentBasis(const vector<list<Node> > &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
+static void ProcessOtherIndependentBasis(const vector<Unique_basis_pair> &ColtoBP, int J);
 
 static Type Cur_type;
 static Type T1;
@@ -55,16 +54,13 @@ static int Num_rows;
 static int Num_cols;
 static int MatrixRank;
 static Matrix TheMatrix = NULL;
-static MAT_PTR TheSparseMatrix = NULL;
-static Unique_basis_pair_list ColtoBP;
 
-int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, Unique_basis_pair_list BPCptr)
+int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
 {
     TheMatrix = Mptr; 
     Num_rows = Rows;
     Num_cols = Cols;
     MatrixRank = Rank;
-    ColtoBP = BPCptr;
 
     Cur_type_len = GetTargetLen();
     Cur_type = (Type) Mymalloc(Cur_type_len * sizeof(Degree));
@@ -85,11 +81,11 @@ int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, Uniq
         vector<Basis> BasisNames(Num_cols, 0);
 
         FillDependent(Dependent);
-        ProcessIndependentBasis(Dependent, BasisNames);
-        ProcessDependentBasis(Dependent, BasisNames);
+        ProcessIndependentBasis(Dependent, ColtoBP, BasisNames);
+        ProcessDependentBasis(Dependent, ColtoBP, BasisNames);
     }
 
-    ProcessOtherIndependentBasis(0);
+    ProcessOtherIndependentBasis(ColtoBP, 0);
 
     free(Cur_type);
     free(T1);
@@ -104,13 +100,11 @@ int ExtractFromTheMatrix(Matrix Mptr, int Rows, int Cols, int Rank, Name N, Uniq
    Basis(). Operation are performed on a locally visible pointer to the 
    matrix and then that pointer is copied to the one passed in upon exit */
    
-int SparseExtractFromMatrix(MAT_PTR SMptr, int Rows, int Cols, int Rank, Name N, Unique_basis_pair_list BPCptr)
+int SparseExtractFromMatrix(vector<list<Node> > &SM, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
 {
-    TheSparseMatrix = SMptr; 
     Num_rows = Rows;
     Num_cols = Cols;
     MatrixRank = Rank;
-    ColtoBP = BPCptr;
 
     Cur_type_len = GetTargetLen();
     Cur_type = (Type) Mymalloc(Cur_type_len * sizeof(Degree));
@@ -130,12 +124,12 @@ int SparseExtractFromMatrix(MAT_PTR SMptr, int Rows, int Cols, int Rank, Name N,
         vector<int> Dependent(Num_cols, 0);
         vector<Basis> BasisNames(Num_cols, 0);
 
-        SparseFillDependent(Dependent);
-        ProcessIndependentBasis(Dependent, BasisNames);
-        SparseProcessDependentBasis(BasisNames);
+        SparseFillDependent(SM, Dependent);
+        ProcessIndependentBasis(Dependent, ColtoBP, BasisNames);
+        SparseProcessDependentBasis(SM, ColtoBP, BasisNames);
     }
 
-    ProcessOtherIndependentBasis(0);
+    ProcessOtherIndependentBasis(ColtoBP, 0);
 
     free(Cur_type);
     free(T1);
@@ -145,7 +139,7 @@ int SparseExtractFromMatrix(MAT_PTR SMptr, int Rows, int Cols, int Rank, Name N,
 }
 
 
-void SparseFillDependent(vector<int> &Dependent)
+void SparseFillDependent(const vector<list<Node> > &SM, vector<int> &Dependent)
 {
     if ((Num_rows == 0) || (Num_cols == 0))
         return;
@@ -158,7 +152,7 @@ void SparseFillDependent(vector<int> &Dependent)
     for(int i=0; i < MatrixRank; i++)
 	 {
 
-             Dependent[TheSparseMatrix[i]->column] = S_one();
+             Dependent[SM[i].begin()->column] = S_one();
 	 } 
 
 }
@@ -195,7 +189,7 @@ void PrintDependent(void)
 #endif
 
 
-void ProcessIndependentBasis(const vector<int> &Dependent, vector<Basis> &BasisNames)
+void ProcessIndependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames)
 {
     if (Num_cols == 0)
         return;
@@ -216,7 +210,7 @@ void ProcessIndependentBasis(const vector<int> &Dependent, vector<Basis> &BasisN
 
              
 
-void ProcessDependentBasis(const vector<int> &Dependent, vector<Basis> &BasisNames)
+void ProcessDependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames)
 {
     if (Num_cols == 0)
         return;
@@ -248,47 +242,37 @@ tl.push_back(make_pair(BasisNames[k], S_minus(TheMatrix[row*Num_cols + k])));
    since the first element is each linked list representing a row is
    a nonzero element*/
 
-void SparseProcessDependentBasis(vector<Basis> &BasisNames)
+void SparseProcessDependentBasis(const vector<list<Node> > &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames)
 {
     if (Num_cols == 0)
         return;
 
-   int rowid=0;
-
     vector<pair<Basis, Scalar> > tl;
 
-    while (rowid < MatrixRank)
-    {
-       NODE_PTR Tmp_Ptr = TheSparseMatrix[rowid];
-       int j=Tmp_Ptr->column;
- tl.clear();
-       NODE_PTR q=NULL;
-       if (Tmp_Ptr->Next_Node != NULL)
-       {
-	    q=Tmp_Ptr->Next_Node;
-       }
-       while (q)
-       {
-           int k=q->column;
-	   Scalar S_temp=Get_Matrix_Element(TheSparseMatrix,rowid,k);
+    for(int rowId = 0; rowId < MatrixRank; rowId++) {
+       const list<Node> &row = SM[rowId];
+
+       int j=row.begin()->column;
+
+       tl.clear();
+       list<Node>::const_iterator ii = row.begin();
+       for(ii++; ii!=row.end(); ii++) {
+           int k = ii->column;
+	   Scalar S_temp = Get_Matrix_Element(SM, rowId, k);
            tl.push_back(make_pair(BasisNames[k], S_minus(S_temp)));
-	   q = q->Next_Node;	
-    	 }
+       }
 
        Basis b1 = ColtoBP[j].left_basis;
        Basis b2 = ColtoBP[j].right_basis;
        EnterProduct(b1, b2, tl);
-
-	    rowid++;
-    	 Tmp_Ptr = TheSparseMatrix[rowid];
     }
 }
 
-void ProcessOtherIndependentBasis(int J)
+void ProcessOtherIndependentBasis(const vector<Unique_basis_pair> &ColtoBP, int J)
 {
    int i,deg,save,/*num_bp,*/j;
    Basis m1,m2,n1,n2,n;
-    vector<pair<Basis, Scalar> > tl(1);
+   vector<pair<Basis, Scalar> > tl(1);
 
     if (Cur_type_len == J) {
         deg = GetDegree(T1);
@@ -302,7 +286,7 @@ void ProcessOtherIndependentBasis(int J)
             if ((0 < m1) && (m1 <= m2) && (0 < n1) && (n1 <= n2)) {
                 for (i=m1;i<=m2;i++) {
                     for (j=n1;j<=n2;j++) {
-                        if (GetCol(i, j) == -1) {
+                        if (GetCol(ColtoBP, i, j) == -1) {
                             n = EnterBasis(i,j,TypeToName(Cur_type));
   tl[0] = make_pair(n, 1);
                             EnterProduct(i, j, tl);
@@ -316,7 +300,7 @@ void ProcessOtherIndependentBasis(int J)
         for (i=0;i<=Cur_type[J];i++) {
             save = T1[i];
             T1[J] = i;
-            ProcessOtherIndependentBasis(J+1);
+            ProcessOtherIndependentBasis(ColtoBP, J+1);
             T1[i] = save;
         }
     }
