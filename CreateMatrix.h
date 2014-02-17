@@ -18,7 +18,7 @@ struct Node {
 };
 
 typedef Scalar *Matrix;
-typedef std::list<Node> SparseRow;
+typedef std::vector<Node> SparseRow;
 typedef std::vector<SparseRow> SparseMatrix;
 
 typedef struct {
