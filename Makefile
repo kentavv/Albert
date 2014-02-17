@@ -9,12 +9,16 @@ CXX=g++
 #CFLAGS=-MMD
 #CFLAGS=-g -O0 -Wall
 #CFLAGS=-g -O -Wall
-CFLAGS=-g -O2 -Wall -fopenmp
+#CFLAGS=-g -O2 -Wall -fopenmp
+#CFLAGS=-g -O2 -Wall -fopenmp -fprofile-generate -fprofile-correction
+CFLAGS=-g -O2 -Wall -fopenmp -fprofile-use -fprofile-correction
 #CFLAGS=-g -O3 -flto -Wall
 
 CXXFLAGS=$(CFLAGS) -std=c++11
 
-LDFLAGS=-fopenmp
+#LDFLAGS=-fopenmp
+#LDFLAGS=-fopenmp -fprofile-generate -fprofile-correction
+LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
 #LDFLAGS=-g -O3 -flto
 #LIBS=-lcurses -ltermcap -lm
 LIBS=
