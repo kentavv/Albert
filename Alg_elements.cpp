@@ -168,13 +168,10 @@ void AddAE(const Alg_element &p1, Alg_element &p2)
 /*******************************************************************/ 
 int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2)
 {
-    Scalar zero = S_zero();
-    
     int status = OK;
 
-    if ((x == zero) || IsZeroAE(p1))
-        return(OK);
-    else {
+    const Scalar zero = S_zero();
+    if (x != zero && !IsZeroAE(p1)) {
       map<Basis, Scalar>::const_iterator i;
       for(i = p1.begin(); i != p1.end(); i++) {
         if(i->second != zero) {
@@ -182,9 +179,10 @@ int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2)
                     status = Mult2basis(b, i->first, S_mul(x, i->second), p2); 
             }
       }
-    clearZeros(p2);
-        return(status);
     }
+    clearZeros(p2);
+
+        return(status);
 }
     
 /*******************************************************************/
@@ -201,13 +199,10 @@ int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2)
 /*******************************************************************/ 
 int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3)
 {
-    Scalar zero = S_zero();
-
     int status = OK;
 
-    if (IsZeroAE(p1) || IsZeroAE(p2))
-        return(OK);
-    else {
+    const Scalar zero = S_zero();
+    if (!IsZeroAE(p1) && !IsZeroAE(p2)) {
       map<Basis, Scalar>::const_iterator p1i;
       for(p1i = p1.begin(); p1i != p1.end(); p1i++) {
         if(p1i->second != zero) {
@@ -217,6 +212,7 @@ int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3)
         }
     }
     clearZeros(p3);
+
     return(status);
 }
 
