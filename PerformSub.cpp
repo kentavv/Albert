@@ -65,11 +65,11 @@ using namespace std;
 static void PrintPermutationList(void);
 static void PrintPermutation(int Var_num, Perm P);
 #endif
-static bool DoPermutation(const vector<Basis> &Substitution, const struct polynomial *The_ident, Eqn_list_node *The_list, int row, vector<vector<int> > &Permutation_list, list<Basis_pair> &Local_list);
+static void BuildPermutation(int row, vector<vector<int> > &Permutation_list, vector<vector<vector<int> > > &permutations);
 static void AppendLocalListToTheList(const list<Basis_pair> &Local_list, Eqn_list_node *L);
-static bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_ident, list<Basis_pair> &Local_list, vector<vector<int> > &Permutation_list);
-static int SubstituteWord(const vector<Basis> &Substitution, const struct term_node *W, list<Basis_pair> &running_list, vector<vector<int> > &Permutation_list);
-static void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struct term_node *W, vector<vector<int> > &Permutation_list);
+static bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_ident, list<Basis_pair> &Local_list, const vector<vector<int> > &Permutation_list);
+static int SubstituteWord(const vector<Basis> &Substitution, const struct term_node *W, list<Basis_pair> &running_list, const vector<vector<int> > &Permutation_list);
+static void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struct term_node *W, const vector<vector<int> > &Permutation_list);
 
 static int Max_deg_var = 0;
 
@@ -77,19 +77,26 @@ int PerformSubs(const vector<Basis> &S, const struct polynomial *F, Eqn_list_nod
 {
     Max_deg_var = Mdv;
 
-    vector<vector<int> > Permutation_list;
-    list<Basis_pair> Local_list;
-
+    vector<vector<vector<int> > > permutations;
     {
-      Permutation_list.resize(nVars);
-      for(int rr=0; rr<nVars; rr++) {
-        Permutation_list[rr].resize(Dv[rr]);
-        iota(Permutation_list[rr].begin(), Permutation_list[rr].end(), 1); // 1, 2, ...
+      vector<vector<int> > Permutation_list;
+      {
+        Permutation_list.resize(nVars);
+        for(int rr=0; rr<nVars; rr++) {
+          Permutation_list[rr].resize(Dv[rr]);
+          iota(Permutation_list[rr].begin(), Permutation_list[rr].end(), 1); // 1, 2, ...
+        }
       }
+
+      BuildPermutation(0, Permutation_list, permutations);
     }
 
-    /* Start of recursive call. */
-    bool rv = DoPermutation(S, F, L, 0, Permutation_list, Local_list);
+    list<Basis_pair> Local_list;
+
+    bool rv = true;
+    for(int i=0; i<(int)permutations.size(); i++) {
+      rv = max(rv, Expand(S, F, Local_list, permutations[i]));
+    }
 
     AppendLocalListToTheList(Local_list, L);
 
@@ -118,10 +125,8 @@ void PrintPermutation(int Var_num, Perm P)
 }
 #endif
 
-bool DoPermutation(const vector<Basis> &Substitution, const struct polynomial *The_ident, Eqn_list_node *The_list, int row, vector<vector<int> > &Permutation_list, list<Basis_pair> &Local_list)
+void BuildPermutation(int row, vector<vector<int> > &Permutation_list, vector<vector<vector<int> > > &permutations)
 {
-  bool rv = true;
-
   if(row == (int)Permutation_list.size()) {
 #if DEBUG_PERMUTATIONS
     PrintPermutationList();
@@ -129,14 +134,12 @@ bool DoPermutation(const vector<Basis> &Substitution, const struct polynomial *T
 
 /* Do the actual substitution using the current permutations of all variables. */
 
-    rv = Expand(Substitution, The_ident, Local_list, Permutation_list);
+    permutations.push_back(Permutation_list);
   } else {
     do {
-      rv = DoPermutation(Substitution, The_ident, The_list, row + 1, Permutation_list, Local_list);
-    } while(rv && next_permutation(Permutation_list[row].begin(), Permutation_list[row].end()));
+      BuildPermutation(row + 1, Permutation_list, permutations);
+    } while(next_permutation(Permutation_list[row].begin(), Permutation_list[row].end()));
   }
-
-  return rv;
 }
         
         
@@ -172,14 +175,16 @@ void AppendLocalListToTheList(const list<Basis_pair> &Local_list, Eqn_list_node 
  * We are getting to the core of the internals.
  */
 
-bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_ident, list<Basis_pair> &Local_list, vector<vector<int> > &Permutation_list)
+bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_ident, list<Basis_pair> &Local_list, const vector<vector<int> > &Permutation_list)
 {
+putchar('#');
     if (The_ident == NULL)
         return true;
 
     term_head *temp_head = The_ident->terms;
 
     while (temp_head) {
+putchar('*');
         list<Basis_pair> running_list;
 
         int alpha = temp_head->coef;
@@ -208,7 +213,7 @@ bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_iden
  * identity. 
  */
 
-int SubstituteWord(const vector<Basis> &Substitution, const struct term_node *W, list<Basis_pair> &running_list, vector<vector<int> > &Permutation_list)
+int SubstituteWord(const vector<Basis> &Substitution, const struct term_node *W, list<Basis_pair> &running_list, const vector<vector<int> > &Permutation_list)
 {
     Alg_element ae1;
     Alg_element ae2;
@@ -258,7 +263,7 @@ int SubstituteWord(const vector<Basis> &Substitution, const struct term_node *W,
 }
                         
 
-void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struct term_node *W, vector<vector<int> > &Permutation_list)
+void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struct term_node *W, const vector<vector<int> > &Permutation_list)
 {
     assert_not_null_nv(W);
 
