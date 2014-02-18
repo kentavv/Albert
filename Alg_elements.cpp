@@ -41,7 +41,7 @@ using std::map;
 static void clearZeros(Alg_element &p2);
 static int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2);
 #if 0
-void PrintAE(const Alg_element *p)
+void PrintAE(const Alg_element *p);
 #endif
 
 static void clearZeros(Alg_element &p) {
