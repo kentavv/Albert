@@ -86,7 +86,13 @@ int PerformSubs(const vector<Basis> &S, const struct polynomial *F, Eqn_list_nod
         Permutation_list.resize(nVars);
         for(int rr=0; rr<nVars; rr++) {
           Permutation_list[rr].resize(Dv[rr]);
+#if 0
           iota(Permutation_list[rr].begin(), Permutation_list[rr].end(), 1); // 1, 2, ...
+#else
+          for(int i=0; i<(int)Permutation_list[rr].size(); i++) {
+            Permutation_list[rr][i] = i+1;
+          }
+#endif
         }
       }
 
