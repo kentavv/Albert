@@ -49,6 +49,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <omp.h>
+
 #include "PerformSub.h"
 #include "Build_defs.h"
 #include "Alg_elements.h"
@@ -91,16 +93,20 @@ int PerformSubs(const vector<Basis> &S, const struct polynomial *F, Eqn_list_nod
       BuildPermutation(0, Permutation_list, permutations);
     }
 
-    list<Basis_pair> Local_list;
-
-    bool rv = true;
+    vector<list<Basis_pair> > Local_lists(permutations.size());
+#pragma omp parallel for schedule(dynamic)
     for(int i=0; i<(int)permutations.size(); i++) {
-      rv = max(rv, Expand(S, F, Local_list, permutations[i]));
+      Expand(S, F, Local_lists[i], permutations[i]);
+    }
+
+    list<Basis_pair> Local_list;
+    for(int i=0; i<(int)Local_lists.size(); i++) {
+      Local_list.splice(Local_list.end(), Local_lists[i]);
     }
 
     AppendLocalListToTheList(Local_list, L);
 
-    return rv;
+    return true;
 }
 
 
@@ -177,14 +183,14 @@ void AppendLocalListToTheList(const list<Basis_pair> &Local_list, Eqn_list_node 
 
 bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_ident, list<Basis_pair> &Local_list, const vector<vector<int> > &Permutation_list)
 {
-putchar('#');
+//putchar('#');
     if (The_ident == NULL)
         return true;
 
     term_head *temp_head = The_ident->terms;
 
     while (temp_head) {
-putchar('*');
+//putchar('*');
         list<Basis_pair> running_list;
 
         int alpha = temp_head->coef;
