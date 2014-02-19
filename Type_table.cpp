@@ -44,7 +44,7 @@ static void InitStoreblocksizes(void);
 static void FillTypecount(int Cur_scan_pos);
 static int InitTypetable(void);
 static int FillTypetable(int Cur_scan_pos, vector<int> &Temp_dttt_index);
-static int GetIndex(Type Pntr);
+static int GetIndex(const Type Pntr);
 static void PrintType(Type Pntr, FILE *filePtr);
 #if 0
 static void PrintTypetable(void);
@@ -185,7 +185,7 @@ int GetDegreeName(Name n)
 }
 
 
-Name TypeToName(Type T)
+Name TypeToName(const Type T)
 {
     return(Type_table_index[GetIndex(T)]);
 }
@@ -401,7 +401,7 @@ int FillTypetable(int Cur_scan_pos, vector<int> &Temp_dttt_index)
 /* RETURNS:                                                        */
 /*     Index into the Type_table.                                  */
 /*******************************************************************/ 
-int GetIndex(Type Pntr)
+int GetIndex(const Type Pntr)
 {
     assert_not_null(Pntr);
 
