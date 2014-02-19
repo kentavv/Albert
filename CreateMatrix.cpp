@@ -77,7 +77,7 @@ static void PrintTheMatrix(void);
 
 static Matrix TheMatrix;
 
-int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+int CreateTheMatrix(const Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
     TheMatrix = NULL;
 
@@ -108,7 +108,7 @@ int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, 
    a pointer internal to this module to be altered and then copy it back
    before returning to SolveEquations() in Build.c */
 
-int SparseCreateTheMatrix(Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+int SparseCreateTheMatrix(const Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
     if (!Eq_list || !Eq_list->basis_pairs)
         return(OK);
