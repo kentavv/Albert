@@ -37,8 +37,8 @@ struct Eqn_list_node{
     Eqn_list_node *next;
 }; 
 
-int CreateTheMatrix(Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
-int SparseCreateTheMatrix(Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
+int CreateTheMatrix(const Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
+int SparseCreateTheMatrix(const Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
 void DestroyTheMatrix(void);
 int GetCol(const std::vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis);
 
