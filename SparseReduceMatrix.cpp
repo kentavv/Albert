@@ -62,39 +62,12 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
         return(OK);
     }
 
-#if 0
-{
-  putchar('\n');
-  int n = 0;
-  int nz = 0;
-  int nnz = 0;
-  int nrz = 0;
-  int nzc = 0;
-  for(int i=0; i<nRows; i++) {
-    if(SM[i].empty()) nrz++; 
-    n += SM[i].size();
-    SparseRow::const_iterator ii;
-//  printf("%d %d\n", i, SM[i].size());
-    for(ii=SM[i].begin(); ii!=SM[i].end(); ii++) {
-      if(i == 2636) {
-        printf("<%d %d>", ii->column, ii->element);
-      }
-      if(ii->element == 0) nz++;
-      if(ii->element != 0) nnz++;
-      if(ii->column == 0) nzc++;
-    }
-  }
-  printf("A n:%d nz:%d nrz:%d nnz:%d nzc:%d nRows:%d nCols:%d\n", n, nz, nrz, nnz, nzc, nRows, nCols);
-}
-#endif
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
     int nextstairrow = 0;
     for (int i=0;i<nCols;i++)
     {
-//struct tms aa, bb, cc;
-//times(&aa);
         int j;
         for (j=nextstairrow; j < nRows; j++)
         {
@@ -103,7 +76,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
                 break;
             }
         }
-//times(&bb);
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
@@ -113,41 +85,9 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
            SparseKnockOut(SM, nextstairrow, i, nRows);
            nextstairrow++;
         }
-//times(&cc);
-//long uaa=aa.tms_utime;
-//long ubb=bb.tms_utime;
-//long ucc=cc.tms_utime;
-//long saa=aa.tms_stime;
-//long sbb=bb.tms_stime;
-//long scc=cc.tms_stime;
-//printf("%ld %ld %ld  %ld %ld %ld\t\t", uaa, ubb, ucc, ubb-uaa, ucc-uaa, ucc-ubb);
-//printf("%ld %ld %ld  %ld %ld %ld\n", saa, sbb, scc, sbb-saa, scc-saa, scc-sbb);
     }
     *Rank=nextstairrow;
 
-#if 0
-{
-  int n = 0;
-  int nz = 0;
-  int nnz = 0;
-  int nrz = 0;
-  int nzc = 0;
-  for(int i=0; i<nRows; i++) {
-    if(SM[i].empty()) nrz++;
-    n += SM[i].size();
-    SparseRow::const_iterator ii;
-    for(ii=SM[i].begin(); ii!=SM[i].end(); ii++) {
-      if(i == 2636) {
-        printf("<%d %d>", ii->column, ii->element);
-      }
-      if(ii->element == 0) nz++;
-      if(ii->element != 0) nnz++;
-      if(ii->column == 0) nzc++;
-    }
-  }
-  printf("B n:%d nz:%d nrz:%d nnz:%d nzc:%d nRows:%d nCols:%d\n", n, nz, nrz, nnz, nzc, nRows, nCols);
-}
-#endif
     return(OK);
 }
 
@@ -172,58 +112,6 @@ void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor)
       the node.
 */
 /*********************************************************************/
-#if 0
-void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
-{
-  /* check for zero factor */
-
-  if (Factor == S_zero()) {
-    return;
-  }
-
-  /* get the beginning of the two rows to work with */
-
-  const SparseRow &r1 = SM[Row1];
-  SparseRow &r2 = SM[Row2];
-
-  SparseRow::const_iterator r1i = r1.begin();
-  SparseRow::iterator r2i = r2.begin();
-
-  for(; r1i != r1.end() && r2i != r2.end();) {
-    if(r1i->column == r2i->column) {
-      Scalar x = S_add(r2i->element, S_mul(Factor, r1i->element));
-      if(x == S_zero()) {
-        r1i++;
-        r2i = r2.erase(r2i);
-      } else {
-        r2i->element = x;
-        r1i++;
-        r2i++;
-      }
-    } else if(r1i->column < r2i->column) {
-      Scalar x = S_mul(Factor, r1i->element);
-      //if(x != S_zero()) {
-        Node n = *r1i;
-        n.element = x;
-        r2i = r2.insert(r2i, n);
-      //}
-      r1i++;
-    } else { //if(r1i->column > r2i->column) {
-      r2i++;
-    }
-  }
-
-  // append r2 with remaining r1 nodes
-  for(; r1i != r1.end(); r1i++) {
-    Scalar x = S_mul(Factor, r1i->element);
-    //if(x != S_zero()) {
-      Node n = *r1i;
-      n.element = x;
-      r2.push_back(n);
-    //}
-  }
-}
-#else
 void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
 {
   /* check for zero factor */
@@ -284,7 +172,6 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
 
   r2 = tmp; 
 }
-#endif
 
 void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows)
 {
