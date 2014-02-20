@@ -121,22 +121,11 @@ development through helpful discussions.\n\n"
 \t\tInvoking Albert\n\n\
 Albert is invoked on the command line by giving its name\n\
 followed by two arguments.\n\n\
-albert -d dimlimit -a dirname\n\n\
+albert -a dirname\n\n\
 The arguments are optional.  Here, dirname refers to the\n\
 directory location where albert will get the \".albert\"\n\
 file.  If this argument is not given, albert will look for\n\
 it in the current directory.\n\n\
-Here dimlimit refers to the dimension limit that albert will\n\
-use.  When the build command is given, and a construction is\n\
-begun for an algebra whose dimension exceeds this limit, the\n\
-construction will fail.  This dimension limit will be in\n\
-effect for the duration of the session.  Thus the user should\n\
-give an adequate setting.  However, setting this number too\n\
-large will cause albert to run extraordinarily slow, so some\n\
-care should be used.\n\n\
-Legitimate values for dimension limits are multiples of 500\n\
-up to 10,000.  If no dimension limit is given, the default\n\
-is 500.\n\n"
 },
 {
     "b",
@@ -152,42 +141,6 @@ A problem type must have been defined with the generators\n\
 command.  Likely reasons for this command to fail are\n\
 insufficient memory, insufficient time, or exceeding the\n\
 dimension limit.\n\n"
-},
-{
-    "c",
-"\n\n\
-\t\tchange\n\n\
-Most of the time Albert's computing time and memory are spent\n\
-performing matrix computations.  These matrices tend to be\n\
-sparse (i.e. have relatively few nonzero entries).  There are\n\
-two ways to store matrices:  As ordinary two-dimensional\n\
-arrays, in which all matrix elements are stored, or\n\
-alternately using a data structure in which only the nonzero\n\
-entries are stored.  Of course in such a sparse\n\
-implementation, there is more overhead associated with each\n\
-entry.  Consequently, for dense matrices the traditional\n\
-two-dimensional array would use less memory, while a sparse\n\
-implementation would be more efficient for sparse matrices.\n\n\
-Albert can use either matrix implementation.  With the sparse\n\
-method, the overhead per entry is now about eight times that\n\
-of the traditional method, and so the sparse implementation\n\
-will be most beneficial for matrices whose density never\n\
-exceeds 12%.\n\n\
-The matrix densities that occur in Albert vary wildly.  Thus,\n\
-a sparse method will sometimes benefit memory utilization,\n\
-and sometimes it will hinder memory utilization.  For this\n\
-reason, the change command allows the user to toggle between\n\
-the two methods.  This switch will not effect the results of\n\
-the computation, only the time and memory needed by Albert to\n\
-obtain the results.  Since many interesting results often\n\
-seem to be just beyond Albert's \"reach\", it is hoped that\n\
-this fine tuning knob may enable more problems to be solved.\n\n\
-A useful methodology is to begin a problem with the new\n\
-(default) sparse setting.  It is likely this will be the best\n\
-method.  But, if the problem is unable to finish due to lack\n\
-of memory, there is a chance the \"change\" toggle will\n\
-help, especially if the user feels that the matrix densities\n\
-are exceeding 12%.\n\n"
 },
 {
     "d",
