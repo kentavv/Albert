@@ -10,6 +10,7 @@ CXX=g++
 #CFLAGS=-g -O0 -Wall
 #CFLAGS=-g -O -Wall
 CFLAGS=-g -O2 -Wall -fopenmp
+#CFLAGS=-g -O2 -Wall -fopenmp --coverage
 #CFLAGS=-g -O2 -Wall -fopenmp -fprofile-generate -fprofile-correction
 #CFLAGS=-g -O2 -Wall -fopenmp -fprofile-use -fprofile-correction
 #CFLAGS=-g -O3 -flto -Wall
@@ -17,7 +18,10 @@ CFLAGS=-g -O2 -Wall -fopenmp
 CXXFLAGS=$(CFLAGS)
 #CXXFLAGS=$(CFLAGS) -std=c++11
 
+#lcov --capture --directory . --output-file coverage.info
+
 LDFLAGS=-fopenmp
+#LDFLAGS=-fopenmp --coverage
 #LDFLAGS=-fopenmp -fprofile-generate -fprofile-correction
 #LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
 #LDFLAGS=-g -O3 -flto
@@ -54,10 +58,10 @@ Basis_table.o: Basis_table.cpp Basis_table.h Build_defs.h Generators.h \
 Build.o: Build.cpp Build.h Id_routines.h Po_parse_exptext.h Type_table.h \
  Build_defs.h Basis_table.h ExtractMatrix.h CreateMatrix.h \
  GenerateEquations.h Mult_table.h Alg_elements.h Scalar_arithmetic.h \
- ReduceMatrix.h SparseReduceMatrix.h Debug.h
+ SparseReduceMatrix.h Debug.h
 CreateMatrix.o: CreateMatrix.cpp CreateMatrix.h Build_defs.h \
  Basis_table.h Memory_routines.h Po_prod_bst.h Scalar_arithmetic.h \
- SparseReduceMatrix.h Type_table.h pair_present.h
+ SparseReduceMatrix.h Type_table.h
 CreateSubs.o: CreateSubs.cpp CreateSubs.h Build_defs.h CreateMatrix.h \
  Po_parse_exptext.h Type_table.h Memory_routines.h Po_prod_bst.h \
  PerformSub.h GenerateEquations.h Debug.h
@@ -88,7 +92,6 @@ Multpart.o: Multpart.cpp Multpart.h Build_defs.h CreateSubs.h \
  Po_prod_bst.h Debug.h
 Mult_table.o: Mult_table.cpp Mult_table.h Build_defs.h Alg_elements.h \
  Scalar_arithmetic.h Help.h Memory_routines.h Po_prod_bst.h Basis_table.h
-pair_present.o: pair_present.cpp pair_present.h
 PerformSub.o: PerformSub.cpp PerformSub.h Build_defs.h CreateMatrix.h \
  GenerateEquations.h Po_parse_exptext.h Alg_elements.h \
  Scalar_arithmetic.h Memory_routines.h Po_prod_bst.h Debug.h
@@ -109,8 +112,6 @@ Po_routines.o: Po_routines.cpp Po_routines.h Po_parse_exptext.h \
 Po_semantics.o: Po_semantics.cpp Po_parse_poly.h Po_syn_stack.h \
  Po_semantics.h Memory_routines.h Po_prod_bst.h
 Po_syn_stack.o: Po_syn_stack.cpp Po_syn_stack.h Po_parse_poly.h
-ReduceMatrix.o: ReduceMatrix.cpp ReduceMatrix.h Build_defs.h \
- CreateMatrix.h Scalar_arithmetic.h
 Scalar_arithmetic.o: Scalar_arithmetic.cpp Scalar_arithmetic.h \
  Build_defs.h driver.h
 SparseReduceMatrix.o: SparseReduceMatrix.cpp SparseReduceMatrix.h \
