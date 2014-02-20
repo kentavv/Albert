@@ -46,7 +46,7 @@ using std::vector;
 #include "SparseReduceMatrix.h"
 #include "Debug.h"
 
-static int InitializeStructures(void);
+static int InitializeStructures(Type Target_type);
 static long ElapsedTime(void);
 static void PrintProgress(int i, int n);
 static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
@@ -60,8 +60,6 @@ static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name
 extern int sparse;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
-
-static Type Target_type;
 
 static time_t Start_time; 
 static Basis Current_dimension;
@@ -80,23 +78,20 @@ static Basis Current_dimension;
 /*     For each degree, New Basis are created and New Products are */
 /*     entered.                                                    */ 
 /*******************************************************************/
-int Build(list<id_queue_node> &Idq_node, Type Ttype)
+int Build(list<id_queue_node> &Idq_node, Type Target_type)
 {
     int status = OK;
-    int i;
 
     Start_time = time(NULL);
     const char *convtime = ctime(&Start_time);
     printf("\nBuild begun at %s\n", convtime);
     printf("Degree    Current Dimension   Elapsed Time(in seconds) \n");
 
-    Target_type = Ttype;
-
-    status = InitializeStructures();
+    status = InitializeStructures(Target_type);
 
     int Target_degree = GetDegreeName(TypeToName(Target_type));
     if (status == OK) {
-        for (i=1; i <= Target_degree; i++)  {
+        for (int i=1; i <= Target_degree; i++)  {
             status = ProcessDegree(i, Idq_node);
 	    if(sigIntFlag == 1){
 /*	      printf("Returning from Build().\n");*/
@@ -125,12 +120,12 @@ int Build(list<id_queue_node> &Idq_node, Type Ttype)
     Print_MultTable();
 #endif
 
-    if (status == OK)
-    {
+    if (status == OK) {
         printf("Build completed.\n");
+    } else {
+        printf("Build incomplete.\n");
     }
-    else
-        printf("Build incomplete\n");
+
     return (status);
 }
 
@@ -142,7 +137,7 @@ int Build(list<id_queue_node> &Idq_node, Type Ttype)
 /*      Type_table -- Type Table for the Given Target Type.        */
 /*      Basis_table -- to 0's.                                     */
 /*******************************************************************/
-int InitializeStructures(void)
+int InitializeStructures(Type Target_type)
 {
     int status = OK; 
 
