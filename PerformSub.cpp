@@ -67,24 +67,33 @@ using namespace std;
 static void PrintPermutationList(void);
 static void PrintPermutation(int Var_num, Perm P);
 #endif
-static void BuildPermutation(int row, vector<vector<int> > &Permutation_list, vector<vector<vector<int> > > &permutations);
-static void AppendLocalListToTheList(const vector<vector<Basis_pair> > &Local_list, Eqn_list_node *L);
+//void BuildPermutationLists(int nVars, const int *Dv, vector<vector<vector<int> > > &permutations);
+static void BuildPermutations(int row, vector<vector<int> > &Permutation_list, vector<vector<vector<int> > > &permutations);
+//static void AppendLocalListToTheList(const vector<vector<Basis_pair> > &Local_list, Eqn_list_node *L);
 static bool Expand(const vector<Basis> &Substitution, const struct polynomial *The_ident, vector<Basis_pair> &Local_list, const vector<vector<int> > &Permutation_list);
 static int SubstituteWord(const vector<Basis> &Substitution, const struct term_node *W, vector<Basis_pair> &running_list, const vector<vector<int> > &Permutation_list);
 static void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struct term_node *W, const vector<vector<int> > &Permutation_list);
 
 static int Max_deg_var = 0;
 
-int PerformSubs(const vector<Basis> &S, const struct polynomial *F, Eqn_list_node *L, int nVars, int Mdv, const int *Dv)
+int PerformSubs(const vector<Basis> &S, const struct polynomial *F, int nVars, int Mdv, const int *Dv, vector<vector<vector<int> > > &permutations, vector<vector<Basis_pair> > &Local_lists, int i)
 {
+//    vector<vector<vector<int> > > permutations;
+//    BuildPermutationLists(nVars, Dv, permutations);
+
     Max_deg_var = Mdv;
 
-    vector<vector<vector<int> > > permutations;
-    {
-      vector<vector<int> > Permutation_list;
-      {
-        Permutation_list.resize(nVars);
-        for(int rr=0; rr<nVars; rr++) {
+//#pragma omp parallel for schedule(dynamic, 2)
+ //   for(int i=0; i<(int)permutations.size(); i++) {
+      Expand(S, F, Local_lists[i], permutations[i]);
+  //  }
+
+    return true;
+}
+
+void BuildPermutationLists(int nVars, const int *Dv, vector<vector<vector<int> > > &permutations) {
+      vector<vector<int> > Permutation_list(nVars);
+      for(int rr=0; rr<nVars; rr++) {
           Permutation_list[rr].resize(Dv[rr]);
 #if 0
           iota(Permutation_list[rr].begin(), Permutation_list[rr].end(), 1); // 1, 2, ...
@@ -93,23 +102,10 @@ int PerformSubs(const vector<Basis> &S, const struct polynomial *F, Eqn_list_nod
             Permutation_list[rr][i] = i+1;
           }
 #endif
-        }
       }
 
-      BuildPermutation(0, Permutation_list, permutations);
+      BuildPermutations(0, Permutation_list, permutations);
     }
-
-    vector<vector<Basis_pair> > Local_lists(permutations.size());
-#pragma omp parallel for schedule(dynamic, 2)
-    for(int i=0; i<(int)permutations.size(); i++) {
-      Expand(S, F, Local_lists[i], permutations[i]);
-    }
-
-    AppendLocalListToTheList(Local_lists, L);
-
-    return true;
-}
-
 
 #if DEBUG_PERMUTATIONS
 void PrintPermutationList(void)
@@ -132,7 +128,7 @@ void PrintPermutation(int Var_num, Perm P)
 }
 #endif
 
-void BuildPermutation(int row, vector<vector<int> > &Permutation_list, vector<vector<vector<int> > > &permutations)
+void BuildPermutations(int row, vector<vector<int> > &Permutation_list, vector<vector<vector<int> > > &permutations)
 {
   if(row == (int)Permutation_list.size()) {
 #if DEBUG_PERMUTATIONS
@@ -144,7 +140,7 @@ void BuildPermutation(int row, vector<vector<int> > &Permutation_list, vector<ve
     permutations.push_back(Permutation_list);
   } else {
     do {
-      BuildPermutation(row + 1, Permutation_list, permutations);
+      BuildPermutations(row + 1, Permutation_list, permutations);
     } while(next_permutation(Permutation_list[row].begin(), Permutation_list[row].end()));
   }
 }

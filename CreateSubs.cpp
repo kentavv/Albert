@@ -57,56 +57,55 @@ using std::vector;
 #include "Po_parse_exptext.h"
 #include "Debug.h"
 
-static void DoCreateSubs(const struct polynomial *F, int row, int col, vector<Basis> &Substitution);
+//static void BuildSubs(const Name *Set_partitions, const int *Deg_var, int row, int col, vector<Basis> &tmp, vector<vector<Basis> > &Substitutions);
 #if DEBUG_SUBSTITUTION
 static void PrintSubstitution(const vector<Basis> &Substitution);
 #endif
 
-static const int *Deg_var = NULL;
-static Eqn_list_node *The_list = NULL;
-static int Num_vars = 0;
-static Name *Set_partitions = NULL;
-static int Max_deg_var = 0;
-static int status = OK;
-
-int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int Nv, int Mdv, Name *Type_lists, const int *Deg_var_types)
+int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int nVars, int maxDegVar, const vector<vector<Basis> > &all_Substitutions, const int *Deg_var)
 {
-    The_list = L;
-    Num_vars = Nv;
-    Set_partitions = Type_lists;
-    Deg_var = Deg_var_types;
-    Max_deg_var = Mdv;
+    int status = OK;
+ 
+    vector<vector<vector<Basis_pair> > > res(all_Substitutions.size());
+    {
+      vector<vector<vector<int> > > permutations;
+      {
+        BuildPermutationLists(nVars, Deg_var, permutations);
+          for(int i=0; i<(int)all_Substitutions.size(); i++) {
+            res[i].resize(permutations.size());
+          }
+      }
 
-    status = OK;
-   
-    vector<Basis> Substitution(Num_vars * Max_deg_var);
+//printf("<%d %d %d>\n", all_Substitutions.size(), Substitutions.size(), permutations.size());
+#pragma omp parallel for schedule(dynamic, 2) collapse(2)
+        for(int i=0; i<(int)all_Substitutions.size(); i++) {
+          for(int j=0; j<(int)permutations.size(); j++) {
+            status = PerformSubs(all_Substitutions[i], F, nVars, maxDegVar, Deg_var, permutations, res[i], j);
+          }
+        }
+      }
 
-    DoCreateSubs(F, 0, 0, Substitution);  /* Start of recursive call. */
+      for(int i=0; i<(int)all_Substitutions.size(); i++) {
+        vector<vector<Basis_pair> > &Local_lists = res[i];
+        AppendLocalListToTheList(Local_lists, L);
+      }
 
     return(status);
 }
 
-void DoCreateSubs(const struct polynomial *F, int row, int col, vector<Basis> &Substitution)
-{
-    if (status != OK)
-        return;
-
-    if (row >= Num_vars) {
+void BuildSubs(const vector<Name> &Set_partitions, int maxDegVar, const int *Deg_var, int row, int col, vector<Basis> &tmp, int nVars, vector<vector<Basis> > &Substitutions) {
+    if (row >= nVars) {
 #if DEBUG_SUBSTITUTION
-        PrintSubstitution(Substitution);
+        PrintSubstitution(tmp);
 #endif
-
-/* Now for each substitution records, perform the substitution. */
-
-        status = PerformSubs(Substitution, F, The_list, Num_vars, Max_deg_var, Deg_var);
-    }
-    else if (col >= Deg_var[row])
-        DoCreateSubs(F, row+1, 0, Substitution);
+      Substitutions.push_back(tmp);
+    } else if (col >= Deg_var[row])
+        BuildSubs(Set_partitions, maxDegVar, Deg_var, row+1, 0, tmp, nVars, Substitutions);
     else {
-        Basis b = FirstBasis(Set_partitions[col*Num_vars + row]); 
-        while ((b != 0) && (status == OK)) {
-            Substitution[row*Max_deg_var + col] = b;
-            DoCreateSubs(F, row, col+1, Substitution);
+        Basis b = FirstBasis(Set_partitions[col*nVars + row]);
+        while (b != 0) {
+            tmp[row*maxDegVar + col] = b;
+            BuildSubs(Set_partitions, maxDegVar, Deg_var, row, col+1, tmp, nVars, Substitutions);
             b = NextBasisSameType(b);
         }
     }
