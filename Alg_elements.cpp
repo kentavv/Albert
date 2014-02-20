@@ -48,8 +48,7 @@ static void clearZeros(Alg_element &p) {
     map<Basis, Scalar>::iterator i;
     for(i = p.begin(); i != p.end();) {
       if(i->first == 0 || i->second == 0) {
-        map<Basis, Scalar>::iterator t = i++;
-        p.erase(t);
+        p.erase(i++);
         printf("Zero removed\n"); 
       } else {
         i++;
