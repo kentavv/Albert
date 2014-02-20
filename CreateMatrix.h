@@ -35,9 +35,7 @@ typedef struct {
 typedef std::vector<Basis_pair> Equation;
 typedef std::vector<Equation> Equations;
 
-int CreateTheMatrix(const Equations &equations, Matrix *Mptr, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
-int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
-void DestroyTheMatrix(void);
+int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
 int GetCol(const std::vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis);
 
 #endif

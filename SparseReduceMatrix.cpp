@@ -43,7 +43,7 @@ using std::lower_bound;
 
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 static void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2);
-static void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows);
+static void SparseKnockOut(SparseMatrix &SM, int row, int col);
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
 static void Print_Rows(int Row1, int Row2, int nCols);
@@ -55,9 +55,9 @@ static void Print_Node(NODE_PTR Prt_Node);
 #include <time.h>
 #include <sys/times.h>
 
-int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
+int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 {
-    if(nRows == 0 || nCols == 0)
+    if(SM.empty() || nCols == 0)
     {
         return(OK);
     }
@@ -69,7 +69,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
     for (int i=0;i<nCols;i++)
     {
         int j;
-        for (j=nextstairrow; j < nRows; j++)
+        for (j=nextstairrow; j < (int)SM.size(); j++)
         {
             if(Get_Matrix_Element(SM, j,i) != S_zero())
             {
@@ -79,10 +79,10 @@ int SparseReduceMatrix(SparseMatrix &SM, int nRows, int nCols, int *Rank)
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-        if (j < nRows)
+        if (j < (int)SM.size())
         {
            SM[nextstairrow].swap(SM[j]);
-           SparseKnockOut(SM, nextstairrow, i, nRows);
+           SparseKnockOut(SM, nextstairrow, i);
            nextstairrow++;
         }
     }
@@ -173,7 +173,7 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
   r2 = tmp; 
 }
 
-void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows)
+void SparseKnockOut(SparseMatrix &SM, int row, int col)
 {
     Scalar x = Get_Matrix_Element(SM, row, col);
     if(x != S_one())
@@ -185,7 +185,7 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col, int nRows)
     /* try to knockout elements in column in the rows above */ 
 
 #pragma omp parallel for schedule(dynamic, 10)
-    for (int j=0; j < nRows; j++) {
+    for (int j=0; j < (int)SM.size(); j++) {
       if(j != row) {
         SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
       }

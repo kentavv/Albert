@@ -68,7 +68,6 @@ static void sigCatch(int x);
 
 
 Scalar Field = DEFAULT_FIELD;          /* Build_defs.h */
-int sparse = TRUE;
 
 int sigIntFlag = 0;		/* TW 10/8/93 - flag for Ctrl-C */
 jmp_buf env;
@@ -351,33 +350,6 @@ int main(int argc, char *argv[])
                      printf("Field not changed.");
                  break;
 
-            case 'c':
-                 if (!Substr(Command,"change")) {
-                     printf("Illegal command.");
-                     break;
-                 }
-                 printf("Changing from ");
-                 if (sparse)
-                 {
-                    printf("Sparse ");
-                 }
-                 else
-                 {
-                    printf("Static ");
-                 }
-		 sparse=!sparse;
-                 printf("to ");
-                 if (sparse)
-                 {
-                    printf("Sparse ");
-                 }
-                 else
-                 {
-                    printf("Static ");
-                 }
-                 printf("matrix method.\n");
-
-                 break;
             case 'b':
 
 /* "build". Build the multiplication table. */
@@ -434,14 +406,6 @@ int main(int argc, char *argv[])
                  else
                      printf("No defining identities.\n");
                  printf("Field = %d.\n",Field);
-                 if (sparse)
-                 {
-                    printf("Using Sparse matrix structure.\n");
-                 }
-                 else
-                 {
-                    printf("Using Static matrix structure.\n");
-                 }
 
 /* Print the Problem type in a good looking format!  */
 

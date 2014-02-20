@@ -54,11 +54,6 @@ static void InstallDegree1(void);
 static int ProcessType(Name n, const list<id_queue_node> &First_id_node);
 static int SolveEquations(Equations &equations, Name n);
 
-/*****************************
- These variables are for the sparse implementation
-******************************/
-extern int sparse;
-
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 static time_t Start_time; 
@@ -301,27 +296,14 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 /*******************************************************************/
 int SolveEquations(Equations &equations, Name n)
 {
-    int rows = 0;              /* Size of matrix */
     int cols = 0;              /* Size of matrix */
-    Matrix mptr = NULL;        /* Pointer to matrix */
-    SparseMatrix SM;
     vector<Unique_basis_pair> BPCptr; /* pointer to BPtoCol */
     int rank = 0;
-    int status = OK;
 
-/* CreateMatrix will initialize rows, cols, m, BP
-   and fill in matrix and BPtoCol */
+/* CreateMatrix will initialize rows, cols, m, BP and fill in matrix and BPtoCol */
 
-/* determine the matrix structure */
-
-   if (!sparse)
-   {
-     status = CreateTheMatrix(equations, &mptr, &rows, &cols, BPCptr, n);
-   }
-   else
-   {
-     status = SparseCreateTheMatrix(equations, SM, &rows, &cols, BPCptr, n);
-   }
+   SparseMatrix SM;
+   int status = SparseCreateTheMatrix(equations, SM, &cols, BPCptr, n);
 
    equations.clear();
 
@@ -330,21 +312,9 @@ int SolveEquations(Equations &equations, Name n)
    PrintTheMatrix();
 #endif
 
-
-/* determine the matrix structure */
-
-   if (status == OK)
-   {
-/* determine the matrix structure */
-printf("Matrix:(%4d X %4d)", rows, cols); fflush(NULL);
-      if (!sparse)
-      {
-         status = ReduceTheMatrix(mptr, rows, cols, &rank);
-      }
-      else
-      {
-         status = SparseReduceMatrix(SM,rows,cols,&rank);
-      }
+   if (status == OK) {
+     printf("Matrix:(%4d X %4d)", (int)SM.size(), cols); fflush(NULL);
+     status = SparseReduceMatrix(SM,cols,&rank);
    }
 
 #if DEBUG_MATRIX
@@ -352,26 +322,12 @@ printf("Matrix:(%4d X %4d)", rows, cols); fflush(NULL);
 #endif
 
 /* ExtractMatrix will expand basis table & MultTable ! */
-  if (status == OK) 
-  {
-/* determine the matrix structure */
-     if (!sparse)
-     {
-        status = ExtractFromTheMatrix(mptr, rows, cols, rank, n, BPCptr);	
-     }
-     else
-     {
-	status = SparseExtractFromMatrix(SM,rows,cols,rank,n, BPCptr);
-     }
+  if (status == OK) {
+	status = SparseExtractFromMatrix(SM,cols,rank,n, BPCptr);
  }
 #if DEBUG_MATRIX
    PrintDependent();
 #endif
-
-      if (!sparse)
-      {
-         DestroyTheMatrix();
-      }
 
    return(status);
 }

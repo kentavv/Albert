@@ -67,7 +67,6 @@ static void FillPairPresent(const Equations &equations, int &Num_unique_basis_pa
 static int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis_pair> &ColtoBP);
 static int AreBasisElements(Degree d);
 static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr);
-static int FillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs);
 static int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, SparseMatrix &SM);
 #if 0
 static void PrintPairPresent(void);
@@ -75,37 +74,12 @@ static void PrintColtoBP(void);
 static void PrintTheMatrix(void);
 #endif
 
-static Matrix TheMatrix;
-
-int CreateTheMatrix(const Equations &equations, Matrix *Mptr, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
-{
-    TheMatrix = NULL;
-
-    ZeroOutPairPresent();
-
-    int Num_unique_basis_pairs;
-    FillPairPresent(equations, Num_unique_basis_pairs);
-/*
-    PrintPairPresent();	
-*/
-    if (CreateColtoBP(n, Num_unique_basis_pairs, ColtoBP) != OK)
-        return(0);
-    if (FillTheMatrix(equations, ColtoBP, Num_unique_basis_pairs) != OK)
-        return(0);
-
-    *Mptr = TheMatrix;
-    *Rows = equations.size();
-    *Cols = Num_unique_basis_pairs; 
-
-    return(OK);
-}
-
 /* Added by DCL (8/92). This is virtually identical to CreateTheMatrix()
    except that we call SparseFillTheMatrix() and copy the Matrix ptr to
    a pointer internal to this module to be altered and then copy it back
    before returning to SolveEquations() in Build.c */
 
-int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
     ZeroOutPairPresent();
 
@@ -121,17 +95,9 @@ int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Row
 
     /* pass locally derived values back to the calling routine */
 
-    *Rows = equations.size();
     *Cols = Num_unique_basis_pairs; 
 
     return(OK);
-}
-
-
-void DestroyTheMatrix(void)
-{
-    assert_not_null_nv(TheMatrix);
-    free(TheMatrix);
 }
 
 
@@ -216,48 +182,6 @@ void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_
     }
 }
             
-
-int FillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs)
-{
-#if 0
-    int i,j;
-    int eq_number = 0;
-    int col;
-    int thematrix_index;
-    Scalar x;
-
-    if ((Num_unique_basis_pairs == 0) || equations.empty())
-        return(OK);
-    TheMatrix = (Scalar *) (Mymalloc(Num_equations*Num_unique_basis_pairs
-                                   *sizeof(Scalar)));
-    assert_not_null(TheMatrix);
-    for (i=0;i<Num_equations;i++)
-        for (j=0;j<Num_unique_basis_pairs;j++) 
-            TheMatrix[i * Num_unique_basis_pairs + j] = 0;
-
-    const Eqn_list_node *temp = Eq_list;
-    while (temp) {
-        i = 0;
-        if (temp->basis_pairs == NULL)
-			{
-            return(OK);
-			}
-        while (temp->basis_pairs[i].coef != 0) {
-            col = GetCol(ColtoBP,
-                         temp->basis_pairs[i].left_basis,
-                         temp->basis_pairs[i].right_basis);
-            thematrix_index = eq_number * Num_unique_basis_pairs + col;
-            x = TheMatrix[thematrix_index];
-            TheMatrix[thematrix_index] = S_add(x, temp->basis_pairs[i].coef);
-            i++;
-        }
-        eq_number++;
-        temp = temp->next;
-    }
-#endif
-
-    return(OK);
-}
 
 int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, SparseMatrix &SM)
 {

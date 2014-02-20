@@ -36,12 +36,10 @@ using namespace std;
 #include "Type_table.h"
 
 static void SparseFillDependent(const SparseMatrix &SM, vector<int> &Dependent);
-static void FillDependent(vector<int> &Dependent);
 #if 0
 static void PrintDependent(void);
 #endif
 static void ProcessIndependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
-static void ProcessDependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
 static void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames);
 static void ProcessOtherIndependentBasis(const vector<Unique_basis_pair> &ColtoBP, int J);
 
@@ -50,59 +48,16 @@ static Type T1;
 static Type T2;
 static int Cur_type_degree;
 static int Cur_type_len;
-static int Num_rows;
 static int Num_cols;
 static int MatrixRank;
-static Matrix TheMatrix = NULL;
-
-int ExtractFromTheMatrix(const Matrix Mptr, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
-{
-    TheMatrix = Mptr; 
-    Num_rows = Rows;
-    Num_cols = Cols;
-    MatrixRank = Rank;
-
-    Cur_type_len = GetTargetLen();
-    Cur_type = (Type) Mymalloc(Cur_type_len * sizeof(Degree));
-    assert_not_null(Cur_type);
-
-    T1 = (Type) Mymalloc((Cur_type_len + 2) * sizeof(Degree)); /* +2 to avoid buffer overflow */
-    assert_not_null(T1);
-
-    NameToType(N,T1);
-    NameToType(N,Cur_type);
-
-    Cur_type_degree = GetDegree(Cur_type);
-    T2 = (Type) Mymalloc(Cur_type_len * sizeof(Degree));
-    assert_not_null(T2);
-
-    if (Num_cols > 0 ) {
-        vector<int> Dependent(Num_cols, 0);
-        vector<Basis> BasisNames(Num_cols, 0);
-
-        FillDependent(Dependent);
-        ProcessIndependentBasis(Dependent, ColtoBP, BasisNames);
-        ProcessDependentBasis(Dependent, ColtoBP, BasisNames);
-    }
-
-    ProcessOtherIndependentBasis(ColtoBP, 0);
-
-    free(Cur_type);
-    free(T1);
-    free(T2);
-
-    return(OK);
-}
-
 
 /* Added (8/92) by DCL. This is virtually identical to ExtractFromMatrix()
    except for the calls to SparseFillDependent() and SparseProcessDependent-
    Basis(). Operation are performed on a locally visible pointer to the 
    matrix and then that pointer is copied to the one passed in upon exit */
    
-int SparseExtractFromMatrix(const SparseMatrix &SM, int Rows, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
+int SparseExtractFromMatrix(const SparseMatrix &SM, int Cols, int Rank, Name N, const vector<Unique_basis_pair> &ColtoBP)
 {
-    Num_rows = Rows;
     Num_cols = Cols;
     MatrixRank = Rank;
 
@@ -141,7 +96,7 @@ int SparseExtractFromMatrix(const SparseMatrix &SM, int Rows, int Cols, int Rank
 
 void SparseFillDependent(const SparseMatrix &SM, vector<int> &Dependent)
 {
-    if ((Num_rows == 0) || (Num_cols == 0))
+    if (SM.empty() || (Num_cols == 0))
         return;
 
          /* This routine is much simpler than its sister FillDependent()
@@ -156,22 +111,6 @@ void SparseFillDependent(const SparseMatrix &SM, vector<int> &Dependent)
 	 } 
 
 }
-
-void FillDependent(vector<int> &Dependent)
-{
-    if ((Num_rows == 0) || (Num_cols == 0))
-        return;
-
-    for (int i=0;i<MatrixRank;i++) {
-        for (int j=0;j<Num_cols;j++) {
-            if (TheMatrix[i*Num_cols + j] > 0) {
-               Dependent[j] = 1;
-               break;
-            }
-        }
-    }
-}
-
 
 #if 0
 void PrintDependent(void)
@@ -209,33 +148,6 @@ void ProcessIndependentBasis(const vector<int> &Dependent, const vector<Unique_b
 }
 
              
-
-void ProcessDependentBasis(const vector<int> &Dependent, const vector<Unique_basis_pair> &ColtoBP, vector<Basis> &BasisNames)
-{
-    if (Num_cols == 0)
-        return;
-
-    vector<pair<Basis, Scalar> > tl;
-
-    for (int j=0;j<Num_cols;j++) {
-        if (Dependent[j]) {
-            int row;
-            for (row=0;row<MatrixRank;row++)
-                if (TheMatrix[row*Num_cols + j] == 1)
-                    break;
-            Basis b1 = ColtoBP[j].left_basis;
-            Basis b2 = ColtoBP[j].right_basis;
-tl.clear();
-            for (int k=j+1;k<Num_cols;k++) {
-                if (TheMatrix[row*Num_cols + k] != 0) {
-tl.push_back(make_pair(BasisNames[k], S_minus(TheMatrix[row*Num_cols + k])));
-                }
-            }
-            EnterProduct(b1, b2, tl);
-        }
-    }
-}
-
 /* Again this is virtually identical to the sister routine of 
    ProcessDependentBasis except we get the information from the 
    sparse matrix structure. Also we do not use the dependent structure
