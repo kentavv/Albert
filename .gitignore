@@ -41,3 +41,4 @@ pair_present.o
 *.openss
 *.gcda
 *.swp
+*.gcno
