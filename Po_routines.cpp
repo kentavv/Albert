@@ -57,7 +57,7 @@ static bool ExpandTerm(Alg_element &Ans, const struct term_node *W);
 /* NOTE:                                                           */
 /*     This routine is called when a command "d" is issued.        */
 /*******************************************************************/
-void Print_poly(struct polynomial *Poly, int Poly_len)
+void Print_poly(const struct polynomial *Poly, int Poly_len)
 {
     struct term_head  *temp_head;
     char *Term_str;
@@ -268,7 +268,7 @@ void Create_term_str(struct term_node *Pntr, char Term_str[])
 /*******************************************************************/
 int Homogeneous(struct polynomial *Poly)
 {
-    struct term_head  *temp_head;
+    const struct term_head  *temp_head;
     struct P_type first_term_type,temp_type;
     int is_homogeneous = TRUE;
     int i;
@@ -442,25 +442,28 @@ void FreeNodes(struct term_node *Term_node)
  * If the expansion collapses to 0, that means Poly is an identity.
  */
 
-int IsIdentity(struct polynomial *Poly)
+int IsIdentity(const struct polynomial *Poly)
 {
-    Alg_element ae;	/* TW 9/22/93 - change ae to *ae */
-    Alg_element result;	/* TW 9/22/93 - change result to *result */
+    Alg_element result;
 
     assert_not_null(Poly);
-    struct term_head *temp_head = Poly->terms;
+    const struct term_head *temp_head = Poly->terms;
 
     while (temp_head) {
         Scalar alpha = ConvertToScalar(temp_head->coef);
-        ae.clear();			/* TW 9/22/93 - change ae to *ae */
-        if(!ExpandTerm(ae,temp_head->term)) {
+
+        Alg_element ae;
+        if(!ExpandTerm(ae, temp_head->term)) {
             printf("Severe Bug. Cant ExpandTerm. Basis product undefined\n");
             return(0);
         }
-        ScalarMultAE(alpha,ae);		/* TW 9/22/93 - change ae to *ae */
-        AddAE(ae,result);	/* TW 9/22/93 - change ae to *ae & result to *result */
+
+        ScalarMultAE(alpha, ae);
+        AddAE(ae, result);
+
         temp_head = temp_head->next;
     }
+
     return IsZeroAE(result);
 }
 
