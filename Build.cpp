@@ -52,7 +52,7 @@ static void PrintProgress(int i, int n);
 static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
 static void InstallDegree1(void);
 static int ProcessType(Name n, const list<id_queue_node> &First_id_node);
-static int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n);
+static int SolveEquations(Equations &equations, Name n);
 
 /*****************************
  These variables are for the sparse implementation
@@ -257,9 +257,7 @@ void InstallDegree1(void)
 int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 {
     int status = OK;
-    Eqn_list_node *L = GetNewEqnListNode();               /* Header record of linked list */
-
-    assert_not_null(L);
+    Equations equations;
 
     printf("Generating..."); fflush(NULL);
 
@@ -268,23 +266,20 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
         const polynomial *f = ii->identity;
 
         if(status == OK && f->degree <= GetDegreeName(n))
-            status = GenerateEquations(f,n,L);
+            status = GenerateEquations(f,n, equations);
 
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
-	  if(L) FreeEqns(L);
 	  return(-1);
 	}
     }
 
 #if DEBUG_EQNS
-    PrintEqns(L);
+    PrintEqns(equations);
 #endif
 
     printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
     if (status == OK) 
-        status = SolveEquations(L,n);			
-    //if (L != NULL)
-    //    FreeEqns(L);
+        status = SolveEquations(equations, n);			
 
     printf("(%lds)\n", ElapsedTime());
 
@@ -304,7 +299,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 /*     and enter them into Basis Table. Then write Dependent Basis */
 /*     pairs into Basis by entering products into Mult_table.      */ 
 /*******************************************************************/
-int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
+int SolveEquations(Equations &equations, Name n)
 {
     int rows = 0;              /* Size of matrix */
     int cols = 0;              /* Size of matrix */
@@ -321,14 +316,14 @@ int SolveEquations(Eqn_list_node *L /* Linked list of pair lists */, Name n)
 
    if (!sparse)
    {
-     status = CreateTheMatrix(L, &mptr, &rows, &cols, BPCptr, n);
+     status = CreateTheMatrix(equations, &mptr, &rows, &cols, BPCptr, n);
    }
    else
    {
-     status = SparseCreateTheMatrix(L, SM, &rows, &cols, BPCptr, n);
+     status = SparseCreateTheMatrix(equations, SM, &rows, &cols, BPCptr, n);
    }
 
-   if(L) FreeEqns(L);
+   equations.clear();
 
 #if DEBUG_MATRIX
    PrintColtoBP();

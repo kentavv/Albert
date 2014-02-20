@@ -63,12 +63,12 @@ using std::vector;
 #include "pair_present.h"
 
 static void ZeroOutPairPresent(void);
-static void FillPairPresent(const Eqn_list_node *Eq_list, int &Num_unique_basis_pairs, int &Num_equations);
+static void FillPairPresent(const Equations &equations, int &Num_unique_basis_pairs);
 static int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis_pair> &ColtoBP);
 static int AreBasisElements(Degree d);
 static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr);
-static int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations);
-static int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, SparseMatrix &SM);
+static int FillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs);
+static int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, SparseMatrix &SM);
 #if 0
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
@@ -77,27 +77,24 @@ static void PrintTheMatrix(void);
 
 static Matrix TheMatrix;
 
-int CreateTheMatrix(const Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+int CreateTheMatrix(const Equations &equations, Matrix *Mptr, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
     TheMatrix = NULL;
 
-    if (!Eq_list || !Eq_list->basis_pairs)
-        return(OK);
-
     ZeroOutPairPresent();
 
-    int Num_unique_basis_pairs, Num_equations;
-    FillPairPresent(Eq_list, Num_unique_basis_pairs, Num_equations);
+    int Num_unique_basis_pairs;
+    FillPairPresent(equations, Num_unique_basis_pairs);
 /*
     PrintPairPresent();	
 */
     if (CreateColtoBP(n, Num_unique_basis_pairs, ColtoBP) != OK)
         return(0);
-    if (FillTheMatrix(Eq_list, ColtoBP, Num_unique_basis_pairs, Num_equations) != OK)
+    if (FillTheMatrix(equations, ColtoBP, Num_unique_basis_pairs) != OK)
         return(0);
 
     *Mptr = TheMatrix;
-    *Rows = Num_equations;
+    *Rows = equations.size();
     *Cols = Num_unique_basis_pairs; 
 
     return(OK);
@@ -108,26 +105,23 @@ int CreateTheMatrix(const Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *
    a pointer internal to this module to be altered and then copy it back
    before returning to SolveEquations() in Build.c */
 
-int SparseCreateTheMatrix(const Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Rows, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
-    if (!Eq_list || !Eq_list->basis_pairs)
-        return(OK);
-
     ZeroOutPairPresent();
 
-    int Num_unique_basis_pairs, Num_equations;
-    FillPairPresent(Eq_list, Num_unique_basis_pairs, Num_equations);
+    int Num_unique_basis_pairs;
+    FillPairPresent(equations, Num_unique_basis_pairs);
 /*
     PrintPairPresent();
 */
     if (CreateColtoBP(n, Num_unique_basis_pairs, ColtoBP) != OK)
         return(0);
-    if (SparseFillTheMatrix(Eq_list, ColtoBP, Num_unique_basis_pairs, Num_equations, SM) != OK)
+    if (SparseFillTheMatrix(equations, ColtoBP, Num_unique_basis_pairs, SM) != OK)
         return(0);
 
     /* pass locally derived values back to the calling routine */
 
-    *Rows = Num_equations;
+    *Rows = equations.size();
     *Cols = Num_unique_basis_pairs; 
 
     return(OK);
@@ -147,28 +141,17 @@ void ZeroOutPairPresent(void)
 }
 
 
-void FillPairPresent(const Eqn_list_node *Eq_list, int &Num_unique_basis_pairs, int &Num_equations)
+void FillPairPresent(const Equations &equations, int &Num_unique_basis_pairs)
 {
-    Num_unique_basis_pairs = 0;
-    Num_equations = 0;
-
-    const Eqn_list_node *temp = Eq_list;
-
-    while (temp) {
-        int i = 0;
-        if(!temp->basis_pairs) break;
-
-        while (temp->basis_pairs[i].coef != 0) {
-            pp_set(temp->basis_pairs[i].left_basis,
-                   temp->basis_pairs[i].right_basis);
-            i++;
-        }
-
-        Num_equations++;
-        temp = temp->next;
+  Equations::const_iterator ii;
+  for(ii = equations.begin(); ii != equations.end(); ii++) {
+    Equation::const_iterator jj;
+    for(jj = ii->begin(); jj != ii->end() /*&& (jj->coef != 0)*/; jj++) {
+      pp_set(jj->left_basis, jj->right_basis);
     }
+  }
 
-    Num_unique_basis_pairs = pp_count();
+  Num_unique_basis_pairs = pp_count();
 }
 
               
@@ -234,15 +217,16 @@ void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_
 }
             
 
-int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations)
+int FillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs)
 {
+#if 0
     int i,j;
     int eq_number = 0;
     int col;
     int thematrix_index;
     Scalar x;
 
-    if ((Num_unique_basis_pairs == 0) || (Num_equations == 0))
+    if ((Num_unique_basis_pairs == 0) || equations.empty())
         return(OK);
     TheMatrix = (Scalar *) (Mymalloc(Num_equations*Num_unique_basis_pairs
                                    *sizeof(Scalar)));
@@ -270,29 +254,26 @@ int FillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> 
         eq_number++;
         temp = temp->next;
     }
+#endif
+
     return(OK);
 }
 
-int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, int Num_equations, SparseMatrix &SM)
+int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, SparseMatrix &SM)
 {
-  if (Num_unique_basis_pairs == 0 || Num_equations == 0)
+  if (Num_unique_basis_pairs == 0 || equations.empty())
     return(OK);
 	
-  SM.resize(Num_equations);
+  SM.resize(equations.size());
 
 #pragma omp parallel for schedule(dynamic, 10)
-  for(int eq_number=0; eq_number < Num_equations; eq_number++) {
-    const Eqn_list_node *temp = Eq_list;
-    for(int j=0; j<eq_number; j++) {
-      temp = temp->next;
-    }
+  for(int eq_number=0; eq_number < (int)equations.size(); eq_number++) {
+    const Equation &eqn = equations[eq_number];
     SparseRow &t_row = SM[eq_number];
 
-    for(int i=0; temp->basis_pairs[i].coef != 0; i++) {
-      int col = GetCol(ColtoBP,
-                       temp->basis_pairs[i].left_basis,
-		       temp->basis_pairs[i].right_basis);
-      Scalar coef = temp->basis_pairs[i].coef;
+    for(int i=0; i<(int)eqn.size() /* && eqn[i].coef != 0*/; i++) {
+      int col = GetCol(ColtoBP, eqn[i].left_basis, eqn[i].right_basis);
+      Scalar coef = eqn[i].coef;
 
       SparseRow::iterator ii;
       for(ii = t_row.begin(); ii != t_row.end() && ii->column < col; ii++) {
@@ -328,7 +309,7 @@ int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_
             ii->element = t;
           }
       }
-        }
+    }
   }
 
   return OK;
@@ -338,9 +319,6 @@ int SparseFillTheMatrix(const Eqn_list_node *Eq_list, const vector<Unique_basis_
 int GetCol(const vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis)
 {
     int Num_unique_basis_pairs = pp_count();
-
-    //if (Num_unique_basis_pairs == 0 || Num_equations == 0)
-    //    return(-1);
 
     int low = 0;
     int high = Num_unique_basis_pairs - 1;

@@ -97,7 +97,7 @@ static int status = OK;
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
 
-int PerformMultiplePartition(const struct polynomial *The_ident, Eqn_list_node *List, int nVars, Type Types, const int *Deg_var)
+int PerformMultiplePartition(const struct polynomial *The_ident, Equations &equations, int nVars, Type Types, const int *Deg_var)
 {
     Deg_var_types = Deg_var;
 
@@ -135,7 +135,7 @@ printf("mp: %d %d %d %d\n", nVars, NUM_LETTERS, target_type_len, Max_deg_var);
       SplitJthType(Var_types, 0, Set_partitions, Cur_index_var, all_Substitutions);     /* Start a recursive call. */
     }
 
-    status = CreateSubs(List, The_ident, nVars, Max_deg_var, all_Substitutions, Deg_var_types);
+    status = CreateSubs(equations, The_ident, nVars, Max_deg_var, all_Substitutions, Deg_var_types);
 
     return(status);
 }

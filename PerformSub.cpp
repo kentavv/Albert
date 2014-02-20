@@ -146,38 +146,23 @@ void BuildPermutations(int row, vector<vector<int> > &Permutation_list, vector<v
 }
         
         
-void AppendLocalListToTheList(const vector<vector<Basis_pair> > &Local_lists, Eqn_list_node *The_list)
+void AppendLocalListToTheList(const vector<vector<Basis_pair> > &Local_lists, Equations &equations)
 {
-    if (Local_lists.empty() || !The_list)
-        return;
-
     int ll_length = 0;
     for(int i=0; i<(int)Local_lists.size(); i++) {
       ll_length += Local_lists[i].size();
     }
 
-    Eqn_list_node *p_tl = The_list;
-    while (p_tl->next)
-        p_tl = p_tl->next;
+    if(ll_length > 0) {
+      equations.resize(equations.size() + 1);
+      Equation &eqn = equations.back() ;
+      eqn.reserve(ll_length);
 
-    p_tl->basis_pairs = (Basis_pair *) Mymalloc((ll_length + 1) * sizeof(Basis_pair));
-    assert_not_null_nv(p_tl->basis_pairs);
-
-    int i=0;
-    vector<vector<Basis_pair> >::const_iterator ii;
-    for(ii = Local_lists.begin(); ii != Local_lists.end(); ii++) {
-      vector<Basis_pair>::const_iterator jj;
-      for(jj = ii->begin(); jj != ii->end(); jj++) {
-        p_tl->basis_pairs[i++] = *jj;
+      vector<vector<Basis_pair> >::const_iterator ii;
+      for(ii = Local_lists.begin(); ii != Local_lists.end(); ii++) {
+        eqn.insert(eqn.end(), ii->begin(), ii->end());
       }
-    }
-
-    p_tl->basis_pairs[ll_length].coef = 0;
-    p_tl->basis_pairs[ll_length].left_basis = 0; 
-    p_tl->basis_pairs[ll_length].right_basis = 0; 
-
-    p_tl->next = GetNewEqnListNode();
-    assert_not_null_nv(p_tl->next);
+   }
 }
 
 /*

@@ -62,7 +62,7 @@ using std::vector;
 static void PrintSubstitution(const vector<Basis> &Substitution);
 #endif
 
-int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int nVars, int maxDegVar, const vector<vector<Basis> > &all_Substitutions, const int *Deg_var)
+int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int maxDegVar, const vector<vector<Basis> > &all_Substitutions, const int *Deg_var)
 {
     int status = OK;
  
@@ -86,8 +86,7 @@ int CreateSubs(Eqn_list_node *L, const struct polynomial *F, int nVars, int maxD
       }
 
       for(int i=0; i<(int)all_Substitutions.size(); i++) {
-        vector<vector<Basis_pair> > &Local_lists = res[i];
-        AppendLocalListToTheList(Local_lists, L);
+        AppendLocalListToTheList(res[i], equations);
       }
 
     return(status);

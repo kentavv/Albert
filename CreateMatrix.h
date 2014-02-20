@@ -32,13 +32,11 @@ typedef struct {
     Basis right_basis;
 } Unique_basis_pair;
 
-struct Eqn_list_node{
-    Basis_pair *basis_pairs;
-    Eqn_list_node *next;
-}; 
+typedef std::vector<Basis_pair> Equation;
+typedef std::vector<Equation> Equations;
 
-int CreateTheMatrix(const Eqn_list_node *Eq_list, Matrix *Mptr, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
-int SparseCreateTheMatrix(const Eqn_list_node *Eq_list, SparseMatrix &SM, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
+int CreateTheMatrix(const Equations &equations, Matrix *Mptr, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
+int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Rows, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
 void DestroyTheMatrix(void);
 int GetCol(const std::vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis);
 

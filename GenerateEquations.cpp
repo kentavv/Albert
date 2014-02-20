@@ -84,13 +84,12 @@
 #include "Debug.h"
 #include "Type_table.h"
 
-static void InitSeqSubtypes(void);
-static int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L);
+static bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equations);
 #if DEBUG_SEQ_SUBTYPES
 static void PrintSeqSubtypes(void);
 #endif
 #if 0
-static void PrintEqns(Eqn_list_node *L);
+static void PrintEqns(const Equations &equations);
 static void PrintEqn(Basis_pair *Temp_eqn);
 #endif
 
@@ -103,16 +102,12 @@ static int *Deg_vars = NULL;
 static int *Cur_deg_vars = NULL;
 static int Whatsleft = 0;
 static const struct polynomial *The_ident = NULL;
-static int status = OK;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
-int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
+int GenerateEquations(const struct polynomial *F, Name N, Equations &equations)
 {
     int i,j;
-
-    if (L == NULL)
-        return(OK);
 
     The_ident = F;
 
@@ -142,16 +137,12 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
         if (The_ident->deg_letter[i] > 0)
             Deg_vars[j++] = The_ident->deg_letter[i];
 
-    InitSeqSubtypes();
-    GenerateSeqSubtypes(0,0,0, L); /* Starting of deep recursive calls */
+    Whatsleft = Target_type_deg;
 
-    if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
-      free(Seq_sub_types);
-      free(Deg_vars);
-      free(Cur_deg_vars);
-/*      printf("Returning from GenerateEquations().\n");*/
-      return(-1);
-    }
+    memset(Cur_deg_vars, 0, sizeof(Cur_deg_vars[0]) * Num_vars);
+    memset(Seq_sub_types, 0, sizeof(Seq_sub_types[0]) * Num_vars * Target_type_len);
+
+    bool status = GenerateSeqSubtypes(0,0,0, equations); /* Starting of deep recursive calls */
 
     free(Seq_sub_types);
     free(Deg_vars);
@@ -161,26 +152,14 @@ int GenerateEquations(const struct polynomial *F, Name N, Eqn_list_node *L)
 }
 
 
-void InitSeqSubtypes(void)
+bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equations)
 {
-    Whatsleft = Target_type_deg;
-
-    memset(Cur_deg_vars, 0, sizeof(Cur_deg_vars[0]) * Num_vars);
-    memset(Seq_sub_types, 0, sizeof(Seq_sub_types[0]) * Num_vars * Target_type_len);
-}
-
-
-int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
-{
-    int whatsave;
-    int tsave,csave;
-
-    int i;
 #if DEBUG_SEQ_SUBTYPES
     static int count = 1;
 #endif
-    if(status != OK) {
-        return -1;
+
+    if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
+      return false;
     }
 
     if (Cur_col == Target_type_len) {
@@ -188,20 +167,13 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
         printf("Printing %d th SeqSubtypes \n",count++);
         PrintSeqSubtypes();
 #endif
-
-/* Now we are jumping into another module while inside a recursive call */
-
-        status = PerformMultiplePartition(The_ident, L, Num_vars, Seq_sub_types, Deg_vars);
-        if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
-/*          printf("Returning from PerformMultiplePartition().\n");*/
-          return(-1);
-        }
+	return PerformMultiplePartition(The_ident, equations, Num_vars, Seq_sub_types, Deg_vars);
     }
     else if (Cur_row == (Num_vars - 1)) {
         if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
-            csave = Cur_deg_vars[Cur_row];
-            whatsave = Whatsleft;
-            tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
+            int csave = Cur_deg_vars[Cur_row];
+            int whatsave = Whatsleft;
+            int tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
 
             Seq_sub_types[Cur_row*Target_type_len + Cur_col] = Target_type[Cur_col] - Weight;
             Cur_deg_vars[Cur_row] += Seq_sub_types[Cur_row*Target_type_len + Cur_col];
@@ -210,10 +182,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
             if ((Cur_col < (Target_type_len - 1)) ||
                ((Cur_col == (Target_type_len - 1)) && 
                (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
-                 GenerateSeqSubtypes(0,Cur_col+1,0, L);
-                 if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
-                   return(-1);
-                 }
+                 if(!GenerateSeqSubtypes(0,Cur_col+1,0, equations)) return false;
 	    }
 
             Cur_deg_vars[Cur_row] = csave; 
@@ -223,10 +192,10 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
     }
     else {
         if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
-            for (i=Target_type[Cur_col] - Weight;i>=0;i--) {
-                csave = Cur_deg_vars[Cur_row];
-                whatsave = Whatsleft;
-                tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
+            for(int i=Target_type[Cur_col] - Weight;i>=0;i--) {
+                int csave = Cur_deg_vars[Cur_row];
+                int whatsave = Whatsleft;
+                int tsave = Seq_sub_types[Cur_row*Target_type_len + Cur_col]; 
 
                 Seq_sub_types[Cur_row*Target_type_len + Cur_col] = i; 
                 Cur_deg_vars[Cur_row] += i; 
@@ -235,10 +204,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
                 if ((Cur_col < (Target_type_len - 1)) ||
                    ((Cur_col == (Target_type_len - 1)) && 
                    (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
-                     GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i, L);
-                     if(sigIntFlag == 1){     /* TW 10/5/93 - Ctrl-C check */
-                       return(-1);
-                     }
+                     if(!GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i, equations)) return false;
 		}
 
                 Cur_deg_vars[Cur_row] = csave; 
@@ -248,7 +214,7 @@ int GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Eqn_list_node *L)
         }
     }
 
-    return 1;
+    return true;
 }
 
 
@@ -266,33 +232,6 @@ int GetVarNumber(char Letter)
     printf("warning: GetVarNumber() fall through\n"); 
     return -1;
 } 
-
-
-
-Eqn_list_node *GetNewEqnListNode(void)
-{
-    Eqn_list_node *temp_node;
-
-    temp_node = (Eqn_list_node *) (Mymalloc(sizeof(Eqn_list_node)));
-    assert_not_null(temp_node);
-    temp_node->basis_pairs = NULL;
-    temp_node->next = NULL;
-    return(temp_node);
-}
-
-
-void FreeEqns(Eqn_list_node *L)
-{
-    while(L) {
-      Eqn_list_node *Ln = L->next;
-
-      if(L->basis_pairs) free(L->basis_pairs);
-      free(L);
- 
-      L = Ln;
-    }
-}
-
 
 #if DEBUG_SEQ_SUBTYPES
 void PrintSeqSubtypes(void)
