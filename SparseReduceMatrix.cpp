@@ -52,9 +52,6 @@ static void Print_Node(NODE_PTR Prt_Node);
 #endif
 
 
-#include <time.h>
-#include <sys/times.h>
-
 int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 {
     if(SM.empty() || nCols == 0)
