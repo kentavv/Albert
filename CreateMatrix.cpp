@@ -60,14 +60,37 @@ using std::vector;
 #include "Scalar_arithmetic.h"
 #include "SparseReduceMatrix.h"
 #include "Type_table.h"
-#include "pair_present.h"
+
+#include <set>
+
+using std::set;
+using std::pair;
+using std::make_pair;
+
+static set<pair<int, int> > pp;
+
+inline void pp_clear() {
+  pp.clear();
+}
+
+inline void pp_set(int r, int c) {
+  pp.insert(make_pair(r, c));
+}
+
+inline int pp_contains(int r, int c) {
+  return pp.find(make_pair(r, c)) != pp.end();
+}
+
+inline int pp_count() {
+  return pp.size();
+}
 
 static void ZeroOutPairPresent(void);
-static void FillPairPresent(const Equations &equations, int &Num_unique_basis_pairs);
-static int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis_pair> &ColtoBP);
+static void FillPairPresent(const Equations &equations);
+static void CreateColtoBP(Name N, vector<Unique_basis_pair> &ColtoBP);
 static int AreBasisElements(Degree d);
 static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr);
-static int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, SparseMatrix &SM);
+static int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, SparseMatrix &SM);
 #if 0
 static void PrintPairPresent(void);
 static void PrintColtoBP(void);
@@ -83,19 +106,15 @@ int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Col
 {
     ZeroOutPairPresent();
 
-    int Num_unique_basis_pairs;
-    FillPairPresent(equations, Num_unique_basis_pairs);
+    FillPairPresent(equations);
 /*
     PrintPairPresent();
 */
-    if (CreateColtoBP(n, Num_unique_basis_pairs, ColtoBP) != OK)
-        return(0);
-    if (SparseFillTheMatrix(equations, ColtoBP, Num_unique_basis_pairs, SM) != OK)
+    CreateColtoBP(n, ColtoBP);
+    if (SparseFillTheMatrix(equations, ColtoBP, SM) != OK)
         return(0);
 
-    /* pass locally derived values back to the calling routine */
-
-    *Cols = Num_unique_basis_pairs; 
+    *Cols = pp_count();
 
     return(OK);
 }
@@ -107,7 +126,7 @@ void ZeroOutPairPresent(void)
 }
 
 
-void FillPairPresent(const Equations &equations, int &Num_unique_basis_pairs)
+void FillPairPresent(const Equations &equations)
 {
   Equations::const_iterator ii;
   for(ii = equations.begin(); ii != equations.end(); ii++) {
@@ -116,32 +135,26 @@ void FillPairPresent(const Equations &equations, int &Num_unique_basis_pairs)
       pp_set(jj->left_basis, jj->right_basis);
     }
   }
-
-  Num_unique_basis_pairs = pp_count();
 }
 
               
-int CreateColtoBP(Name N, int Num_unique_basis_pairs, vector<Unique_basis_pair> &ColtoBP)
+void CreateColtoBP(Name N, vector<Unique_basis_pair> &ColtoBP)
 {
-    int col_to_bp_index = 0;
+    int Num_unique_basis_pairs = pp_count();
 
-    int i;
-    Degree d;
-
-    if (Num_unique_basis_pairs == 0)
-        return(OK);
-
-    ColtoBP.resize(Num_unique_basis_pairs);
-
-    d = GetDegreeName(N);
+    if (Num_unique_basis_pairs > 0) {
+      ColtoBP.resize(Num_unique_basis_pairs);
+  
+      Degree d = GetDegreeName(N);
+      int col_to_bp_index = 0;
      
-    for (i=1;i<d;i++)
+      for (int i=1; i<d; i++) {
         /*  	This check added 5/94   (DPJ)    */
-        if ( AreBasisElements(i) && AreBasisElements(d-i) ) 
-        {
-            Process(ColtoBP, i,d-i,&col_to_bp_index);
+        if ( AreBasisElements(i) && AreBasisElements(d-i) ) {
+            Process(ColtoBP, i, d-i, &col_to_bp_index);
         }
-    return(OK);
+      }
+    }
 }
 
 /*
@@ -161,18 +174,13 @@ int AreBasisElements(Degree d)
 
 void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr)
 {
-    Basis b1,b2,b3,b4;
-    /*Basis row,col;*/
-    /*int col_bit;*/
-    Basis i,j;
+    const Basis b1 = BasisStart(d1);
+    const Basis b2 = BasisEnd(d1);
+    const Basis b3 = BasisStart(d2);
+    const Basis b4 = BasisEnd(d2);
 
-    b1 = BasisStart(d1);
-    b2 = BasisEnd(d1);
-    b3 = BasisStart(d2);
-    b4 = BasisEnd(d2);
-
-    for (i=b1;i<=b2;i++) {
-        for (j=b3;j<=b4;j++) {
+    for (Basis i=b1; i<=b2; i++) {
+        for (Basis j=b3; j<=b4; j++) {
           if(pp_contains(i, j)) {
                 ColtoBP[*col_to_bp_index_ptr].left_basis = i; 
                 ColtoBP[*col_to_bp_index_ptr].right_basis = j; 
@@ -183,9 +191,9 @@ void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_
 }
             
 
-int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, int Num_unique_basis_pairs, SparseMatrix &SM)
+int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, SparseMatrix &SM)
 {
-  if (Num_unique_basis_pairs == 0 || equations.empty())
+  if (ColtoBP.empty() || equations.empty())
     return(OK);
 	
   SM.resize(equations.size());
@@ -242,7 +250,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
 
 int GetCol(const vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis)
 {
-    int Num_unique_basis_pairs = pp_count();
+    int Num_unique_basis_pairs = ColtoBP.size();
 
     int low = 0;
     int high = Num_unique_basis_pairs - 1;
