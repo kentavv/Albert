@@ -125,7 +125,7 @@ albert -a dirname\n\n\
 The arguments are optional.  Here, dirname refers to the\n\
 directory location where albert will get the \".albert\"\n\
 file.  If this argument is not given, albert will look for\n\
-it in the current directory.\n\n\
+it in the current directory.\n\n"
 },
 {
     "b",
