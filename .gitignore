@@ -42,3 +42,4 @@ pair_present.o
 *.gcda
 *.swp
 *.gcno
+coverage.info
