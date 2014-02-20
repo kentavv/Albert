@@ -42,7 +42,6 @@ using std::vector;
 #include "CreateMatrix.h"
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
-#include "ReduceMatrix.h"
 #include "SparseReduceMatrix.h"
 #include "Debug.h"
 
