@@ -190,22 +190,6 @@ void *Mymalloc(int size)
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
 /* REQUIRES: None.                                                 */
-/* RETURNS:                                                        */
-/*     Pointer to a new id_queue_node.                             */
-/*******************************************************************/ 
-struct id_queue_node *Id_queue_node_alloc()
-{
-    struct id_queue_node *id;
-
-    id = (struct id_queue_node *) Mymalloc(sizeof(struct id_queue_node));
-
-    return(id);
-}
-
-
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES: None.                                                 */
 /* RETURNS:  None.                                                 */
 /* FUNCTION:                                                       */
 /*     Issue a warning and exit to $ prompt.                       */
@@ -214,18 +198,4 @@ void No_memory_panic()
 {
     fprintf(stderr,"\nMemory overflow.\n");
     longjmp(env,2);
-}
-
-
-/*******************************************************************/
-/* MODIFIES: None.                                                 */
-/* REQUIRES: None.                                                 */
-/* RETURNS:  None.                                                 */
-/* FUNCTION:                                                       */
-/*     Issue a warning and exit to $ prompt.                       */
-/*******************************************************************/
-void Short_string_panic()
-{
-    fprintf(stderr,"\nString limit reached. Exiting.\n");
-    exit(0);
 }
