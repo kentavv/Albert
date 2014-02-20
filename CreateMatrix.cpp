@@ -221,10 +221,6 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
             Node node;
             node.column = col;
             node.element = t;
-            //if(ii == r_row.end()) {
-            //  t_row.push_back(node);
-            //} else {
-            //}
             t_row.insert(ii, node);
           }
       } else {
