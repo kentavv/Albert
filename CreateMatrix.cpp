@@ -69,26 +69,13 @@ using std::make_pair;
 
 static set<pair<int, int> > pp;
 
-inline void pp_clear() {
-  pp.clear();
-}
-
-inline void pp_set(int r, int c) {
-  pp.insert(make_pair(r, c));
-}
-
 inline int pp_contains(int r, int c) {
   return pp.find(make_pair(r, c)) != pp.end();
 }
 
-inline int pp_count() {
-  return pp.size();
-}
-
-static void ZeroOutPairPresent(void);
 static void FillPairPresent(const Equations &equations);
 static void CreateColtoBP(Name N, vector<Unique_basis_pair> &ColtoBP);
-static int AreBasisElements(Degree d);
+static bool AreBasisElements(Degree d);
 static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, int *col_to_bp_index_ptr);
 static int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, SparseMatrix &SM);
 #if 0
@@ -104,7 +91,7 @@ static void PrintTheMatrix(void);
 
 int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
-    ZeroOutPairPresent();
+    pp.clear();
 
     FillPairPresent(equations);
 /*
@@ -114,15 +101,9 @@ int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Col
     if (SparseFillTheMatrix(equations, ColtoBP, SM) != OK)
         return(0);
 
-    *Cols = pp_count();
+    *Cols = pp.size();
 
     return(OK);
-}
-
-
-void ZeroOutPairPresent(void)
-{
-  pp_clear();
 }
 
 
@@ -132,7 +113,7 @@ void FillPairPresent(const Equations &equations)
   for(ii = equations.begin(); ii != equations.end(); ii++) {
     Equation::const_iterator jj;
     for(jj = ii->begin(); jj != ii->end() /*&& (jj->coef != 0)*/; jj++) {
-      pp_set(jj->left_basis, jj->right_basis);
+      pp.insert(make_pair(jj->left_basis, jj->right_basis));
     }
   }
 }
@@ -140,7 +121,7 @@ void FillPairPresent(const Equations &equations)
               
 void CreateColtoBP(Name N, vector<Unique_basis_pair> &ColtoBP)
 {
-    int Num_unique_basis_pairs = pp_count();
+    int Num_unique_basis_pairs = pp.size();
 
     if (Num_unique_basis_pairs > 0) {
       ColtoBP.resize(Num_unique_basis_pairs);
@@ -163,12 +144,9 @@ Returns true if there are basis elements at degree d.
 Note: when the algebra is nilpotent it is possible
 that no new basis elements were entered at degree d.
 */
-int AreBasisElements(Degree d)
+bool AreBasisElements(Degree d)
 {
-   if (BasisStart(d) == 0) 
-       return FALSE;
-   else
-       return TRUE;
+   return BasisStart(d) != 0;
 }
 
 
