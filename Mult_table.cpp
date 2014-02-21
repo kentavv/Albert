@@ -44,7 +44,7 @@ using namespace std;
 
 map<pair<Basis, Basis>, vector<pair<Basis, Scalar> > > mult_table;
 
-static void Print_AE(const Alg_element &ae, FILE *filePtr, int outputType);
+static void Print_AE(const Alg_element &ae, FILE *filePtr);
 
 /*******************************************************************/
 /* MODIFIES: None.                                                 */
@@ -76,7 +76,7 @@ void DestroyMultTable(void)
 /* FUNCTION:                                                       */
 /*     Print the table.                                            */
 /*******************************************************************/
-void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
+void Print_MultTable(FILE *filePtr) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
   int i, j, dim;
   Alg_element prod;
@@ -92,7 +92,7 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
           /* PrintBasis(i); */
           fprintf(filePtr, "(b%d)*(b%d)\n",i,j);
           /* PrintBasis(j); */
-          Print_AE(prod, filePtr, outputType); 	/* TW 9/22/93 - change prod[] to *prod */
+          Print_AE(prod, filePtr); 	/* TW 9/22/93 - change prod[] to *prod */
           fprintf(filePtr, "\n\n");
         }
       }
@@ -100,7 +100,7 @@ void Print_MultTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 para
   }
 }
  
-void Print_AE(const Alg_element &ae, FILE *filePtr, int outputType) /* TW 9/19/93 - add 2 params to support view, save, & output */
+void Print_AE(const Alg_element &ae, FILE *filePtr) /* TW 9/19/93 - add 2 params to support view, save, & output */
 {
   int trmcnt = 0;		/* How many terms have been printed */
   int lnecnt = 0;		/* How many have been printed on current line */

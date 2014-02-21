@@ -19,7 +19,7 @@
 extern std::map<std::pair<Basis, Basis>, std::vector<std::pair<Basis, Scalar> > > mult_table;
 
 void DestroyMultTable(void);
-void Print_MultTable(FILE *filePtr, int outputType);
+void Print_MultTable(FILE *filePtr);
 
 inline bool EnterProduct(Basis B1, Basis B2, const std::vector<std::pair<Basis, Scalar> > &tl)
 {
