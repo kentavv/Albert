@@ -23,7 +23,7 @@
 #include "Help_pri.h"
 
 static const char *getHelp(const char *helpRqst);
-static void displayHelp(const char *helpPtr, int rows, int cols);
+static void displayHelp(const char *helpPtr);
 
 void initHelp(void)
 {
@@ -55,7 +55,7 @@ int Help(char topic[])
   while(strlen(str)){
     helpPtr = getHelp(str);
     if(helpPtr){
-      displayHelp(helpPtr, helpLines, helpCols);
+      displayHelp(helpPtr);
     }
     else{
       printf("No help is available for %s\n", str);
@@ -87,48 +87,9 @@ const char *getHelp(const char *helpRqst)
 
 
 
-void displayHelp(const char *helpPtr, int rows, int cols)
+void displayHelp(const char *helpPtr)
 {
-#if 1
   puts(helpPtr);
-#else
-  char line[500 + 1], *blank = NULL, *pos = helpPtr;
-  int i, j, done, blankNdx;
-
-  for(j = 0; *pos; ++j){
-    for(i = 0, done = 0, blankNdx = 0; i < cols && *pos && !done; ++i, ++pos){
-      if(*pos == ' ' || *pos == '\t'){
-        blank = pos;		/* set blank to point to most current white space */
-        blankNdx = i;		/* save the index to the last white space */
-      }
-      else if(*pos == '\n'){
-	done = 1;
-      }
-      line[i] = *pos;
-    }
-    if(*(pos-1) == '\n'){	/* substitute EOL for CRLF */
-      line[i-1] = '\0';
-    }
-    else if(blankNdx != 0){	/* set EOL at last white space encountered */
-      line[blankNdx] = '\0';
-      pos = blank;
-    }
-    else{			/* if no white space encountered, break up the word */
-      line[cols + 1] = '\0';
-    }
-    printf("%s\n", line);	/* write the line */
-#if 0
-    if(j >= rows-2){
-      j += 3;			/* increment the row counter */
-      printf("\nHit Return to continue-->");	/* print more message at bottom left of screen */
-      fflush(stdout);
-      getchar();
-      printf("\n");
-      j = 0;			/* reset the line number */
-    }
-#endif
-  }
-#endif
 }
 
 
