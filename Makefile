@@ -18,8 +18,6 @@ CFLAGS=-g -O2 -Wall -fopenmp -Weffc++ -Wextra
 CXXFLAGS=$(CFLAGS)
 #CXXFLAGS=$(CFLAGS) -std=c++11
 
-#lcov --capture --directory . --output-file coverage.info
-
 LDFLAGS=-fopenmp
 #LDFLAGS=-fopenmp --coverage
 #LDFLAGS=-fopenmp -fprofile-generate -fprofile-correction
@@ -52,6 +50,10 @@ clean:
 clean_all:
 	- make clean
 	- rm -f *.gcda *.gcno
+
+coverage:
+	- lcov --capture --directory . --output-file coverage.info
+	- genhtml coverage.info --output-directory coverage
 
 #-include $(OBJFILES:.o=.d)
 
