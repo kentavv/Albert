@@ -164,8 +164,6 @@ void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_bas
     for(int rowId = 0; rowId < MatrixRank; rowId++) {
        const SparseRow &row = SM[rowId];
 
-       int j=row.begin()->column;
-
        tl.clear();
        SparseRow::const_iterator ii = row.begin();
        for(ii++; ii!=row.end(); ii++) {
@@ -174,6 +172,7 @@ void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_bas
            tl.push_back(make_pair(BasisNames[k], S_minus(S_temp)));
        }
 
+       int j=row.begin()->column;
        Basis b1 = ColtoBP[j].left_basis;
        Basis b2 = ColtoBP[j].right_basis;
        EnterProduct(b1, b2, tl);
@@ -182,25 +181,23 @@ void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_bas
 
 void ProcessOtherIndependentBasis(const vector<Unique_basis_pair> &ColtoBP, int J)
 {
-   int i,deg,save,/*num_bp,*/j;
-   Basis m1,m2,n1,n2,n;
    vector<pair<Basis, Scalar> > tl(1);
 
     if (Cur_type_len == J) {
-        deg = GetDegree(T1);
+        int deg = GetDegree(T1);
         if ((deg > 0) && (deg < Cur_type_degree)) {
-            for (i=0;i<Cur_type_len;i++)
+            for (int i=0;i<Cur_type_len;i++)
                 T2[i] = Cur_type[i] - T1[i];
-            m1 = BeginBasis(TypeToName(T1));
-            m2 = EndBasis(TypeToName(T1));
-            n1 = BeginBasis(TypeToName(T2));
-            n2 = EndBasis(TypeToName(T2));
+            const Basis m1 = BeginBasis(TypeToName(T1));
+            const Basis m2 = EndBasis(TypeToName(T1));
+            const Basis n1 = BeginBasis(TypeToName(T2));
+            const Basis n2 = EndBasis(TypeToName(T2));
             if ((0 < m1) && (m1 <= m2) && (0 < n1) && (n1 <= n2)) {
-                for (i=m1;i<=m2;i++) {
-                    for (j=n1;j<=n2;j++) {
+                for (int i=m1;i<=m2;i++) {
+                    for (int j=n1;j<=n2;j++) {
                         if (GetCol(ColtoBP, i, j) == -1) {
-                            n = EnterBasis(i,j,TypeToName(Cur_type));
-  tl[0] = make_pair(n, 1);
+                            Basis n = EnterBasis(i,j,TypeToName(Cur_type));
+                            tl[0] = make_pair(n, 1);
                             EnterProduct(i, j, tl);
                         }
                     }
@@ -209,8 +206,8 @@ void ProcessOtherIndependentBasis(const vector<Unique_basis_pair> &ColtoBP, int 
         }
     }
     else {
-        for (i=0;i<=Cur_type[J];i++) {
-            save = T1[i];
+        for (int i=0;i<=Cur_type[J];i++) {
+            Degree save = T1[i];
             T1[J] = i;
             ProcessOtherIndependentBasis(ColtoBP, J+1);
             T1[i] = save;
