@@ -9,7 +9,7 @@ CXX=g++
 #CFLAGS=-MMD
 #CFLAGS=-g -O0 -Wall
 #CFLAGS=-g -O -Wall
-CFLAGS=-g -O2 -Wall -fopenmp
+CFLAGS=-g -O2 -Wall -fopenmp -Weffc++ -Wextra
 #CFLAGS=-g -O2 -Wall -fopenmp --coverage
 #CFLAGS=-g -O2 -Wall -fopenmp -fprofile-generate -fprofile-correction
 #CFLAGS=-g -O2 -Wall -fopenmp -fprofile-use -fprofile-correction
@@ -48,6 +48,10 @@ clean:
 	- rm -f albert *.o *.d *~ *# *.core core
 	- rm -f cachegrind.out.* callgrind.out.*
 	- rm -rf doxygen
+
+clean_all:
+	- make clean
+	- rm -f *.gcda *.gcno
 
 #-include $(OBJFILES:.o=.d)
 
