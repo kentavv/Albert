@@ -59,7 +59,7 @@ static vector<pair<Basis, Basis> > Deg_to_basis_table; // maps degree to first a
 /* FUNCTION:                                                       */
 /*     Initialize the Basis Table and Nextbasistobefilled.         */
 /*******************************************************************/ 
-int CreateBasisTable(int Target_degree)
+int CreateBasisTable()
 {
     Basis_table.clear();
     { // First entry is expected to be zero, but this may not be required
@@ -160,7 +160,7 @@ Name GetType(Basis B)
 /* RETURNS:                                                        */
 /*     Type of the Basis B.                                        */
 /*******************************************************************/ 
-void PrintBasisTable(FILE *filePtr, int outputType) /* TW 9/19/93 - added 2 params to support view, save, & output */
+void PrintBasisTable(FILE *filePtr) /* TW 9/19/93 - added 2 params to support view, save, & output */
 {
   if(Basis_table.size() > 1){
     fprintf(filePtr, "Basis Table: \n");

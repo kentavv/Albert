@@ -13,12 +13,12 @@
 
 #include "Build_defs.h"
 
-int CreateBasisTable(int Target_degree);
+int CreateBasisTable();
 Basis EnterBasis(Basis Left_factor, Basis Right_factor, Name Cur_type);
 Basis GetNextBasisTobeFilled(void);
 Basis BasisStart(Degree Deg);
 Basis BasisEnd(Degree Deg);
 Name GetType(Basis B);
-void PrintBasisTable(FILE *filePtr, int outputType);
+void PrintBasisTable(FILE *filePtr);
 
 #endif
