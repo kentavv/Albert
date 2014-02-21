@@ -45,11 +45,12 @@ install: albert
 clean:
 	- rm -f albert *.o *.d *~ *# *.core core
 	- rm -f cachegrind.out.* callgrind.out.*
-	- rm -rf doxygen
 
 clean_all:
 	- make clean
 	- rm -f *.gcda *.gcno
+	- rm -rf doxygen
+	- rm -rf coverage coverage.info
 
 coverage:
 	- lcov --capture --directory . --output-file coverage.info
