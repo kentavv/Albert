@@ -80,7 +80,7 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
 #pragma omp parallel for schedule(dynamic, 2) collapse(2)
         for(int i=0; i<(int)all_Substitutions.size(); i++) {
           for(int j=0; j<(int)permutations.size(); j++) {
-            status = PerformSubs(all_Substitutions[i], F, nVars, maxDegVar, Deg_var, permutations, res[i], j);
+            status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations, res[i], j);
           }
         }
       }
