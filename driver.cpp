@@ -530,7 +530,7 @@ type to show */
                        sprintf(tableFileName, "/tmp/Basis.table");
                        tableFilePtr = fopen(tableFileName, "w");
                        if(tableFilePtr){
-                         PrintBasisTable(tableFilePtr, 0);
+                         PrintBasisTable(tableFilePtr);
                          fclose(tableFilePtr);
 		         sprintf(cmd, "lpr %s", tableFileName);
 		         if(system(cmd)){	/* print command failed */
@@ -552,7 +552,7 @@ tableFileName);
                        sprintf(tableFileName, "/tmp/Mult.table");
                        tableFilePtr = fopen(tableFileName, "w");
                        if(tableFilePtr) {
-                         Print_MultTable(tableFilePtr, 0);
+                         Print_MultTable(tableFilePtr);
                          fclose(tableFilePtr);
 		         sprintf(cmd, "lpr %s", tableFileName);
 		         if(system(cmd)){	/* print command failed */
@@ -603,7 +603,7 @@ type to show */
 		         printf("No file name was entered.  Command aborted.\n");
 		         break;
 		       }
-                       PrintBasisTable(tableFilePtr, 0);
+                       PrintBasisTable(tableFilePtr);
 		       fclose(tableFilePtr);
 		     }
 		     else{
@@ -628,7 +628,7 @@ type to show */
 		         printf("No file name was entered.  Command aborted.\n");
 		         break;
 		       }
-                       Print_MultTable(tableFilePtr, 0);
+                       Print_MultTable(tableFilePtr);
 		       fclose(tableFilePtr);
 		     }
 		     else{
@@ -652,7 +652,7 @@ type to show */
 		 switch(table){
 		   case 'b':
 		     if(mtable_status == PRESENT){
-		       PrintBasisTable(stdout, 1);
+		       PrintBasisTable(stdout);
 		     }
 		     else{
 		       printf("Basis Table not present.\n");
@@ -660,7 +660,7 @@ type to show */
 		     break;
 		   case 'm':
 		     if(mtable_status == PRESENT){
-		       Print_MultTable(stdout, 1);
+		       Print_MultTable(stdout);
 		     }
 		     else{
 		       printf("Multiplication Table not present.\n");
@@ -807,7 +807,7 @@ void usage(void)
 }
 
 
-void sigCatch(int x)
+void sigCatch(int)
 {
   sigIntFlag = 1;
 }
