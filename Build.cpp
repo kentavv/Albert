@@ -138,8 +138,7 @@ int InitializeStructures(Type Target_type)
     status = CreateTypeTable(Target_type);
 
     if (status == OK) { 
-        int Target_degree = GetDegreeName(TypeToName(Target_type));
-        status = CreateBasisTable(Target_degree);
+        status = CreateBasisTable();
     }
 
     return (status);
@@ -259,13 +258,21 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
     for(; ii != First_id_node.end() && status == OK; ii++) {
         const polynomial *f = ii->identity;
 
-        if(status == OK && f->degree <= GetDegreeName(n))
-            status = GenerateEquations(f,n, equations);
+        if(f->degree <= GetDegreeName(n))
+            status = GenerateEquations(f, n, equations);
 
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
 	  return(-1);
 	}
     }
+
+   {
+     int tt=0;
+     for(int i=0; i<(int)equations.size(); i++) {
+       tt += equations[i].size();
+     } 
+     printf("...neqn:%d ne:%d nMb:%.2f...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(NULL);
+   }
 
 #if DEBUG_EQNS
     PrintEqns(equations);
@@ -296,14 +303,15 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 int SolveEquations(Equations &equations, Name n)
 {
     int cols = 0;              /* Size of matrix */
-    vector<Unique_basis_pair> BPCptr; /* pointer to BPtoCol */
+    vector<Unique_basis_pair> BPtoCol;
     int rank = 0;
 
 /* CreateMatrix will initialize rows, cols, m, BP and fill in matrix and BPtoCol */
 
    SparseMatrix SM;
-   int status = SparseCreateTheMatrix(equations, SM, &cols, BPCptr, n);
+   int status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
+   printf("BPtoCol:(%d Mb:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
    equations.clear();
 
 #if DEBUG_MATRIX
@@ -312,8 +320,19 @@ int SolveEquations(Equations &equations, Name n)
 #endif
 
    if (status == OK) {
-     printf("Matrix:(%4d X %4d)", (int)SM.size(), cols); fflush(NULL);
+  int tt = 0;
+  for(int i=0; i<(int)SM.size(); i++) {
+    tt += SM[i].size();
+  }
+
+     printf("Matrix:(%4d X %4d (%.2f%% %d Mb:%.2f)", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
      status = SparseReduceMatrix(SM,cols,&rank);
+
+ tt = 0;
+  for(int i=0; i<(int)SM.size(); i++) {
+    tt += SM[i].size();
+  }
+     printf("->(%.2f%% %d Mb:%.2f))", (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
    }
 
 #if DEBUG_MATRIX
@@ -322,7 +341,7 @@ int SolveEquations(Equations &equations, Name n)
 
 /* ExtractMatrix will expand basis table & MultTable ! */
   if (status == OK) {
-	status = SparseExtractFromMatrix(SM,cols,rank,n, BPCptr);
+	status = SparseExtractFromMatrix(SM,cols,rank,n, BPtoCol);
  }
 #if DEBUG_MATRIX
    PrintDependent();
