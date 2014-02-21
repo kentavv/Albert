@@ -76,17 +76,10 @@ static void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struc
 
 static int Max_deg_var = 0;
 
-int PerformSubs(const vector<Basis> &S, const struct polynomial *F, int nVars, int Mdv, const int *Dv, vector<vector<vector<int> > > &permutations, vector<vector<Basis_pair> > &Local_lists, int i)
+int PerformSubs(const vector<Basis> &S, const struct polynomial *F, int Mdv, vector<vector<vector<int> > > &permutations, vector<vector<Basis_pair> > &Local_lists, int i)
 {
-//    vector<vector<vector<int> > > permutations;
-//    BuildPermutationLists(nVars, Dv, permutations);
-
     Max_deg_var = Mdv;
-
-//#pragma omp parallel for schedule(dynamic, 2)
- //   for(int i=0; i<(int)permutations.size(); i++) {
-      Expand(S, F, Local_lists[i], permutations[i]);
-  //  }
+    Expand(S, F, Local_lists[i], permutations[i]);
 
     return true;
 }
