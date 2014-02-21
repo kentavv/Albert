@@ -51,7 +51,7 @@ static void PrintProgress(int i, int n);
 static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
 static void InstallDegree1(void);
 static int ProcessType(Name n, const list<id_queue_node> &First_id_node);
-static int SolveEquations(Equations &equations, Name n);
+static int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCol, Name n);
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
@@ -249,7 +249,12 @@ void InstallDegree1(void)
 /* Process type t for degree i */
 int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 {
-    int status = OK;
+  SparseMatrix SM;
+  int cols = 0;
+  vector<Unique_basis_pair> BPtoCol;
+
+  int status = OK;
+  {
     Equations equations;
 
     printf("Generating..."); fflush(NULL);
@@ -266,6 +271,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 	}
     }
 
+    if (status == OK) {
    {
      int tt=0;
      for(int i=0; i<(int)equations.size(); i++) {
@@ -279,12 +285,19 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 #endif
 
     printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
-    if (status == OK) 
-        status = SolveEquations(equations, n);			
+     status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
-    printf("(%lds)\n", ElapsedTime());
+     printf("BPtoCol:(%d Mb:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
+  }
+  }
 
-    return(status);
+    if (status == OK) {
+  status = SolveEquations(SM, cols, BPtoCol, n);			
+
+  printf("(%lds)\n", ElapsedTime());
+  }
+
+  return(status);
 }
 
 /*******************************************************************/
@@ -300,40 +313,27 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 /*     and enter them into Basis Table. Then write Dependent Basis */
 /*     pairs into Basis by entering products into Mult_table.      */ 
 /*******************************************************************/
-int SolveEquations(Equations &equations, Name n)
+int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCol, Name n)
 {
-    int cols = 0;              /* Size of matrix */
-    vector<Unique_basis_pair> BPtoCol;
-    int rank = 0;
-
-/* CreateMatrix will initialize rows, cols, m, BP and fill in matrix and BPtoCol */
-
-   SparseMatrix SM;
-   int status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
-
-   printf("BPtoCol:(%d Mb:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
-   equations.clear();
-
 #if DEBUG_MATRIX
    PrintColtoBP();
    PrintTheMatrix();
 #endif
 
-   if (status == OK) {
   int tt = 0;
   for(int i=0; i<(int)SM.size(); i++) {
     tt += SM[i].size();
   }
 
+    int rank = 0;
      printf("Matrix:(%4d X %4d (%.2f%% %d Mb:%.2f)", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
-     status = SparseReduceMatrix(SM,cols,&rank);
+     int status = SparseReduceMatrix(SM,cols,&rank);
 
  tt = 0;
   for(int i=0; i<(int)SM.size(); i++) {
     tt += SM[i].size();
   }
      printf("->(%.2f%% %d Mb:%.2f))", (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
-   }
 
 #if DEBUG_MATRIX
    PrintTheRMatrix();
