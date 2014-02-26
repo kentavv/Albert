@@ -45,15 +45,26 @@ void PrintAE(const Alg_element &p);
 #endif
 
 static void clearZeros(Alg_element &p) {
+#if 0
+    int ne = p.size();
+    int nz = 0;
+#endif
     map<Basis, Scalar>::iterator i;
     for(i = p.begin(); i != p.end();) {
       if(i->first == 0 || i->second == 0) {
         p.erase(i++);
-        printf("Term with zero coef or basis removed\n"); 
+#if 0
+        nz++;
+#endif
       } else {
         i++;
       } 
     }
+#if 0
+  if(nz > 0) {
+      printf("%d of %d zero coef or basis terms removed\n", nz, ne);
+  }
+#endif
 }
 
 /*******************************************************************/
