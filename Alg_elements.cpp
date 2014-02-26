@@ -40,8 +40,8 @@ using std::map;
 
 static void clearZeros(Alg_element &p2);
 static int LeftTapAE(Scalar x, Basis b, const Alg_element &p1, Alg_element &p2);
-#if 0
-void PrintAE(const Alg_element *p);
+#if 1
+void PrintAE(const Alg_element &p);
 #endif
 
 static void clearZeros(Alg_element &p) {
@@ -225,26 +225,18 @@ int MultAE(const Alg_element &p1, const Alg_element &p2, Alg_element &p3)
 /* FUNCTION:                                                       */
 /*     Print the Algebraic element *p.                             */
 /*******************************************************************/ 
-void PrintAE(const Alg_element *p)
+void PrintAE(const Alg_element &p)
 {
-    /*int i;*/
-    int k = 0;
-
-    assert_not_null_nv(p);
-
-    printf("Alg_element:\n");
-
-    while(p) {
-         if(p->basis_coef != 0) {
-             if (p->basis_coef > 0)
-                 printf(" + %d b[%d]", p->basis_coef, p->basis);
+    map<Basis, Scalar>::const_iterator pi;
+    for(pi = p.begin(); pi != p.end(); pi++) {
+         Basis basis = pi->first;
+         Scalar coef = pi->second;
+         if(coef != 0) {
+             if (coef > 0)
+                 printf(" + %d b[%d]", coef, basis);
              else
-                 printf(" - %d b[%d]", p->basis_coef, p->basis);
-             k = (k + 1) % 7;
-             if (k == 0)
-                 printf("\n");
+                 printf(" - %d b[%d]", coef, basis);
           }
-     p = p->next;
     }
     printf("\n");
 } 
