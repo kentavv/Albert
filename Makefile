@@ -9,10 +9,10 @@ CXX=g++
 #CFLAGS=-MMD
 #CFLAGS=-g -O0 -Wall
 #CFLAGS=-g -O -Wall
-CFLAGS=-g -O2 -Wall -fopenmp -Weffc++ -Wextra
-#CFLAGS=-g -O2 -Wall -fopenmp --coverage
-#CFLAGS=-g -O2 -Wall -fopenmp -fprofile-generate -fprofile-correction
-#CFLAGS=-g -O2 -Wall -fopenmp -fprofile-use -fprofile-correction
+CFLAGS=-g -O3 -Wall -fopenmp -Weffc++ -Wextra
+#CFLAGS=-g -O3 -Wall -fopenmp --coverage
+#CFLAGS=-g -O3 -Wall -fopenmp -fprofile-generate -fprofile-correction
+#CFLAGS=-g -O3 -Wall -fopenmp -fprofile-use -fprofile-correction
 #CFLAGS=-g -O3 -flto -Wall
 
 CXXFLAGS=$(CFLAGS)
