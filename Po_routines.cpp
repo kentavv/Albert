@@ -33,7 +33,6 @@
 #include "Alg_elements.h"
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
-/*#include "getchar.h"*/
 
 static int Absolute(int Num);
 static int Get_len(int Num);
@@ -106,14 +105,6 @@ void Print_poly(const struct polynomial *Poly, int Poly_len)
                 printf("\n");
                 cur_col = 3 + len_max_coef + term_len;
             }
-#if 0
-            if (cur_row >= maxRows) {
-                cur_row = 0;
-                printf("\n\n Hit Return to continue-->\n\n");
-		fflush(stdout);
-                getchar();
-            }
-#endif
             if((temp_head->coef >= 1) && (!first_term))
                 printf(" + ");
             else if(temp_head->coef <= -1)
