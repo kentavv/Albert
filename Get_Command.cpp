@@ -25,11 +25,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <readline/readline.h>
+#include <readline/history.h>
+
 #include "Get_Command.h"
 #include "Memory_routines.h"
 #include "Strings.h"
 #include "Type_table.h"
-#include "getchar.h"
 
 static int DoSubstitution(void);
 
@@ -38,6 +40,36 @@ static int total_len = 0;
 static char *total_line1 = NULL;
 static Dalbert_node *Dalbertheadptr = NULL;
 static int DotalbertPresent = 0;
+
+
+/* Based on http://cnswww.cns.cwru.edu/php/chet/readline/readline.html */
+
+/* A static variable for holding the line. */
+static char *line_read = (char *)NULL;
+
+/* Read a string, and return a pointer to it.
+ *    Returns NULL on EOF. */
+char *rl_gets(const char *prompt)
+{
+  /* If the buffer has already been allocated,
+ *      return the memory to the free pool. */
+  if (line_read) {
+      free (line_read);
+      line_read = (char *)NULL;
+    }
+
+  /* Get a line from the user. */
+  line_read = readline (prompt);
+
+  /* If the line has any text in it,
+ *      save it on the history. */
+  if (line_read && *line_read) {
+    add_history (line_read);
+  }
+
+  return (line_read);
+}
+
 
 /* Called from Main(). Returns the command and the operand.
  * Also uses the definitions in .albert. Since both comand and
@@ -48,7 +80,6 @@ static int DotalbertPresent = 0;
 
 void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, int *Operand_len_ptr)
 {
-    char temp_line[MAX_LINE];
     char temp_line2[MAX_LINE];
     int slashfound;
     int temp_line_len;
@@ -56,7 +87,8 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
     int tl;
 
     total_line[0] = '\0';
-    temp_line_len = my_getline(temp_line,MAX_LINE);
+    char *temp_line = rl_gets("-->");
+    temp_line_len = strlen(temp_line);
     slashfound = TRUE;
     while ((slashfound) && (temp_line_len > 0)) {
         i = 0;
@@ -68,7 +100,8 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
             temp_line2[j++] = temp_line[i++];
         if (temp_line[i] == '\\') {
             slashfound = TRUE;
-            temp_line_len = my_getline(temp_line,MAX_LINE);
+            temp_line = rl_gets("...");
+            temp_line_len = strlen(temp_line);
         }
         else
             slashfound = FALSE;
@@ -108,6 +141,11 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
     printf("operand = %s \n",*Operand_ptr);
 #endif
     free(total_line1);
+
+  if (line_read) {
+      free (line_read);
+      line_read = (char *)NULL;
+    }
 }
 
 /*

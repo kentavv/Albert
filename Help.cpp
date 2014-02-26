@@ -14,57 +14,42 @@
 /**********************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#if 0
-#include <curses.h>
-#endif
 
 #include "Help.h"
 #include "Help_pri.h"
+#include "Get_Command.h"
 
 static const char *getHelp(const char *helpRqst);
 static void displayHelp(const char *helpPtr);
 
 void initHelp(void)
 {
-#if 1
   helpLines = 24; /* resonable defaults */
   helpCols = 80;
-#else
-  initscr();                            /* initialize LINES and COLS */
-  helpLines = LINES;
-  helpCols = COLS;
-  clear();                              /* clear the buffer */
-  refresh();                            /* display the buffer */
-  endwin();
-#endif
 }
 
-int Help(char topic[])
+int Help(char */*topic[]*/)
 {
-  char str[80];
-  const char *helpPtr; /*, *test;*/
+  char *str = NULL;
+  const char *helpPtr = NULL; /*, *test;*/
 
-  str[0] = '\0';
-  if(!strlen(topic)){
-    strcpy(str, "H");			/* if no topic, display menu */
-  }
-  else{
-    strcpy(str, topic);
-  }
+  displayHelp(getHelp("H"));
+
+  str = rl_gets("HELP-->");
   while(strlen(str)){
-    helpPtr = getHelp(str);
-    if(helpPtr){
-      displayHelp(helpPtr);
-    }
-    else{
-      printf("No help is available for %s\n", str);
+    if(str && strlen(str) > 0) {
+      helpPtr = getHelp(str);
+      if(helpPtr) {
+        displayHelp(helpPtr);
+      } else {
+        printf("No help is available for %s\n", str);
+      }
     }
     printf(" Type a letter for help, or carriage return to\n return\
-	to the Albert session.\n\n\nHELP--> ");
-    fflush(stdout);
-    /*test =*/ fgets(str, 80, stdin);
-    str[strlen(str)-1] = '\0';
+	to the Albert session.\n\n\n");
+    str = rl_gets("HELP-->");
   }
   return 1;
 }

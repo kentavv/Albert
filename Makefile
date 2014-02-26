@@ -24,7 +24,7 @@ LDFLAGS=-fopenmp
 #LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
 #LDFLAGS=-g -O3 -flto
 #LIBS=-lcurses -ltermcap -lm
-LIBS=
+LIBS=-lreadline
 
 C_FILES=$(wildcard *.c)
 CPP_FILES=$(wildcard *.cpp)
@@ -86,9 +86,8 @@ GenerateEquations.o: GenerateEquations.cpp GenerateEquations.h \
  Build_defs.h CreateMatrix.h Po_parse_exptext.h Memory_routines.h \
  Po_prod_bst.h Multpart.h CreateSubs.h Debug.h Type_table.h
 Generators.o: Generators.cpp Generators.h Build_defs.h Po_parse_exptext.h
-getchar.o: getchar.cpp getchar.h
 Get_Command.o: Get_Command.cpp Get_Command.h Memory_routines.h \
- Po_prod_bst.h Strings.h Type_table.h Build_defs.h getchar.h
+ Po_prod_bst.h Strings.h Type_table.h Build_defs.h
 Help.o: Help.cpp Help.h Help_pri.h
 Id_routines.o: Id_routines.cpp Id_routines.h Po_parse_exptext.h \
  Memory_routines.h Po_prod_bst.h Po_routines.h
