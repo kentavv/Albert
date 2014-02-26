@@ -49,7 +49,7 @@ static void clearZeros(Alg_element &p) {
     for(i = p.begin(); i != p.end();) {
       if(i->first == 0 || i->second == 0) {
         p.erase(i++);
-        printf("Zero removed\n"); 
+        printf("Term with zero coef or basis removed\n"); 
       } else {
         i++;
       } 
@@ -144,7 +144,6 @@ void AddAE(const Alg_element &p1, Alg_element &p2)
         p2[p1i->first] = p1i->second;
 
         p1i++;
-        p2i++;
       }
     }
 
