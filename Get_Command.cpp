@@ -58,8 +58,10 @@ char *rl_gets(const char *prompt)
       line_read = (char *)NULL;
     }
 
+  do {
   /* Get a line from the user. */
   line_read = readline (prompt);
+  } while(!line_read);
 
   /* If the line has any text in it,
  *      save it on the history. */
@@ -88,6 +90,7 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
 
     total_line[0] = '\0';
     char *temp_line = rl_gets("-->");
+  if(temp_line) {
     temp_line_len = strlen(temp_line);
     slashfound = TRUE;
     while ((slashfound) && (temp_line_len > 0)) {
@@ -141,7 +144,7 @@ void GetCommand(char **Command_ptr, char **Operand_ptr, int *Command_len_ptr, in
     printf("operand = %s \n",*Operand_ptr);
 #endif
     free(total_line1);
-
+  }
   if (line_read) {
       free (line_read);
       line_read = (char *)NULL;
