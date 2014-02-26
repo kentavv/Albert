@@ -49,6 +49,7 @@ clean:
 clean_all:
 	- make clean
 	- rm -f *.gcda *.gcno
+	- rm -f *.openss
 	- rm -rf doxygen
 	- rm -rf coverage coverage.info
 
