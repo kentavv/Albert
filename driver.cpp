@@ -210,8 +210,8 @@ int main(int argc, char *argv[])
 	  sigIntFlag = 0;
 	}
 
-        printf("\n");
-        printf("\n-->");
+        printf("\n\n");
+        //printf("\n-->");
         GetCommand(&Command,&Operand,&Command_len,&Operand_len);
         printf("\n");
 
