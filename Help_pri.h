@@ -10,8 +10,7 @@
 /***                                   messages                  ***/
 /*******************************************************************/
 
-#define    NUM_COMMANDS    23
-#define    MAX_LINE        80
+#define    NUM_COMMANDS    22
 
 static int helpLines = 0;
 static int helpCols = 0;
