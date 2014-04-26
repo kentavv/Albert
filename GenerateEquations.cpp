@@ -172,9 +172,9 @@ bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Name N, Equations
         printf("Printing %d th SeqSubtypes \n",count++);
         PrintSeqSubtypes();
 #endif
-int b1=equations.size();
+//int b1=equations.size();
 	bool rv = PerformMultiplePartition(The_ident, equations, Num_vars, Seq_sub_types, Deg_vars);
-        printf("*%d %d*", (int)equations.size(), (int)equations.size() - b1); fflush(NULL);
+        //printf("*%d %d*", (int)equations.size(), (int)equations.size() - b1); fflush(NULL);
 //UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, N);
 //equations.clear();
         return rv;

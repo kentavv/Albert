@@ -254,7 +254,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
 {
 void pp_clear();
 pp_clear();
-SM.resize(0);
+SM.clear();
 }
 
   int status = OK;
@@ -269,7 +269,7 @@ SM.resize(0);
 
         if(f->degree <= GetDegreeName(n)) {
             status = GenerateEquations(f, n, equations, SM, cols, BPtoCol);
-puts("#"); fflush(NULL);
+//puts("#"); fflush(NULL);
 UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 equations.clear();
         }
@@ -280,13 +280,15 @@ equations.clear();
     }
 
     if (status == OK) {
+#if 0
    {
      int tt=0;
      for(int i=0; i<(int)equations.size(); i++) {
        tt += equations[i].size();
      } 
-     printf("...neqn:%d ne:%d nMb:%.2f...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(NULL);
+     printf("...neqn:%d ne:%d MB:%.2f...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(NULL);
    }
+#endif
 
 #if DEBUG_EQNS
     PrintEqns(equations);
@@ -296,7 +298,7 @@ equations.clear();
      //status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
      //status = UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
-     printf("BPtoCol:(%d Mb:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
+     //printf("BPtoCol:(%d MB:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
   }
   }
 
@@ -305,7 +307,7 @@ void pp_clear();
 pp_clear();
 }
 
-    if (status == OK) {
+    if (status == OK) { /*SM.shrink_to_fit();*/
   status = SolveEquations(SM, cols, BPtoCol, n);			
 
   printf("(%lds)\n", ElapsedTime());
@@ -340,14 +342,16 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
   }
 
     int rank = 0;
-     printf("Matrix:(%4d X %4d (%.2f%% %d Mb:%.2f)", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
+    // printf("Matrix:(%4d X %4d (%.2f%% %d MB:%.2f)", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
+     printf("Matrix:(%4d X %4d (%.1f%% %.1fMB)->", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt*sizeof(Node)/1024./1024.); fflush(NULL);
      int status = SparseReduceMatrix(SM,cols,&rank);
 
  tt = 0;
   for(int i=0; i<(int)SM.size(); i++) {
     tt += SM[i].size();
   }
-     printf("->(%.2f%% %d Mb:%.2f))", (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
+     //printf("->(%.2f%% %d MB:%.2f))", (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
+     printf("(%.1f%% %.1fMB))", (double)tt / (SM.size() * cols) * 100., tt*sizeof(Node)/1024./1024.); fflush(NULL);
 
 #if DEBUG_MATRIX
    PrintTheRMatrix();

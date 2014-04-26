@@ -121,7 +121,10 @@ void FillPairPresent(const Equations &equations)
   for(ii = equations.begin(); ii != equations.end(); ii++) {
     Equation::const_iterator jj;
     for(jj = ii->begin(); jj != ii->end() /*&& (jj->coef != 0)*/; jj++) {
-      pp.insert(make_pair(jj->left_basis, jj->right_basis));
+      std::vector<Basis_pair>::const_iterator kk; 
+      for(kk = jj->begin(); kk != jj->end() /*&& (jj->coef != 0)*/; kk++) {
+        pp.insert(make_pair(kk->left_basis, kk->right_basis));
+      }
     }
   }
 }
@@ -183,16 +186,18 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
     return(OK);
 
   int se = SM.size();
-  SM.resize(SM.size() + equations.size());
+  SM.resize(se + equations.size());
 
 #pragma omp parallel for schedule(dynamic, 10)
   for(int eq_number=0; eq_number < (int)equations.size(); eq_number++) {
     const Equation &eqn = equations[eq_number];
-    SparseRow &t_row = SM[se + eq_number];
+    SparseRow &d_row = SM[se + eq_number];
+    SparseRow t_row;
 
     for(int i=0; i<(int)eqn.size() /* && eqn[i].coef != 0*/; i++) {
-      int col = GetCol(ColtoBP, eqn[i].left_basis, eqn[i].right_basis);
-      Scalar coef = eqn[i].coef;
+    for(int j=0; j<(int)eqn[i].size() /* && eqn[i].coef != 0*/; j++) {
+      int col = GetCol(ColtoBP, eqn[i][j].left_basis, eqn[i][j].right_basis);
+      Scalar coef = eqn[i][j].coef;
 
       SparseRow::iterator ii;
       for(ii = t_row.begin(); ii != t_row.end() && ii->column < col; ii++) {
@@ -225,6 +230,9 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
           }
       }
     }
+  }
+
+  SparseRow(t_row.begin(), t_row.end()).swap(d_row); // shrink capacity while assigning 
   }
 
   return OK;

@@ -70,7 +70,7 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
     int as = all_Substitutions.size();
     equations.resize(se + as);
 
-    vector<vector<vector<Basis_pair> > > res(as);
+    //vector<vector<vector<Basis_pair> > > res(as);
     {
       vector<vector<vector<int> > > permutations;
       int ps = 0;
@@ -78,7 +78,8 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
         BuildPermutationLists(nVars, Deg_var, permutations);
         ps = permutations.size();
           for(int i=0; i<as; i++) {
-            res[i].resize(ps);
+            //res[i].resize(ps);
+            equations[se + i].resize(ps);
           }
       }
 
@@ -86,16 +87,18 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
 #pragma omp parallel for schedule(dynamic, 2) collapse(2)
         for(int i=0; i<as; i++) {
           for(int j=0; j<ps; j++) {
-            status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations[j], res[i][j]);
+            status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations[j], equations[se + i][j]);
           }
         }
       }
 
-printf("se:%d ass:%d ", se, as);
+//printf("se:%d ass:%d ", se, as);
+#if 0
       for(int i=0; i<as; i++) {
         LocalListToEquation(res[i], equations[se + i]);
         //AppendLocalListToTheList(res[i], equations);
       }
+#endif
 
     return(status);
 }

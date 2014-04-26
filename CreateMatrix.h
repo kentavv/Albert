@@ -31,7 +31,7 @@ typedef struct {
     Basis right_basis;
 } Unique_basis_pair;
 
-typedef std::vector<Basis_pair> Equation;
+typedef std::vector<std::vector<Basis_pair> > Equation;
 typedef std::vector<Equation> Equations;
 
 int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);

@@ -139,6 +139,7 @@ void BuildPermutations(int row, vector<vector<int> > &Permutation_list, vector<v
         
 void AppendLocalListToTheList(const vector<vector<Basis_pair> > &Local_lists, Equations &equations)
 {
+#if 0
     int ll_length = 0;
     for(int i=0; i<(int)Local_lists.size(); i++) {
       ll_length += Local_lists[i].size();
@@ -151,9 +152,11 @@ printf("ll_l:%d eqs:%d lls:%d ", ll_length, (int)equations.size(), (int)Local_li
       LocalListToEquation(Local_lists, eqn);
       equations.push_back(eqn);
    }
+#endif
 }
 
 void LocalListToEquation(const vector<vector<Basis_pair> > &Local_lists, Equation &eqn) {
+#if 0
     int ll_length = 0;
     for(int i=0; i<(int)Local_lists.size(); i++) {
       ll_length += Local_lists[i].size();
@@ -166,6 +169,7 @@ printf("ll_l:%d lls:%d ", ll_length, (int)Local_lists.size());
       for(ii = Local_lists.begin(); ii != Local_lists.end(); ii++) {
         eqn.insert(eqn.end(), ii->begin(), ii->end());
       }
+#endif
 }
 
 /*

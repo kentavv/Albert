@@ -58,7 +58,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
     {
         return(OK);
     }
-
+    //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
@@ -95,6 +95,12 @@ void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor)
    for(SparseRow::iterator ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
       ii->element = S_mul(ii->element, Factor);
    }
+}
+
+template< typename T, class Allocator >
+void shrink_capacity(std::vector<T,Allocator>& v)
+{
+   std::vector<T,Allocator>(v.begin(),v.end()).swap(v);
 }
 
 /*********************************************************************/
@@ -166,9 +172,12 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
   for(; r2i != r2.end(); r2i++) {
     tmp.push_back(*r2i);
   }
-
+  SparseRow(tmp.begin(), tmp.end()).swap(r2); // shrink capacity while assigning
+  //r2 = SparseRow(tmp.begin(), tmp.end());
+  //shrink_capacity(tmp);
+  //printf("<%d %d %d %d>", (int)r2.size(), (int)r2.capacity(),  (int)tmp.size(), (int)tmp.capacity());
   //r2 = tmp; 
-  r2.swap(tmp); 
+  //r2.swap(tmp); 
 }
 
 void SparseKnockOut(SparseMatrix &SM, int row, int col)
