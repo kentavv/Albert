@@ -71,6 +71,10 @@
 /***                                                               ***/
 /*********************************************************************/
 
+#include <vector>
+
+using std::vector;
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,7 +88,7 @@
 #include "Debug.h"
 #include "Type_table.h"
 
-static bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equations);
+static bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Name N, Equations &equations, SparseMatrix &SM, int &cols, vector<Unique_basis_pair> &BPtoCol);
 #if DEBUG_SEQ_SUBTYPES
 static void PrintSeqSubtypes(void);
 #endif
@@ -93,11 +97,11 @@ static void PrintEqns(const Equations &equations);
 static void PrintEqn(Basis_pair *Temp_eqn);
 #endif
 
-static Type Target_type = 0;
+static Type Target_type = NULL;
 static int Target_type_len = 0;
 static int Target_type_deg = 0;
 static int Num_vars = 0;
-static Type Seq_sub_types = 0;
+static Type Seq_sub_types = NULL;
 static int *Deg_vars = NULL;
 static int *Cur_deg_vars = NULL;
 static int Whatsleft = 0;
@@ -105,7 +109,7 @@ static const struct polynomial *The_ident = NULL;
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
 
-int GenerateEquations(const struct polynomial *F, Name N, Equations &equations)
+int GenerateEquations(const struct polynomial *F, Name N, Equations &equations, SparseMatrix &SM, int &cols, vector<Unique_basis_pair> &BPtoCol)
 {
     int i,j;
 
@@ -142,17 +146,18 @@ int GenerateEquations(const struct polynomial *F, Name N, Equations &equations)
     memset(Cur_deg_vars, 0, sizeof(Cur_deg_vars[0]) * Num_vars);
     memset(Seq_sub_types, 0, sizeof(Seq_sub_types[0]) * Num_vars * Target_type_len);
 
-    bool status = GenerateSeqSubtypes(0,0,0, equations); /* Starting of deep recursive calls */
+    bool status = GenerateSeqSubtypes(0,0,0, N, equations, SM, cols, BPtoCol); /* Starting of deep recursive calls */
 
-    free(Seq_sub_types);
-    free(Deg_vars);
-    free(Cur_deg_vars);
+    free(Seq_sub_types); Seq_sub_types = NULL;
+    free(Deg_vars); Deg_vars = NULL;
+    free(Cur_deg_vars); Cur_deg_vars = NULL;
+    free(Target_type); Target_type = NULL;
 
     return(status);
 }
 
 
-bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equations)
+bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Name N, Equations &equations, SparseMatrix &SM, int &cols, vector<Unique_basis_pair> &BPtoCol)
 {
 #if DEBUG_SEQ_SUBTYPES
     static int count = 1;
@@ -167,7 +172,12 @@ bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equati
         printf("Printing %d th SeqSubtypes \n",count++);
         PrintSeqSubtypes();
 #endif
-	return PerformMultiplePartition(The_ident, equations, Num_vars, Seq_sub_types, Deg_vars);
+int b1=equations.size();
+	bool rv = PerformMultiplePartition(The_ident, equations, Num_vars, Seq_sub_types, Deg_vars);
+        printf("*%d %d*", (int)equations.size(), (int)equations.size() - b1); fflush(NULL);
+//UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, N);
+//equations.clear();
+        return rv;
     }
     else if (Cur_row == (Num_vars - 1)) {
         if ((Cur_deg_vars[Cur_row] + Whatsleft) >= Deg_vars[Cur_row]) {
@@ -182,7 +192,7 @@ bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equati
             if ((Cur_col < (Target_type_len - 1)) ||
                ((Cur_col == (Target_type_len - 1)) && 
                (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
-                 if(!GenerateSeqSubtypes(0,Cur_col+1,0, equations)) return false;
+                 if(!GenerateSeqSubtypes(0,Cur_col+1,0, N, equations, SM, cols, BPtoCol)) return false;
 	    }
 
             Cur_deg_vars[Cur_row] = csave; 
@@ -204,7 +214,7 @@ bool GenerateSeqSubtypes(int Cur_row, int Cur_col, int Weight, Equations &equati
                 if ((Cur_col < (Target_type_len - 1)) ||
                    ((Cur_col == (Target_type_len - 1)) && 
                    (Cur_deg_vars[Cur_row] >= Deg_vars[Cur_row]))){
-                     if(!GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i, equations)) return false;
+                     if(!GenerateSeqSubtypes(Cur_row+1,Cur_col,Weight+i, N, equations, SM, cols, BPtoCol)) return false;
 		}
 
                 Cur_deg_vars[Cur_row] = csave; 

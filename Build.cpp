@@ -50,7 +50,7 @@ static long ElapsedTime(void);
 static void PrintProgress(int i, int n);
 static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
 static void InstallDegree1(void);
-static int ProcessType(Name n, const list<id_queue_node> &First_id_node);
+static int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &SM);
 static int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCol, Name n);
 
 extern int sigIntFlag;		/* TW 10/8/93 - flag for Ctrl-C */
@@ -169,6 +169,8 @@ int ProcessDegree(int i, const list<id_queue_node> &First_id_node)
    Basis begin_basis;
    Basis end_basis = 0;
 
+SparseMatrix SM;
+
    if (i == 1)
        InstallDegree1();
    else {
@@ -186,7 +188,7 @@ int ProcessDegree(int i, const list<id_queue_node> &First_id_node)
        while ((status == OK) && (n != -1)) {
            begin_basis = GetNextBasisTobeFilled();
            printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis); fflush(NULL);
-           status = ProcessType(n, First_id_node);
+           status = ProcessType(n, First_id_node, SM);
 	   if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
 /*	     printf("Returning from ProcessDegree().\n");*/
 	     return(-1);
@@ -212,28 +214,25 @@ int ProcessDegree(int i, const list<id_queue_node> &First_id_node)
 /*******************************************************************/
 void InstallDegree1(void)
 {
-    int i,j;
-    int len;
-    Name n;
-    Basis begin_basis;
     Basis end_basis = 0;
-    Type temp_type;
 
-    temp_type = GetNewType();
+    Type temp_type = GetNewType();
     
-    len = GetTargetLen();
+    int len = GetTargetLen();
 
-    for (i=0;i<len;i++) {
-        for (j=0;j<len;j++)
+    for (int i=0;i<len;i++) {
+        for (int j=0;j<len;j++)
             temp_type[j] = 0;
         temp_type[i] = 1;
-        n = TypeToName(temp_type);
-        begin_basis = GetNextBasisTobeFilled();
+        Name n = TypeToName(temp_type);
+        Basis begin_basis = GetNextBasisTobeFilled();
         EnterBasis(0,0,n);
         end_basis = GetNextBasisTobeFilled() - 1;
         UpdateTypeTable(n,begin_basis,end_basis);
     }
     Current_dimension = end_basis;
+
+    free(temp_type);
 }
 
 
@@ -247,11 +246,16 @@ void InstallDegree1(void)
 /*     other basis pairs in terms of existing basis.               */ 
 /*******************************************************************/
 /* Process type t for degree i */
-int ProcessType(Name n, const list<id_queue_node> &First_id_node)
+int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &SM)
 {
-  SparseMatrix SM;
   int cols = 0;
   vector<Unique_basis_pair> BPtoCol;
+
+{
+void pp_clear();
+pp_clear();
+SM.resize(0);
+}
 
   int status = OK;
   {
@@ -263,8 +267,12 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
     for(; ii != First_id_node.end() && status == OK; ii++) {
         const polynomial *f = ii->identity;
 
-        if(f->degree <= GetDegreeName(n))
-            status = GenerateEquations(f, n, equations);
+        if(f->degree <= GetDegreeName(n)) {
+            status = GenerateEquations(f, n, equations, SM, cols, BPtoCol);
+puts("#"); fflush(NULL);
+UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
+equations.clear();
+        }
 
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
 	  return(-1);
@@ -285,11 +293,17 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node)
 #endif
 
     printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
-     status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
+     //status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
+     //status = UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
      printf("BPtoCol:(%d Mb:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
   }
   }
+
+{
+void pp_clear();
+pp_clear();
+}
 
     if (status == OK) {
   status = SolveEquations(SM, cols, BPtoCol, n);			

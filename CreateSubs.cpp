@@ -82,11 +82,16 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
           for(int j=0; j<(int)permutations.size(); j++) {
             status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations, res[i], j);
           }
+          int y;
         }
       }
 
+      int se = equations.size();
+      equations.resize(equations.size() + all_Substitutions.size());
+printf("se:%d ass:%d ", se, (int)all_Substitutions.size());
       for(int i=0; i<(int)all_Substitutions.size(); i++) {
-        AppendLocalListToTheList(res[i], equations);
+        LocalListToEquation(res[i], equations[se + i]);
+        //AppendLocalListToTheList(res[i], equations);
       }
 
     return(status);

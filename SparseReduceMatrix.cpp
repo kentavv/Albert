@@ -167,7 +167,8 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
     tmp.push_back(*r2i);
   }
 
-  r2 = tmp; 
+  //r2 = tmp; 
+  r2.swap(tmp); 
 }
 
 void SparseKnockOut(SparseMatrix &SM, int row, int col)

@@ -79,9 +79,7 @@ static int Max_deg_var = 0;
 int PerformSubs(const vector<Basis> &S, const struct polynomial *F, int Mdv, vector<vector<vector<int> > > &permutations, vector<vector<Basis_pair> > &Local_lists, int i)
 {
     Max_deg_var = Mdv;
-    Expand(S, F, Local_lists[i], permutations[i]);
-
-    return true;
+    return Expand(S, F, Local_lists[i], permutations[i]);
 }
 
 void BuildPermutationLists(int nVars, const int *Dv, vector<vector<vector<int> > > &permutations) {
@@ -147,15 +145,27 @@ void AppendLocalListToTheList(const vector<vector<Basis_pair> > &Local_lists, Eq
     }
 
     if(ll_length > 0) {
-      equations.resize(equations.size() + 1);
-      Equation &eqn = equations.back() ;
+printf("ll_l:%d eqs:%d lls:%d ", ll_length, (int)equations.size(), (int)Local_lists.size());
+      Equation eqn;
+      eqn.reserve(ll_length);
+      LocalListToEquation(Local_lists, eqn);
+      equations.push_back(eqn);
+   }
+}
+
+void LocalListToEquation(const vector<vector<Basis_pair> > &Local_lists, Equation &eqn) {
+    int ll_length = 0;
+    for(int i=0; i<(int)Local_lists.size(); i++) {
+      ll_length += Local_lists[i].size();
+    }
+
+printf("ll_l:%d lls:%d ", ll_length, (int)Local_lists.size());
       eqn.reserve(ll_length);
 
       vector<vector<Basis_pair> >::const_iterator ii;
       for(ii = Local_lists.begin(); ii != Local_lists.end(); ii++) {
         eqn.insert(eqn.end(), ii->begin(), ii->end());
       }
-   }
 }
 
 /*

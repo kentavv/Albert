@@ -90,9 +90,16 @@ static void PrintTheMatrix(void);
    before returning to SolveEquations() in Build.c */
 
 int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
-{
-    pp.clear();
+{ return 0; }
 
+void pp_clear() {
+    pp.clear();
+}
+
+int UpdateCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
+{
+    //pp.clear();
+ColtoBP.clear();
     FillPairPresent(equations);
 /*
     PrintPairPresent();
@@ -105,6 +112,7 @@ int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Col
 
     return(OK);
 }
+
 
 
 void FillPairPresent(const Equations &equations)
@@ -173,13 +181,14 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
 {
   if (ColtoBP.empty() || equations.empty())
     return(OK);
-	
-  SM.resize(equations.size());
+
+  int se = SM.size();
+  SM.resize(SM.size() + equations.size());
 
 #pragma omp parallel for schedule(dynamic, 10)
   for(int eq_number=0; eq_number < (int)equations.size(); eq_number++) {
     const Equation &eqn = equations[eq_number];
-    SparseRow &t_row = SM[eq_number];
+    SparseRow &t_row = SM[se + eq_number];
 
     for(int i=0; i<(int)eqn.size() /* && eqn[i].coef != 0*/; i++) {
       int col = GetCol(ColtoBP, eqn[i].left_basis, eqn[i].right_basis);

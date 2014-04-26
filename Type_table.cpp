@@ -333,6 +333,10 @@ int InitTypetable(void)
 void DestroyTypeTable(void)
 {
     if(Type_table) {
+      for(int i=0;i<Tot_subtypes;i++) {
+        if(Type_table[i].type) free(Type_table[i].type);
+      }
+
       free(Type_table);
       Type_table = NULL;
     }
