@@ -82,7 +82,6 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
           for(int j=0; j<(int)permutations.size(); j++) {
             status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations, res[i], j);
           }
-          int y;
         }
       }
 
