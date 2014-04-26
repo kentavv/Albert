@@ -76,10 +76,10 @@ static void Sub(const vector<Basis> &Substitution, Alg_element &Ans, const struc
 
 static int Max_deg_var = 0;
 
-int PerformSubs(const vector<Basis> &S, const struct polynomial *F, int Mdv, vector<vector<vector<int> > > &permutations, vector<vector<Basis_pair> > &Local_lists, int i)
+int PerformSubs(const vector<Basis> &S, const struct polynomial *F, int Mdv, vector<vector<int> > &permutation, vector<Basis_pair> &Local_list)
 {
     Max_deg_var = Mdv;
-    return Expand(S, F, Local_lists[i], permutations[i]);
+    return Expand(S, F, Local_list, permutation);
 }
 
 void BuildPermutationLists(int nVars, const int *Dv, vector<vector<vector<int> > > &permutations) {

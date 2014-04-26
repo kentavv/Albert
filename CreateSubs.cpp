@@ -66,29 +66,33 @@ int CreateSubs(Equations &equations, const struct polynomial *F, int nVars, int 
 {
     int status = OK;
  
-    vector<vector<vector<Basis_pair> > > res(all_Substitutions.size());
+    int se = equations.size();
+    int as = all_Substitutions.size();
+    equations.resize(se + as);
+
+    vector<vector<vector<Basis_pair> > > res(as);
     {
       vector<vector<vector<int> > > permutations;
+      int ps = 0;
       {
         BuildPermutationLists(nVars, Deg_var, permutations);
-          for(int i=0; i<(int)all_Substitutions.size(); i++) {
-            res[i].resize(permutations.size());
+        ps = permutations.size();
+          for(int i=0; i<as; i++) {
+            res[i].resize(ps);
           }
       }
 
 //printf("<%d %d %d>\n", all_Substitutions.size(), Substitutions.size(), permutations.size());
 #pragma omp parallel for schedule(dynamic, 2) collapse(2)
-        for(int i=0; i<(int)all_Substitutions.size(); i++) {
-          for(int j=0; j<(int)permutations.size(); j++) {
-            status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations, res[i], j);
+        for(int i=0; i<as; i++) {
+          for(int j=0; j<ps; j++) {
+            status = PerformSubs(all_Substitutions[i], F, maxDegVar, permutations[j], res[i][j]);
           }
         }
       }
 
-      int se = equations.size();
-      equations.resize(equations.size() + all_Substitutions.size());
-printf("se:%d ass:%d ", se, (int)all_Substitutions.size());
-      for(int i=0; i<(int)all_Substitutions.size(); i++) {
+printf("se:%d ass:%d ", se, as);
+      for(int i=0; i<as; i++) {
         LocalListToEquation(res[i], equations[se + i]);
         //AppendLocalListToTheList(res[i], equations);
       }
