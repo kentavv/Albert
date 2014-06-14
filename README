@@ -12,3 +12,14 @@ retrieved from
 
 on Feb. 2, 2014
 
+
+For best performance, it is recommended that Albert be compiled in two stages. The first stage collects execution statistics that GCC can use in the second stage. To do this, edit the Makefile to enable the following options, compile, and perform an example of your typical work in Albert.
+
+	CFLAGS=-g -O3 -Wall -fopenmp -fprofile-generate -fprofile-correction
+	LDFLAGS=-fopenmp -fprofile-generate -fprofile-correction
+
+After a few minutes of having Albert calculate, enable the following Makefile flags, execute 'make clean', and rebuild Albert.
+
+	CFLAGS=-g -O3 -Wall -fopenmp -fprofile-use -fprofile-correction
+	LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
+
