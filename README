@@ -1,4 +1,4 @@
-Albert is an interactive program to assist the specialist in the study of nonassociative algebra. The program was first designed and implemented at Clemson University about 1990 by D. Jacobs and S.V. Muddana, with assistance from A.J. Offutt, under an NSF grant. Enhancements have been made by K. Prabhu, D. Lee, and T. Whiteley. The main problem addressed by Albert is the recognition of polynomial identities in varieties of nonassociative algebras. 
+Albert is an interactive program to assist the specialist in the study of nonassociative algebra. The program was first designed and implemented at Clemson University about 1990 by D. Jacobs and S.V. Muddana, with assistance from A.J. Offutt, under an NSF grant. Enhancements have been made by K. Prabhu, D. Lee, and T. Whiteley. K.A. Vander Velden improved memory usage and enhanced performance. The main problem addressed by Albert is the recognition of polynomial identities in varieties of nonassociative algebras. 
 
 
 This repository is an update to the Albert package
