@@ -200,10 +200,10 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
       Scalar coef = eqn[i][j].coef;
 
       SparseRow::iterator ii;
-      for(ii = t_row.begin(); ii != t_row.end() && ii->column < col; ii++) {
+      for(ii = t_row.begin(); ii != t_row.end() && ii->getColumn() < col; ii++) {
       }
 
-      if(ii == t_row.end() || ii->column != col) {
+      if(ii == t_row.end() || ii->getColumn() != col) {
 	  /* Here we should add a node since there is no node in 
 	     the row with the column value we are looking for */
 
@@ -211,22 +211,22 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
 
           if(t != S_zero()) {
             Node node;
-            node.column = col;
-            node.element = t;
+            node.setColumn(col);
+            node.setElement(t);
             t_row.insert(ii, node);
           }
       } else {
           /* There is a node here with the same column value we are
                looking for so add the new value to this one */
 
-          Scalar t = S_add(ii->element, coef);
+          Scalar t = S_add(ii->getElement(), coef);
 
           if(t == S_zero()) {
             /* If the result is zero then we will want to delete this node */
             t_row.erase(ii);
           } else {
             /* the result was nonzero and we just change the node element field to the result */
-            ii->element = t;
+            ii->setElement(t);
           }
       }
     }

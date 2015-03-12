@@ -107,7 +107,7 @@ void SparseFillDependent(const SparseMatrix &SM, vector<int> &Dependent)
     for(int i=0; i < MatrixRank; i++)
 	 {
 
-             Dependent[SM[i].begin()->column] = S_one();
+             Dependent[SM[i].begin()->getColumn()] = S_one();
 	 } 
 
 }
@@ -167,12 +167,12 @@ void SparseProcessDependentBasis(const SparseMatrix &SM, const vector<Unique_bas
        tl.clear();
        SparseRow::const_iterator ii = row.begin();
        for(ii++; ii!=row.end(); ii++) {
-           int k = ii->column;
+           int k = ii->getColumn();
 	   Scalar S_temp = Get_Matrix_Element(SM, rowId, k);
            tl.push_back(make_pair(BasisNames[k], S_minus(S_temp)));
        }
 
-       int j=row.begin()->column;
+       int j=row.begin()->getColumn();
        Basis b1 = ColtoBP[j].left_basis;
        Basis b2 = ColtoBP[j].right_basis;
        EnterProduct(b1, b2, tl);

@@ -23,7 +23,7 @@
 #define assert_not_null(p) if ((p) == NULL) return(NULL_PTR_ERR)
 #define assert_not_null_nv(p) if ((p) == NULL) return;
 
-typedef unsigned char Scalar;
+typedef unsigned char Scalar; // do not change from u_char without understaning implication on struct Node
 typedef int Basis;
 typedef char Degree;
 typedef Degree *Type;

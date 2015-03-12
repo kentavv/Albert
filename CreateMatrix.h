@@ -12,9 +12,38 @@
 #include "Build_defs.h"
 
 struct Node {
-  int column;
-  Scalar element;
-} __attribute__((packed));
+#if 1
+  unsigned int e_c; // e:0xff000000 c:0x00ffffff
+  Scalar getElement() const {
+    return (e_c & 0xff000000) >> 24;
+  }
+  void setElement(Scalar e) {
+    e_c = (e_c & 0x00ffffff) | (e << 24);
+  }
+  int getColumn() const {
+    return (e_c & 0x00ffffff);
+  }
+  void setColumn(int c) {
+    e_c = (e_c & 0xff000000) | (c & 0x00ffffff);
+  }
+#else
+  int c_;
+  Scalar e_;
+
+  Scalar getElement() const {
+    return e_;
+  }
+  void setElement(Scalar e) {
+    e_ = e;
+  }
+  int getColumn() const {
+    return c_;
+  }
+  void setColumn(int c) {
+    c_ = c;
+  }
+#endif
+};
 
 typedef Scalar *Matrix;
 typedef std::vector<Node> SparseRow;

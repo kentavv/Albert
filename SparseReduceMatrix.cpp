@@ -147,7 +147,7 @@ struct stats {
       }
 
       for(int jj=0; jj<(int)SM[ii].size(); jj++) {
-        if(SM[ii][jj].element == S_zero()) {
+        if(SM[ii][jj].getElement() == S_zero()) {
           n_zero_elements++;
         }
       }
@@ -214,7 +214,7 @@ void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor)
 {
    /* Step thru row ... multiplying each element by the factor */
    for(SparseRow::iterator ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
-      ii->element = S_mul(ii->element, Factor);
+      ii->setElement(S_mul(ii->getElement(), Factor));
    }
 }
 
@@ -256,20 +256,20 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
   SparseRow::const_iterator r2i = r2.begin();
 
   for(; r1i != r1.end() && r2i != r2.end();) {
-    if(r1i->column == r2i->column) {
-      Scalar x = S_add(r2i->element, S_mul(Factor, r1i->element));
+    if(r1i->getColumn() == r2i->getColumn()) {
+      Scalar x = S_add(r2i->getElement(), S_mul(Factor, r1i->getElement()));
       if(x != S_zero()) {
         Node n = *r1i;
-        n.element = x;
+        n.setElement(x);
         tmp.push_back(n);
       }
       r1i++;
       r2i++;
-    } else if(r1i->column < r2i->column) {
-      Scalar x = S_mul(Factor, r1i->element);
+    } else if(r1i->getColumn() < r2i->getColumn()) {
+      Scalar x = S_mul(Factor, r1i->getElement());
       //if(x != S_zero()) {
         Node n = *r1i;
-        n.element = x;
+        n.setElement(x);
         tmp.push_back(n);
       //}
       r1i++;
@@ -281,10 +281,10 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
 
   // append r2 with remaining r1 nodes
   for(; r1i != r1.end(); r1i++) {
-    Scalar x = S_mul(Factor, r1i->element);
+    Scalar x = S_mul(Factor, r1i->getElement());
     //if(x != S_zero()) {
       Node n = *r1i;
-      n.element = x;
+      n.setElement(x);
       tmp.push_back(n);
     //}
   }
@@ -460,8 +460,8 @@ Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
 Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
 {
     /* either return the element at location i,j or return a zero */
-    for(SparseRow::const_iterator ii = SM[i].begin(); ii != SM[i].end() && ii->column <= j; ii++) {
-      if(ii->column == j) return ii->element;
+    for(SparseRow::const_iterator ii = SM[i].begin(); ii != SM[i].end() && ii->getColumn() <= j; ii++) {
+      if(ii->getColumn() == j) return ii->getElement();
     }
     return S_zero();
 }
