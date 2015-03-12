@@ -54,7 +54,7 @@ static void Print_Node(NODE_PTR Prt_Node);
 #endif
 
 struct stats {
-  size_t n_zero_elements;
+  //size_t n_zero_elements;
   size_t n_elements;
   size_t capacity;
   size_t n_zero_rows;
@@ -68,7 +68,7 @@ struct stats {
   stats() : first_update(0) {}
 
   void clear() {
-    n_zero_elements = 0;
+    //n_zero_elements = 0;
     n_elements = 0;
     capacity = 0;
     n_zero_rows = 0;
@@ -92,8 +92,13 @@ struct stats {
  
   void print() const {
     printf("\r\t\tne:%lu", n_elements);
-    if(n_zero_elements > 0 || n_elements != capacity) {
-      printf(" ze:%lu ce:%lu", n_zero_elements, capacity);
+#if 0
+    if(n_zero_elements > 0) {
+      printf(" ze:%lu", n_zero_elements);
+    }
+#endif
+    if(n_elements != capacity) {
+      printf(" ce:%lu", capacity);
     }
     printf("  zr:%lu  lr:%d/%lu  lc:%d/%lu",
            n_zero_rows,
@@ -146,11 +151,14 @@ struct stats {
         n_zero_rows++;
       }
 
+#if 0
+      // There should be no zero elements
       for(int jj=0; jj<(int)SM[ii].size(); jj++) {
         if(SM[ii][jj].getElement() == S_zero()) {
           n_zero_elements++;
         }
       }
+#endif
     }
 
     if(do_print) {
@@ -199,7 +207,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
            nextstairrow++;
         }
 
-        s1.update(SM, nextstairrow, i, nCols, 10, true);
+        s1.update(SM, nextstairrow, i, nCols, 600, true);
     }
     *Rank=nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
