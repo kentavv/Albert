@@ -31,9 +31,11 @@
 using std::list;
 using std::vector;
 using std::lower_bound;
+//using std::random_shuffle;
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <omp.h>
 
@@ -51,6 +53,112 @@ static void Print_SLList(Node *SLHead_Ptr);
 static void Print_Node(NODE_PTR Prt_Node);
 #endif
 
+struct stats {
+  size_t n_zero_elements;
+  size_t n_elements;
+  size_t capacity;
+  size_t n_zero_rows;
+  size_t n_rows;
+  size_t n_cols;
+  int last_nextstairrow;
+  int last_col;
+  time_t first_update;
+  time_t last_update;
+
+  stats() : first_update(0) {}
+
+  void clear() {
+    n_zero_elements = 0;
+    n_elements = 0;
+    capacity = 0;
+    n_zero_rows = 0;
+    n_rows = 0;
+    n_cols = 0;
+    last_nextstairrow = 0;
+    last_col = 0;
+    //first_update = 0;
+    //last_update = 0;
+  }
+ 
+  static void tp(float t) {
+    if(t > 3600) {
+      printf("%.02fh", t / 3600.);
+    } else if(t > 60) {
+      printf("%.02fm", t / 60.);
+    } else {
+      printf("%.02fs", t);
+    }
+  }
+ 
+  void print() const {
+    printf("\r\t\tne:%lu", n_elements);
+    if(n_zero_elements > 0 || n_elements != capacity) {
+      printf(" ze:%lu ce:%lu", n_zero_elements, capacity);
+    }
+    printf("  zr:%lu  lr:%d/%lu  lc:%d/%lu",
+           n_zero_rows,
+           last_nextstairrow, n_rows,
+           last_col, n_cols);
+    {
+      time_t dt = last_update - first_update;
+      if(dt > 0) {
+        printf("  tt:"); tp(dt);
+      }
+    }
+    if(last_col > 100) {
+      int d = last_update - first_update;
+      if(d != 0) {
+        float cps = (last_col + 1) / float(d);
+        printf("  cps:%.02f", cps);
+
+        float eta = (n_cols - last_col) / cps;
+        if(eta > 1) {
+          printf("  eta:"); tp(eta);
+        }
+      }
+    }
+    printf("                    ");
+    fflush(NULL);
+  }
+
+  void update(const SparseMatrix &SM, int nextstairrow_, int last_col_, int nCols_, int timeout=-1, bool do_print=false) {
+    time_t t = time(NULL);
+    if(timeout != -1 && last_update != 0 && t - last_update < timeout) {
+      return;
+    }
+
+    clear();
+    if(first_update == 0) {
+      first_update = t;
+    }
+    last_update = t;
+
+    n_rows = SM.size();
+    n_cols = nCols_;
+    last_nextstairrow = nextstairrow_;
+    last_col = last_col_;
+
+    for(int ii=0; ii<(int)SM.size(); ii++) {
+      capacity += SM[ii].capacity();
+      n_elements += SM[ii].size();
+
+      if(SM[ii].size() == 0) {
+        n_zero_rows++;
+      }
+
+      for(int jj=0; jj<(int)SM[ii].size(); jj++) {
+        if(SM[ii][jj].element == S_zero()) {
+          n_zero_elements++;
+        }
+      }
+    }
+
+    if(do_print) {
+      print();
+    }
+  }
+};
+
 
 int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 {
@@ -58,9 +166,17 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
     {
         return(OK);
     }
+
+//random_shuffle(SM.begin(), SM.end());
+
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
+
+    putchar('\n');
+
+    stats s1;
+    s1.update(SM, 0, 0, nCols, -1, true);
 
     int nextstairrow = 0;
     for (int i=0;i<nCols;i++)
@@ -82,8 +198,13 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
            SparseKnockOut(SM, nextstairrow, i);
            nextstairrow++;
         }
+
+        s1.update(SM, nextstairrow, i, nCols, 10, true);
     }
     *Rank=nextstairrow;
+    s1.update(SM, nextstairrow, nCols, nCols, -1, true);
+
+    printf("\n\t\t\t");
 
     return(OK);
 }
