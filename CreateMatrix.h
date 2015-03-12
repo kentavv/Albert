@@ -14,7 +14,7 @@
 struct Node {
   int column;
   Scalar element;
-};
+} __attribute__((packed));
 
 typedef Scalar *Matrix;
 typedef std::vector<Node> SparseRow;
