@@ -34,7 +34,7 @@
 /*******************************************************************/ 
 void Str_cat(char **Str1_ptr, char Str2[], int *Str1_maxsize_ptr)
 {
-    if (*Str1_maxsize_ptr < (int)strlen(*Str1_ptr) + (int)strlen(Str2)) {
+    if (*Str1_maxsize_ptr < (int)strlen(*Str1_ptr) + (int)strlen(Str2) + 1) {
         int n = 2 * (*Str1_maxsize_ptr + strlen(Str2));
 
         *Str1_ptr = (char*) realloc(*Str1_ptr, n);
