@@ -20,6 +20,8 @@
 /* MODIFIES:                                                       */
 /*     Str1_ptr -- pointer to a string                             */
 /*     *Str1_maxsize_ptr -- maximum size to which Str1 can grow.   */ 
+/*                          this size includes the trailing \0     */
+/*     *Str1_maxsize_ptr -- maximum size to which Str1 can grow.   */ 
 /* REQUIRES:                                                       */
 /*     Str2 -- string which is to be attached to *Str1_ptr.        */
 /* RETURNS: None.                                                  */

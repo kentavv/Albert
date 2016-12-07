@@ -6,6 +6,7 @@
 /***  AUTHOR:    Sekhar Muddana                                  ***/
 /*******************************************************************/
 
+/* MAX_LINE includes trailing \0, and this value is passed to fgets() */
 #define   MAX_LINE        1000
 #define   DB_READ_ALBERT   0 
 #define   TRUE   1 
