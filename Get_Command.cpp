@@ -382,16 +382,19 @@ message to display path */
                 if ((albert_line[i] == ' ') || (albert_line[i] == '\t'))
                     break;
                 tnodeptr->lhs[j++] = albert_line[i++];
+                tnodeptr->lhs[j] = '\0';
             }
-            tnodeptr->lhs[j++] = '\0';
 
             tnodeptr->rhs = (char*) Mymalloc(rhs_len+1);
             j = 0;
             while (i < alinelen) {
-                if ((albert_line[i] != ' ') && (albert_line[i] != '\t'))
+                if ((albert_line[i] != ' ') && (albert_line[i] != '\t')) {
                      tnodeptr->rhs[j++] = albert_line[i];
+                     tnodeptr->rhs[j] = '\0';
+                }
                 i++;
             }
+
             tnodeptr->next = (Dalbert_node *) Mymalloc(sizeof(Dalbert_node));
             tnodeptr = tnodeptr->next;
             tnodeptr->lhs = NULL;
