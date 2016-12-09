@@ -23,3 +23,10 @@ After a few minutes of having Albert calculate, enable the following Makefile fl
 	CFLAGS=-g -O3 -Wall -fopenmp -fprofile-use -fprofile-correction
 	LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
 
+
+Dependencies
+
+To compile Albert, the development version of libreadline must be available. The installation method may vary between operating systems. E.g., on Ubuntu, the following operation must be run.
+
+  apt install libreadline-dev
+
