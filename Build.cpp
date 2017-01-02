@@ -270,8 +270,19 @@ SM.clear();
         if(f->degree <= GetDegreeName(n)) {
             status = GenerateEquations(f, n, equations, SM, cols, BPtoCol);
 //puts("#"); fflush(NULL);
-UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
-equations.clear();
+// It seems it should be possible to call UpdateCreateTheMatrix(..) incrementally, and while
+// that works on all previously tested examples, the following should have degree 29, buts has 23
+//i c((ad)b)-(a(db))c
+//i ab-ba
+//g a b c d
+//build
+// vs.
+//i ((ad)b)c-(a(db))c
+//i ab-ba
+//g a b c d
+//build
+//UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
+//equations.clear();
         }
 
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
@@ -295,8 +306,9 @@ equations.clear();
 #endif
 
     printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
+     // disable both these lines if building incrementally
      //status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
-     //status = UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
+     status = UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
      //printf("BPtoCol:(%d MB:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
   }
