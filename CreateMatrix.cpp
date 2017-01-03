@@ -90,25 +90,44 @@ static void PrintTheMatrix(void);
    before returning to SolveEquations() in Build.c */
 
 int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
-{ return 0; }
-
-void pp_clear() {
-    pp.clear();
-}
-
-int UpdateCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, vector<Unique_basis_pair> &ColtoBP, Name n)
 {
-    //pp.clear();
-ColtoBP.clear();
+    pp.clear();
+    ColtoBP.clear();
+
     FillPairPresent(equations);
 /*
     PrintPairPresent();
 */
     CreateColtoBP(n, ColtoBP);
+
+#if 0
+    {
+      for(int i=0; i<ColtoBP.size(); i++) {
+        printf("cbp %d %d %d\n", i, ColtoBP[i].left_basis, ColtoBP[i].right_basis);
+      }
+    }
+#endif
+    
     if (SparseFillTheMatrix(equations, ColtoBP, SM) != OK)
         return(0);
 
+#if 0
+    {
+      for(int i=0; i<SM.size(); i++) {
+        const SparseRow &row = SM[i];
+        vector<Node>::const_iterator j;
+        printf("%d", i);
+        for(j=row.begin(); j!=row.end(); j++) {
+          printf("\t(%d %d)", j->getColumn(), j->getElement());
+        }
+        putchar('\n');
+      }
+    }
+#endif
+    
     *Cols = pp.size();
+
+    pp.clear();
 
     return(OK);
 }
@@ -132,12 +151,12 @@ void FillPairPresent(const Equations &equations)
               
 void CreateColtoBP(Name N, vector<Unique_basis_pair> &ColtoBP)
 {
-    int Num_unique_basis_pairs = pp.size();
+    const int Num_unique_basis_pairs = pp.size();
 
     if (Num_unique_basis_pairs > 0) {
       ColtoBP.resize(Num_unique_basis_pairs);
   
-      Degree d = GetDegreeName(N);
+      const Degree d = GetDegreeName(N);
       int col_to_bp_index = 0;
      
       for (int i=1; i<d; i++) {
@@ -185,19 +204,18 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
   if (ColtoBP.empty() || equations.empty())
     return(OK);
 
-  int se = SM.size();
+  const int se = SM.size();
   SM.resize(se + equations.size());
 
 #pragma omp parallel for schedule(dynamic, 10)
   for(int eq_number=0; eq_number < (int)equations.size(); eq_number++) {
     const Equation &eqn = equations[eq_number];
-    SparseRow &d_row = SM[se + eq_number];
     SparseRow t_row;
 
     for(int i=0; i<(int)eqn.size() /* && eqn[i].coef != 0*/; i++) {
     for(int j=0; j<(int)eqn[i].size() /* && eqn[i].coef != 0*/; j++) {
-      int col = GetCol(ColtoBP, eqn[i][j].left_basis, eqn[i][j].right_basis);
-      Scalar coef = eqn[i][j].coef;
+      const int col = GetCol(ColtoBP, eqn[i][j].left_basis, eqn[i][j].right_basis);
+      const Scalar coef = eqn[i][j].coef;
 
       SparseRow::iterator ii;
       for(ii = t_row.begin(); ii != t_row.end() && ii->getColumn() < col; ii++) {
@@ -207,7 +225,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
 	  /* Here we should add a node since there is no node in 
 	     the row with the column value we are looking for */
 
-          Scalar t = S_add(S_zero(), coef);
+          const Scalar t = S_add(S_zero(), coef);
 
           if(t != S_zero()) {
             Node node;
@@ -219,7 +237,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
           /* There is a node here with the same column value we are
                looking for so add the new value to this one */
 
-          Scalar t = S_add(ii->getElement(), coef);
+          const Scalar t = S_add(ii->getElement(), coef);
 
           if(t == S_zero()) {
             /* If the result is zero then we will want to delete this node */
@@ -230,9 +248,10 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
           }
       }
     }
-  }
+    }
 
-  SparseRow(t_row.begin(), t_row.end()).swap(d_row); // shrink capacity while assigning 
+    SparseRow &d_row = SM[se + eq_number];
+    SparseRow(t_row.begin(), t_row.end()).swap(d_row); // shrink capacity while assigning 
   }
 
   return OK;
@@ -241,7 +260,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
 
 int GetCol(const vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis)
 {
-    int Num_unique_basis_pairs = ColtoBP.size();
+    const int Num_unique_basis_pairs = ColtoBP.size();
 
     int low = 0;
     int high = Num_unique_basis_pairs - 1;

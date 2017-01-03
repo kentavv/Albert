@@ -251,11 +251,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
   int cols = 0;
   vector<Unique_basis_pair> BPtoCol;
 
-{
-void pp_clear();
-pp_clear();
-SM.clear();
-}
+  SM.clear();
 
   int status = OK;
   {
@@ -268,21 +264,7 @@ SM.clear();
         const polynomial *f = ii->identity;
 
         if(f->degree <= GetDegreeName(n)) {
-            status = GenerateEquations(f, n, equations, SM, cols, BPtoCol);
-//puts("#"); fflush(NULL);
-// It seems it should be possible to call UpdateCreateTheMatrix(..) incrementally, and while
-// that works on all previously tested examples, the following should have degree 29, buts has 23
-//i c((ad)b)-(a(db))c
-//i ab-ba
-//g a b c d
-//build
-// vs.
-//i ((ad)b)c-(a(db))c
-//i ab-ba
-//g a b c d
-//build
-//UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
-//equations.clear();
+            status = GenerateEquations(f, n, equations);
         }
 
 	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
@@ -291,13 +273,13 @@ SM.clear();
     }
 
     if (status == OK) {
-#if 0
+#if 1
    {
      int tt=0;
      for(int i=0; i<(int)equations.size(); i++) {
        tt += equations[i].size();
      } 
-     printf("...neqn:%d ne:%d MB:%.2f...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(NULL);
+     printf("neqn:%d (ne:%d MB:%.2f)...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(NULL);
    }
 #endif
 
@@ -306,23 +288,17 @@ SM.clear();
 #endif
 
     printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
-     // disable both these lines if building incrementally
-     //status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
-     status = UpdateCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
+    status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
-     //printf("BPtoCol:(%d MB:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
+    //printf("BPtoCol:(%d MB:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
   }
   }
 
-{
-void pp_clear();
-pp_clear();
-}
 
-    if (status == OK) { /*SM.shrink_to_fit();*/
-  status = SolveEquations(SM, cols, BPtoCol, n);			
-
-  printf("(%lds)\n", ElapsedTime());
+  if (status == OK) { /*SM.shrink_to_fit();*/
+      status = SolveEquations(SM, cols, BPtoCol, n);			
+      
+      printf("(%lds)\n", ElapsedTime());
   }
 
   return(status);
