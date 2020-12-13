@@ -740,9 +740,10 @@ type to show */
 
 void Print_title(void)
 {
-    printf("\n\n         ((Albert)), Version 4.0, 2008\n");
-    printf("Dept. of Computer Science, Clemson University\n\n");
-    printf("\n");
+    printf("\n\n         ((Albert)), Version 4.0, 2008\n"
+           "Dept. of Computer Science, Clemson University\n\n"
+           "Enhanced V4.0.1 by kent.vandervelden@gmail.com\n"
+           "Compiled " __DATE__ ", " __TIME__ "\n\n\n");
 }
 
 /* Called from S_init() of Scalar_arithmetic.c Used to build the inverse
