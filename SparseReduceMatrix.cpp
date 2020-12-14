@@ -65,7 +65,16 @@ struct stats {
   time_t first_update;
   time_t last_update;
 
-  stats() : first_update(0) {}
+  stats() : // n_zero_elements(0),
+    n_elements(0),
+    capacity(0),
+    n_zero_rows(0),
+    n_rows(0),
+    n_cols(0),
+    last_nextstairrow(0),
+    last_col(0),
+    first_update(0),
+    last_update(0) {}
 
   void clear() {
     //n_zero_elements = 0;
