@@ -298,7 +298,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
   if (status == OK) { /*SM.shrink_to_fit();*/
       status = SolveEquations(SM, cols, BPtoCol, n);			
       
-      printf("(%lds)\n", ElapsedTime());
+      printf("\t\tDone: %lds\n", ElapsedTime());
   }
 
   return(status);
@@ -328,18 +328,21 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
   for(int i=0; i<(int)SM.size(); i++) {
     tt += SM[i].size();
   }
+  int p_tt = tt;
 
     int rank = 0;
-    // printf("Matrix:(%4d X %4d (%.2f%% %d MB:%.2f)", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
-     printf("Matrix:(%4d X %4d (%.1f%% %.1fMB)->", (int)SM.size(), cols, (double)tt / (SM.size() * cols) * 100., tt*sizeof(Node)/1024./1024.); fflush(NULL);
-     int status = SparseReduceMatrix(SM,cols,&rank);
+     printf("Matrix:(%d X %d)\n", (int)SM.size(), cols);
+    int status = SparseReduceMatrix(SM,cols,&rank);
 
  tt = 0;
   for(int i=0; i<(int)SM.size(); i++) {
     tt += SM[i].size();
   }
-     //printf("->(%.2f%% %d MB:%.2f))", (double)tt / (SM.size() * cols) * 100., tt, tt*sizeof(Node)/1024./1024.); fflush(NULL);
-     printf("(%.1f%% %.1fMB))", (double)tt / (SM.size() * cols) * 100., tt*sizeof(Node)/1024./1024.); fflush(NULL);
+     if (SM.size() * cols > 0) {
+         printf("\t\tFill: (%.1f%% %.1fMB)->", p_tt / double(SM.size() * cols) * 100., p_tt * sizeof(Node) / 1024. / 1024.);
+         printf("(%.1f%% %.1fMB)\n", tt / double(SM.size() * cols) * 100., tt * sizeof(Node) / 1024. / 1024.);
+     }
+     fflush(NULL);
 
 #if DEBUG_MATRIX
    PrintTheRMatrix();

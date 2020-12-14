@@ -190,8 +190,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
-    putchar('\n');
-
     stats s1;
     s1.update(SM, 0, 0, nCols, -1, true);
 
@@ -221,7 +219,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
     *Rank=nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
 
-    printf("\n\t\t\t");
+    putchar('\n');
 
     return(OK);
 }
