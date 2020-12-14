@@ -8,41 +8,27 @@
 /*******************************************************************/
 
 #include <vector>
+#include <stdint.h>
 
 #include "Build_defs.h"
 
 struct Node {
-#if 1
-  unsigned int e_c; // e:0xff000000 c:0x00ffffff
-  Scalar getElement() const {
-    return (e_c & 0xff000000) >> 24;
-  }
-  void setElement(Scalar e) {
-    e_c = (e_c & 0x00ffffff) | (e << 24);
-  }
-  int getColumn() const {
-    return (e_c & 0x00ffffff);
-  }
-  void setColumn(int c) {
-    e_c = (e_c & 0xff000000) | (c & 0x00ffffff);
-  }
-#else
-  int c_;
-  Scalar e_;
+  uint32_t e:8;
+  uint32_t c:24;
 
+  Node() : e(0), c(0) {};
   Scalar getElement() const {
-    return e_;
+    return e;
   }
-  void setElement(Scalar e) {
-    e_ = e;
+  void setElement(Scalar v) {
+    e = v;
   }
   int getColumn() const {
-    return c_;
+    return c;
   }
-  void setColumn(int c) {
-    c_ = c;
+  void setColumn(int v) {
+    c = v;
   }
-#endif
 };
 
 typedef Scalar *Matrix;
