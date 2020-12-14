@@ -31,7 +31,6 @@ static struct Help_struct Help_lines[NUM_COMMANDS] = {
     g -- generators command\n\
     h -- help command\n\
     i -- identity command\n\
-    o -- output command\n\
     p -- polynomial command\n\
     q -- quit command\n\
     r -- remove command\n\
@@ -204,17 +203,6 @@ any existing multiplication table in memory.  Names defined\n\
 in the \".albert\" file can also be used to enter a\n\
 polynomial.  The entered polynomial must be homogeneous.\n\
 Albert linearizes all identities without telling the user.\n\n"
-},
-{
-    "o",
-"\n\n\
-\t\toutput [b | m]\n\n\
-This command outputs the basis table or the multiplication\n\
-table to the printer, provided the table exists.  The\n\
-argument specifies the table to be output (b - basis table,\n\
-m - multiplication table).  For example, typing\n\n\
-\toutput b\n\n\
-will output the current basis table to the printer.\n\n"
 },
 {
     "p",

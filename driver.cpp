@@ -76,9 +76,7 @@ int main(int argc, char *argv[])
 {
 /* TW 9/18/93 - code to support save, view, & output commands */
     char tableFileName[100];
-    char cmd[100];
     char table;
-    /*char *myPtr;*/
     FILE *tableFilePtr = NULL;
 
     Type Target_type = NULL;
@@ -514,66 +512,6 @@ int main(int argc, char *argv[])
                  }
                  break;
 
-/* "output" the multiplication table or the basis table to a printer */
-	    case 'o':
-		 if(!Substr(Command, "output")){
-                   printf("Illegal command.");
-                   break;
-		 }
-
-                 table = Operand[0];                    /* get the table
-type to show */
-
-                 switch(table){
-                   case 'b':
-                     if(mtable_status == PRESENT){
-                       sprintf(tableFileName, "/tmp/Basis.table");
-                       tableFilePtr = fopen(tableFileName, "w");
-                       if(tableFilePtr){
-                         PrintBasisTable(tableFilePtr);
-                         fclose(tableFilePtr);
-		         sprintf(cmd, "lpr %s", tableFileName);
-		         if(system(cmd)){	/* print command failed */
-			   printf("Unable to print file, %s.\n", tableFileName);
-		         }
-		         remove(tableFileName);
-                       }
-                       else{
-                         printf("Unable to open output file, %s\n",
-tableFileName);
-                       }
-		     }
-		     else{
-		       printf("Basis Table not present.\n");
-		     }
-                     break;
-                   case 'm':
-		     if(mtable_status == PRESENT){
-                       sprintf(tableFileName, "/tmp/Mult.table");
-                       tableFilePtr = fopen(tableFileName, "w");
-                       if(tableFilePtr) {
-                         Print_MultTable(tableFilePtr);
-                         fclose(tableFilePtr);
-		         sprintf(cmd, "lpr %s", tableFileName);
-		         if(system(cmd)){	/* print command failed */
-			   printf("Unable to print file, %s.\n", tableFileName);
-		         }
-		         remove(tableFileName);
-                       }
-                       else{
-                         printf("Unable to open output file, %s\n",
-tableFileName);
-                       }
-		     }
-		     else{
-		       printf("Multiplication Table not present.\n");
-		     }
-                     break;
-                   default:
-                     printf("Invalid table type.  Specify \"m\" or \"b\".\n");
-                 }
-		 break;
-
 /* "save" the multiplication table or the basis table to a file */
 	    case 's':
 		 if(!Substr(Command, "save")){
@@ -583,61 +521,36 @@ tableFileName);
 
                  table = Operand[0];                    /* get the table
 type to show */
-
-                 switch(table){
-                   case 'b':
-		     if(mtable_status == PRESENT){
-		       printf("File Name --> ");
-			fflush(stdout);
-		       fgets(tableFileName,sizeof(tableFileName),stdin);
-		       tableFileName[sizeof(tableFileName) - 1] = '\0';
-		       tableFileName[strlen(tableFileName) - 1] = '\0';
-		       printf("\n");
-		       if(strlen(tableFileName)){
-		         if(!(tableFilePtr = fopen(tableFileName, "w"))){
-		           printf("Unable to open file, %s.\n", tableFileName);
-		           break;
-		         }
-		       }
-		       else{
-		         printf("No file name was entered.  Command aborted.\n");
-		         break;
-		       }
-                       PrintBasisTable(tableFilePtr);
-		       fclose(tableFilePtr);
-		     }
-		     else{
-		       printf("Basis Table not present.\n");
-		     }
-                     break;
-                   case 'm':
-		     if(mtable_status == PRESENT){
-		       printf("File Name --> ");
-			fflush(stdout);
-		       fgets(tableFileName,sizeof(tableFileName),stdin);
-		       tableFileName[sizeof(tableFileName) - 1] = '\0';
-		       tableFileName[strlen(tableFileName) - 1] = '\0';
-		       printf("\n");
-		       if(strlen(tableFileName)){
-		         if(!(tableFilePtr = fopen(tableFileName, "w"))){
-		           printf("Unable to open file, %s.\n", tableFileName);
-		           break;
-		         }
-		       }
-		       else{
-		         printf("No file name was entered.  Command aborted.\n");
-		         break;
-		       }
-                       Print_MultTable(tableFilePtr);
-		       fclose(tableFilePtr);
-		     }
-		     else{
-		       printf("Multiplication Table not present.\n");
-		     }
-                     break;
-                   default:
+                 if (table != 'b' && table != 'm') {
                      printf("Invalid table type.  Specify \"m\" or \"b\".\n");
-                 }
+                     break;
+                 } else if(mtable_status != PRESENT) {
+                     if (table == 'b') {
+                         printf("Basis Table not present.\n");
+                     } else {
+                         printf("Multiplication Table not present.\n");
+                     }
+                 } else {
+                   const char *fn = rl_gets("File Name --> ");
+                   printf("\n");
+		           if(fn && *fn){
+		             FILE *f = fopen(fn, "w");
+		             if(!f){
+    		           printf("Unable to open file, %s.\n", fn);
+	    	           break;
+		             }
+		             if (table == 'b') {
+                         PrintBasisTable(f);
+                     } else {
+                         Print_MultTable(f);
+		             }
+                    fclose(f);
+		        }
+		        else{
+		             printf("No file name was entered.  Command aborted.\n");
+		            break;
+		        }
+		        }
 		 break;
 
 /* "view" the multiplication table or the basis table on screen */
@@ -742,7 +655,7 @@ void Print_title(void)
 {
     printf("\n\n         ((Albert)), Version 4.0, 2008\n"
            "Dept. of Computer Science, Clemson University\n\n"
-           "Enhanced V4.0.1 by kent.vandervelden@gmail.com\n"
+           "Enhanced V4.0.2 by kent.vandervelden@gmail.com\n"
            "Compiled " __DATE__ ", " __TIME__ "\n\n\n");
 }
 
