@@ -26,10 +26,10 @@ def process(fn, f_coeff, search_lhs, search_rhs, n_cb, n_ca):
             if not f_coeff:
                 rhs = ' + '.join(rhs_terms)
 
-            t0 = search_lhs == None and search_rhs == None
-            t1 = search_lhs != None and search_rhs != None
-            t2 = search_lhs != None and set(lhs_terms) & search_lhs == search_lhs
-            t3 = search_rhs != None and set(rhs_terms) & search_rhs == search_rhs
+            t0 = search_lhs is None and search_rhs is None
+            t1 = search_lhs is not None and search_rhs is not None
+            t2 = search_lhs is not None and set(lhs_terms) & search_lhs == search_lhs
+            t3 = search_rhs is not None and set(rhs_terms) & search_rhs == search_rhs
             t = t0 or (not t1 and t2) or (not t1 and t3) or (t1 and t2 and t3)
 
             s = '{0:d} : {1:s} = {2:s}'.format(nt, lhs, rhs)

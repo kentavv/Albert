@@ -13,10 +13,11 @@
 #include "Build_defs.h"
 
 struct Node {
+  Node(int e_=0, int c_=0) : e(e_), c(c_) {};
+
   uint32_t e:8;
   uint32_t c:24;
 
-  Node() : e(0), c(0) {};
   Scalar getElement() const {
     return e;
   }

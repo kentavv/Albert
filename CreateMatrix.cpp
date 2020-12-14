@@ -228,10 +228,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
           const Scalar t = S_add(S_zero(), coef);
 
           if(t != S_zero()) {
-            Node node;
-            node.setColumn(col);
-            node.setElement(t);
-            t_row.insert(ii, node);
+            t_row.insert(ii, Node(t, col));
           }
       } else {
           /* There is a node here with the same column value we are
