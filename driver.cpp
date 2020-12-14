@@ -521,61 +521,36 @@ int main(int argc, char *argv[])
 
                  table = Operand[0];                    /* get the table
 type to show */
-
-                 switch(table){
-                   case 'b':
-		     if(mtable_status == PRESENT){
-		       printf("File Name --> ");
-			fflush(stdout);
-		       fgets(tableFileName,sizeof(tableFileName),stdin);
-		       tableFileName[sizeof(tableFileName) - 1] = '\0';
-		       tableFileName[strlen(tableFileName) - 1] = '\0';
-		       printf("\n");
-		       if(strlen(tableFileName)){
-		         if(!(tableFilePtr = fopen(tableFileName, "w"))){
-		           printf("Unable to open file, %s.\n", tableFileName);
-		           break;
-		         }
-		       }
-		       else{
-		         printf("No file name was entered.  Command aborted.\n");
-		         break;
-		       }
-                       PrintBasisTable(tableFilePtr);
-		       fclose(tableFilePtr);
-		     }
-		     else{
-		       printf("Basis Table not present.\n");
-		     }
-                     break;
-                   case 'm':
-		     if(mtable_status == PRESENT){
-		       printf("File Name --> ");
-			fflush(stdout);
-		       fgets(tableFileName,sizeof(tableFileName),stdin);
-		       tableFileName[sizeof(tableFileName) - 1] = '\0';
-		       tableFileName[strlen(tableFileName) - 1] = '\0';
-		       printf("\n");
-		       if(strlen(tableFileName)){
-		         if(!(tableFilePtr = fopen(tableFileName, "w"))){
-		           printf("Unable to open file, %s.\n", tableFileName);
-		           break;
-		         }
-		       }
-		       else{
-		         printf("No file name was entered.  Command aborted.\n");
-		         break;
-		       }
-                       Print_MultTable(tableFilePtr);
-		       fclose(tableFilePtr);
-		     }
-		     else{
-		       printf("Multiplication Table not present.\n");
-		     }
-                     break;
-                   default:
+                 if (table != 'b' && table != 'm') {
                      printf("Invalid table type.  Specify \"m\" or \"b\".\n");
-                 }
+                     break;
+                 } else if(mtable_status != PRESENT) {
+                     if (table == 'b') {
+                         printf("Basis Table not present.\n");
+                     } else {
+                         printf("Multiplication Table not present.\n");
+                     }
+                 } else {
+                   const char *fn = rl_gets("File Name --> ");
+                   printf("\n");
+		           if(fn && *fn){
+		             FILE *f = fopen(fn, "w");
+		             if(!f){
+    		           printf("Unable to open file, %s.\n", fn);
+	    	           break;
+		             }
+		             if (table == 'b') {
+                         PrintBasisTable(f);
+                     } else {
+                         Print_MultTable(f);
+		             }
+                    fclose(f);
+		        }
+		        else{
+		             printf("No file name was entered.  Command aborted.\n");
+		            break;
+		        }
+		        }
 		 break;
 
 /* "view" the multiplication table or the basis table on screen */
