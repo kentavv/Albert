@@ -76,9 +76,7 @@ int main(int argc, char *argv[])
 {
 /* TW 9/18/93 - code to support save, view, & output commands */
     char tableFileName[100];
-    char cmd[100];
     char table;
-    /*char *myPtr;*/
     FILE *tableFilePtr = NULL;
 
     Type Target_type = NULL;
@@ -513,66 +511,6 @@ int main(int argc, char *argv[])
                          printf("%s is not a polynomial.",Operand);
                  }
                  break;
-
-/* "output" the multiplication table or the basis table to a printer */
-	    case 'o':
-		 if(!Substr(Command, "output")){
-                   printf("Illegal command.");
-                   break;
-		 }
-
-                 table = Operand[0];                    /* get the table
-type to show */
-
-                 switch(table){
-                   case 'b':
-                     if(mtable_status == PRESENT){
-                       sprintf(tableFileName, "/tmp/Basis.table");
-                       tableFilePtr = fopen(tableFileName, "w");
-                       if(tableFilePtr){
-                         PrintBasisTable(tableFilePtr);
-                         fclose(tableFilePtr);
-		         sprintf(cmd, "lpr %s", tableFileName);
-		         if(system(cmd)){	/* print command failed */
-			   printf("Unable to print file, %s.\n", tableFileName);
-		         }
-		         remove(tableFileName);
-                       }
-                       else{
-                         printf("Unable to open output file, %s\n",
-tableFileName);
-                       }
-		     }
-		     else{
-		       printf("Basis Table not present.\n");
-		     }
-                     break;
-                   case 'm':
-		     if(mtable_status == PRESENT){
-                       sprintf(tableFileName, "/tmp/Mult.table");
-                       tableFilePtr = fopen(tableFileName, "w");
-                       if(tableFilePtr) {
-                         Print_MultTable(tableFilePtr);
-                         fclose(tableFilePtr);
-		         sprintf(cmd, "lpr %s", tableFileName);
-		         if(system(cmd)){	/* print command failed */
-			   printf("Unable to print file, %s.\n", tableFileName);
-		         }
-		         remove(tableFileName);
-                       }
-                       else{
-                         printf("Unable to open output file, %s\n",
-tableFileName);
-                       }
-		     }
-		     else{
-		       printf("Multiplication Table not present.\n");
-		     }
-                     break;
-                   default:
-                     printf("Invalid table type.  Specify \"m\" or \"b\".\n");
-                 }
-		 break;
 
 /* "save" the multiplication table or the basis table to a file */
 	    case 's':
