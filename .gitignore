@@ -43,3 +43,5 @@ pair_present.o
 *.swp
 *.gcno
 coverage.info
+cmake-build-debug
+cmake-build-release
