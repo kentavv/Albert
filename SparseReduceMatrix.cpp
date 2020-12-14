@@ -61,9 +61,11 @@ struct stats {
   size_t n_rows;
   size_t n_cols;
   int last_nextstairrow;
-  int last_col;
+  int prev_col;
+  int cur_col;
   time_t first_update;
-  time_t last_update;
+  time_t prev_update;
+  time_t cur_update;
 
   stats() : // n_zero_elements(0),
     n_elements(0),
@@ -72,9 +74,11 @@ struct stats {
     n_rows(0),
     n_cols(0),
     last_nextstairrow(0),
-    last_col(0),
+    prev_col(0),
+    cur_col(0),
     first_update(0),
-    last_update(0) {}
+    prev_update(0),
+    cur_update(0) {}
 
   void clear() {
     //n_zero_elements = 0;
@@ -84,9 +88,13 @@ struct stats {
     n_rows = 0;
     n_cols = 0;
     last_nextstairrow = 0;
-    last_col = 0;
+    // These are not reset between updates because they are used
+    // to calculate rates.
+    //prev_col = 0;
+    //cur_col = 0;
     //first_update = 0;
-    //last_update = 0;
+    //prev_update = 0;
+    //cur_update = 0;
   }
  
   static void tp(float t) {
@@ -100,7 +108,7 @@ struct stats {
   }
  
   void print() const {
-    printf("\r\t\tne:%lu", n_elements);
+    printf("\r\t\tne:%lu (%.1fMB)", n_elements, n_elements * sizeof(Node) / 1024. / 1024.);
 #if 0
     if(n_zero_elements > 0) {
       printf(" ze:%lu", n_zero_elements);
@@ -112,22 +120,22 @@ struct stats {
     printf("  zr:%lu  lr:%d/%lu  lc:%d/%lu",
            n_zero_rows,
            last_nextstairrow, n_rows,
-           last_col, n_cols);
+           cur_col, n_cols);
     {
-      time_t dt = last_update - first_update;
+      time_t dt = cur_update - first_update;
       if(dt > 0) {
         printf("  tt:"); tp(dt);
       }
     }
-    if(last_col > 100) {
-      int d = last_update - first_update;
-      if(d != 0) {
-        float cps = (last_col + 1) / float(d);
+    if(cur_col > 100) {
+      int dt = cur_update - prev_update;
+      if(dt != 0) {
+        float cps = (cur_col - prev_col + 1) / float(dt);
         printf("  cps:%.02f", cps);
 
-        float eta = (n_cols - last_col) / cps;
+        float eta = (n_cols - cur_col) / cps;
         if(eta > 1) {
-          printf("  eta:"); tp(eta);
+          printf("  etr:"); tp(eta);
         }
       }
     }
@@ -137,7 +145,7 @@ struct stats {
 
   void update(const SparseMatrix &SM, int nextstairrow_, int last_col_, int nCols_, int timeout=-1, bool do_print=false) {
     time_t t = time(NULL);
-    if(timeout != -1 && last_update != 0 && t - last_update < timeout) {
+    if(timeout != -1 && cur_update != 0 && t - cur_update < timeout) {
       return;
     }
 
@@ -145,12 +153,14 @@ struct stats {
     if(first_update == 0) {
       first_update = t;
     }
-    last_update = t;
+    prev_update = cur_update;
+    cur_update = t;
 
     n_rows = SM.size();
     n_cols = nCols_;
     last_nextstairrow = nextstairrow_;
-    last_col = last_col_;
+    prev_col = cur_col;
+    cur_col = last_col_;
 
     for(int ii=0; ii<(int)SM.size(); ii++) {
       capacity += SM[ii].capacity();
@@ -214,7 +224,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
            nextstairrow++;
         }
 
-        s1.update(SM, nextstairrow, i, nCols, 600, true);
+        s1.update(SM, nextstairrow, i, nCols, 60, true);
     }
     *Rank=nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
