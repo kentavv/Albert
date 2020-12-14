@@ -36,6 +36,7 @@ using std::list;
 #include <ctype.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <omp.h>
 
 #include "driver.h"
 #include "Basis_table.h"
@@ -654,9 +655,15 @@ type to show */
 void Print_title(void)
 {
     printf("\n\n         ((Albert)), Version 4.0, 2008\n"
-           "Dept. of Computer Science, Clemson University\n\n"
-           "Enhanced V4.0.3 by kent.vandervelden@gmail.com\n"
-           "Compiled " __DATE__ ", " __TIME__ "\n\n\n");
+           "Dept. of Computer Science, Clemson University\n"
+           "\n"
+           "Enhanced V4.0.4 by kent.vandervelden@gmail.com\n"
+           "Compiled " __DATE__ ", " __TIME__ "\n");
+#if defined(_OPENMP)
+    printf("Parallel processing enabled: %d processors.\n\n\n", omp_get_num_procs());
+#else
+    printf("Parallel processing disabled.\n\n\n");
+#endif
 }
 
 /* Called from S_init() of Scalar_arithmetic.c Used to build the inverse
