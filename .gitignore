@@ -47,3 +47,4 @@ cmake-build-debug
 cmake-build-release
 CMakeCache.txt
 CMakeFiles
+cmake_install.cmake
