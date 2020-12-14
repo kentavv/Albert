@@ -655,7 +655,7 @@ void Print_title(void)
 {
     printf("\n\n         ((Albert)), Version 4.0, 2008\n"
            "Dept. of Computer Science, Clemson University\n\n"
-           "Enhanced V4.0.2 by kent.vandervelden@gmail.com\n"
+           "Enhanced V4.0.3 by kent.vandervelden@gmail.com\n"
            "Compiled " __DATE__ ", " __TIME__ "\n\n\n");
 }
 
