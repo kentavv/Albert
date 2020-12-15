@@ -35,6 +35,10 @@ struct Node {
     }
 };
 
+inline bool operator==(const Node &n1, const Node &n2) {
+    return n1.e == n2.e && n1.c == n2.c;
+}
+
 typedef std::vector<Node> SparseRow;
 typedef std::vector<SparseRow> SparseMatrix;
 
