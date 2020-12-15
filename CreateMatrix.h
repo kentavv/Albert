@@ -13,26 +13,28 @@
 #include "Build_defs.h"
 
 struct Node {
-  Node(int e_=0, int c_=0) : e(e_), c(c_) {};
+    Node(int e_ = 0, int c_ = 0) : e(e_), c(c_) {};
 
-  uint32_t e:8;
-  uint32_t c:24;
+    uint32_t e: 8;
+    uint32_t c: 24;
 
-  Scalar getElement() const {
-    return e;
-  }
-  void setElement(Scalar v) {
-    e = v;
-  }
-  int getColumn() const {
-    return c;
-  }
-  void setColumn(int v) {
-    c = v;
-  }
+    Scalar getElement() const {
+        return e;
+    }
+
+    void setElement(Scalar v) {
+        e = v;
+    }
+
+    int getColumn() const {
+        return c;
+    }
+
+    void setColumn(int v) {
+        c = v;
+    }
 };
 
-typedef Scalar *Matrix;
 typedef std::vector<Node> SparseRow;
 typedef std::vector<SparseRow> SparseMatrix;
 
@@ -50,7 +52,9 @@ typedef struct {
 typedef std::vector<std::vector<Basis_pair> > Equation;
 typedef std::vector<Equation> Equations;
 
-int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols, std::vector<Unique_basis_pair> &BPCptr, Name n);
+int SparseCreateTheMatrix(const Equations &equations, SparseMatrix &SM, int *Cols,
+                          std::vector<Unique_basis_pair> &BPCptr, Name n);
+
 int GetCol(const std::vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Right_basis);
 
 #endif
