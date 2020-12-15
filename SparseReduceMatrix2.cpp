@@ -366,11 +366,23 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
                         jj1->setElement(jj2->getElement());
                         jj2->setElement(t);
                     } else if (jj1 != ii->end() && jj2 == ii->end()) {
+#if 0
                         jj1->setRow(nextstairrow);
                         sort(ii->begin(), ii->end());
+#else
+                        Node2 n(jj1->getElement(), nextstairrow);
+                        ii->erase(jj1);
+                        ii->insert(std::upper_bound(ii->begin(), ii->end(), n), n);
+#endif
                     } else if (jj1 == ii->end() && jj2 != ii->end()) {
+#if 0
                         jj2->setRow(j);
                         sort(ii->begin(), ii->end());
+#else
+                        Node2 n(jj2->getElement(), j);
+                        ii->erase(jj2);
+                        ii->insert(std::upper_bound(ii->begin(), ii->end(), n), n);
+#endif
                     }
                 }
             }
