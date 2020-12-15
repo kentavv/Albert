@@ -31,6 +31,8 @@
 using std::list;
 using std::vector;
 using std::lower_bound;
+using std::sort;
+using std::max;
 //using std::random_shuffle;
 
 #include <stdio.h>
@@ -43,11 +45,47 @@ using std::lower_bound;
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
 
+struct Node2 {
+    Node2(int e_ = 0, int c_ = 0) : e(e_), c(c_) {};
+
+    uint32_t e: 8;
+    uint32_t c: 24;
+
+    Scalar getElement() const {
+        return e;
+    }
+
+    void setElement(Scalar v) {
+        e = v;
+    }
+
+    int getRow() const {
+        return c;
+    }
+
+    void setRow(int v) {
+        c = v;
+    }
+};
+
+inline bool operator==(const Node2 &n1, const Node2 &n2) {
+    return n1.e == n2.e && n1.c == n2.c;
+}
+
+inline bool operator<(const Node2 &n1, const Node2 &n2) {
+    return n1.c < n2.c || (n1.c == n2.c && n1.e < n2.e);
+}
+
+typedef std::vector<Node2> SparseCol;
+typedef std::vector<SparseCol> SparseMatrix2;
+
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
 static void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2);
 
-static void SparseKnockOut(SparseMatrix &SM, int row, int col);
+static void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows);
+
+static Scalar Get_Matrix_Element2(const SparseMatrix2 &SM, int i, int j);
 
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
@@ -148,7 +186,7 @@ struct stats {
         fflush(nullptr);
     }
 
-    void update(const SparseMatrix &SM, int nextstairrow_, int last_col_, int nCols_, int timeout = -1,
+    void update(const SparseMatrix2 &SM, int nextstairrow_, int last_col_, int nCols_, int timeout = -1,
                 bool do_print = false) {
         time_t t = time(nullptr);
         if (timeout != -1 && cur_update != 0 && t - cur_update < timeout) {
@@ -192,9 +230,80 @@ struct stats {
     }
 };
 
+static int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank);
 
-int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
-    if (SM.empty() || nCols == 0) {
+int SparseReduceMatrix2(SparseMatrix &SM, int nCols, int *Rank) {
+    SparseMatrix SMa = SM;
+
+    SparseMatrix2 SM2;
+    SM2.resize(nCols);
+    for (int i = 0; i < (int) SM.size(); i++) {
+        SparseCol tmp;
+        for (auto j = SM[i].cbegin(); j != SM[i].cend(); j++) {
+            SM2[j->getColumn()].push_back(Node2(j->getElement(), i));
+        }
+    }
+    for (auto i = SM2.begin(); i != SM2.end(); i++) {
+        sort(i->begin(), i->end());
+    }
+
+    int nRows = SM.size();
+
+    {
+        SM.clear();
+        int nrows = 0;
+        for (auto i = SM2.cbegin(); i != SM2.cend(); i++) {
+            if (!i->empty()) {
+                nrows = max(nrows, i->back().getRow() + 1);
+            }
+        }
+        SM.resize(nrows);
+        for (int i = 0; i < (int) SM2.size(); i++) {
+            for (auto j = SM2[i].cbegin(); j != SM2[i].cend(); j++) {
+                SM[j->getRow()].push_back(Node(j->getElement(), i));
+            }
+        }
+        if(SM != SMa) {
+            abort();
+        }
+    }
+
+    int rv = SparseReduceMatrix2_(SM2, nRows, Rank);
+
+    SM.clear();
+//    int nrows = 0;
+//    for (auto i = SM2.cbegin(); i != SM2.cend(); i++) {
+//        if (!i->empty()) {
+//            nrows = max(nrows, i->back().getRow() + 1);
+//        }
+//    }
+    SM.resize(nRows);
+    for (int i = 0; i < (int) SM2.size(); i++) {
+        for (auto j = SM2[i].cbegin(); j != SM2[i].cend(); j++) {
+            SM[j->getRow()].push_back(Node(j->getElement(), i));
+        }
+    }
+
+#define DD 0
+
+#if DD
+    {
+        printf("Final\n");
+        for (int i = 0; i < (int) SM.size(); i++) {
+            for (int j = 0; j<(int)nCols; j++) {
+                Scalar s = Get_Matrix_Element(SM, i, j);
+                printf(" %3d", s);
+            }
+            putchar('\n');
+        }
+    }
+#endif
+
+    return rv;
+}
+
+int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
+    if (SM.empty()) {
         return OK;
     }
 
@@ -204,56 +313,86 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
+    int nCols = SM.size();
+
     stats s1;
     s1.update(SM, 0, 0, nCols, -1, true);
 
     int nextstairrow = 0;
     for (int i = 0; i < nCols; i++) {
         int j;
-        for (j = nextstairrow; j < (int) SM.size(); j++) {
-            if (Get_Matrix_Element(SM, j, i) != S_zero()) {
+        for (j = nextstairrow; j < nRows; j++) {
+            if (Get_Matrix_Element2(SM, j, i) != S_zero()) {
                 break;
             }
         }
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-#define DD 0
-
 #if DD
-        printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, SM.size(), j < (int) SM.size());
+        printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, nRows,
+               j < (int) nRows);
         {
             printf("Start\n");
-            for (int i = 0; i < (int) SM.size(); i++) {
-                for (int j = 0; j<(int)nCols; j++) {
-                    Scalar s = Get_Matrix_Element(SM, i, j);
+            for (int i = 0; i < (int) nRows; i++) {
+                for (int j = 0; j < (int) SM.size(); j++) {
+                    Scalar s = Get_Matrix_Element2(SM, i, j);
                     printf(" %3d", s);
                 }
                 putchar('\n');
             }
         }
 #endif
-        if (j < (int) SM.size()) {
-            SM[nextstairrow].swap(SM[j]);
+
+        if (j < nRows) {
+//            SM[nextstairrow].swap(SM[j]);
+            if (nextstairrow != j) {
+                for (auto ii = SM.begin(); ii != SM.end(); ii++) {
+                    auto jj1 = ii->end();
+                    auto jj2 = ii->end();
+                    for (auto jj = ii->begin(); jj != ii->end(); jj++) {
+                        if (jj->getRow() == j) jj1 = jj;
+                        if (jj->getRow() == nextstairrow) jj2 = jj;
+                        // TODO Check if
+                        if (jj1 != ii->end() && jj2 != ii->end()) break;
+//                        if (jj1 == ii->end() && jj->getRow() > j) break;
+//                        if (jj2 == ii->end() && jj->getRow() > nextstairrow) break;
+                    }
+                    if (jj1 != ii->end() && jj2 != ii->end()) {
+                        auto t = jj1->getElement();
+                        jj1->setElement(jj2->getElement());
+                        jj2->setElement(t);
+                    } else if (jj1 != ii->end() && jj2 == ii->end()) {
+                        jj1->setRow(nextstairrow);
+                        sort(ii->begin(), ii->end());
+                    } else if (jj1 == ii->end() && jj2 != ii->end()) {
+                        jj2->setRow(j);
+                        sort(ii->begin(), ii->end());
+                    }
+                }
+            }
+
 #if DD
             {
                 printf("After swap\n");
-                for (int i = 0; i < (int) SM.size(); i++) {
-                    for (int j = 0; j<(int)nCols; j++) {
-                        Scalar s = Get_Matrix_Element(SM, i, j);
+                for (int i = 0; i < (int) nRows; i++) {
+                    for (int j = 0; j < (int) SM.size(); j++) {
+                        Scalar s = Get_Matrix_Element2(SM, i, j);
                         printf(" %3d", s);
                     }
                     putchar('\n');
                 }
             }
 #endif
-            SparseKnockOut(SM, nextstairrow, i);
+
+            SparseKnockOut(SM, nextstairrow, i, nRows);
+
 #if DD
             {
                 printf("After reduce\n");
-                for (int i = 0; i < (int) SM.size(); i++) {
-                    for (int j = 0; j<(int)nCols; j++) {
-                        Scalar s = Get_Matrix_Element(SM, i, j);
+                for (int i = 0; i < (int) nRows; i++) {
+                    for (int j = 0; j < (int) SM.size(); j++) {
+                        Scalar s = Get_Matrix_Element2(SM, i, j);
                         printf(" %3d", s);
                     }
                     putchar('\n');
@@ -269,19 +408,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
 
     putchar('\n');
-
-#if DD
-    {
-        printf("Final\n");
-        for (int i = 0; i < (int) SM.size(); i++) {
-            for (int j = 0; j<(int)nCols; j++) {
-                Scalar s = Get_Matrix_Element(SM, i, j);
-                printf(" %3d", s);
-            }
-            putchar('\n');
-        }
-    }
-#endif
 
     return OK;
 }
@@ -375,21 +501,76 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2) {
     //r2.swap(tmp);
 }
 
-void SparseKnockOut(SparseMatrix &SM, int row, int col) {
-    Scalar x = Get_Matrix_Element(SM, row, col);
-    if (x != S_one()) {
-        /* if the rightmost element in the current row is not one then multiply*/
-        SparseMultRow(SM, row, S_inv(x));
+void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
+    Scalar x = Get_Matrix_Element2(SM, row, col);
+    Scalar x_inv = S_inv(x);
+    SparseRow sr;
+    for (int j = col; j < (int) SM.size(); j++) {
+        for (auto ii = SM[j].begin(); ii != SM[j].end() && ii->getRow() <= row; ii++) {
+            if (ii->getRow() == row) {
+                ii->setElement(S_mul(ii->getElement(), x_inv));
+                sr.push_back(Node(ii->getElement(), j));
+            }
+        }
     }
 
     /* try to knockout elements in column in the rows above */
 
-#pragma omp parallel for shared(SM, row, col) schedule(dynamic, 10) default(none)
-    for (int j = 0; j < (int) SM.size(); j++) {
-        if (j != row) {
-            SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
+    auto ss = SM[col];
+
+#pragma omp parallel for shared(sr, nRows, row, ss, SM) schedule(dynamic, 10) default(none)
+    for (int j0 = 0; j0 < (int) sr.size(); j0++) {
+        Scalar e = sr[j0].getElement();
+        int j = sr[j0].getColumn();
+
+        vector<Node2> tmp;
+        for (int i = 0; i < nRows; i++) {
+            if (i == row) {
+                tmp.push_back(Node2(e, i));
+                continue;
+            }
+
+//            Scalar x3 = Get_Matrix_Element2(SM, i, col);
+            Scalar x3 = S_zero();
+            auto iii = ss.begin();
+            for (; iii != ss.end(); iii++) {
+                if (iii->getRow() == i) {
+                    x3 = iii->getElement();
+                    break;
+                }
+            }
+
+            if (x3 == S_zero()) {
+                Scalar x3b = Get_Matrix_Element2(SM, i, j);
+                if (x3b != S_zero()) {
+                    tmp.push_back(Node2(x3b, i));
+                }
+                continue;
+            }
+            x3 = S_minus(x3);
+            Scalar x4 = S_mul(x3, e);
+
+            Scalar x3b = Get_Matrix_Element2(SM, i, j);
+            Scalar x5 = S_add(x3b, x4);
+            if (x5 != S_zero()) {
+                tmp.push_back(Node2(x5, i));
+            }
         }
+//        SM[j].swap(tmp);
+        SparseCol(tmp.begin(), tmp.end()).swap(SM[j]); // shrink capacity while assigning
     }
+//
+//    if (x != S_one()) {
+//        /* if the rightmost element in the current row is not one then multiply*/
+////        SparseMultRow(SM, row, S_inv(x));
+////        S_mul(ii->getElement(), Factor)
+//    }
+//
+//    for (int j = 0; j < (int) SM.size(); j++) {
+//        if (j != row) {
+//            SparseAddRow(SM, S_minus(Get_Matrix_Element2(SM, j, col)), row, j);
+//        }
+//    }
 }
 
 #if 0
@@ -489,7 +670,7 @@ struct A {
 
 #endif
 
-Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j) {
+Scalar Get_Matrix_Element2(const SparseMatrix &SM, int i, int j) {
     Node n;
     n.column = j;
 
@@ -505,10 +686,10 @@ Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j) {
 
 #else
 
-Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j) {
+Scalar Get_Matrix_Element2(const SparseMatrix2 &SM, int i, int j) {
     /* either return the element at location i,j or return a zero */
-    for (auto ii = SM[i].cbegin(); ii != SM[i].cend() && ii->getColumn() <= j; ii++) {
-        if (ii->getColumn() == j) return ii->getElement();
+    for (auto ii = SM[j].cbegin(); ii != SM[j].cend() && ii->getRow() <= i; ii++) {
+        if (ii->getRow() == i) return ii->getElement();
     }
     return S_zero();
 }

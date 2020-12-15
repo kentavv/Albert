@@ -71,6 +71,8 @@ add_executable(albert
         Scalar_arithmetic.h
         SparseReduceMatrix.cpp
         SparseReduceMatrix.h
+        SparseReduceMatrix2.cpp
+        SparseReduceMatrix2.h
         Strings.cpp
         Strings.h
         Type_table.cpp
