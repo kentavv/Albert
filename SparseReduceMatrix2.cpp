@@ -74,8 +74,11 @@ inline bool operator==(const Node2 &n1, const Node2 &n2) {
     return n1.e == n2.e && n1.c == n2.c;
 }
 
+//inline bool operator<(const Node2 &n1, const Node2 &n2) {
+//    return n1.c < n2.c || (n1.c == n2.c && n1.e < n2.e);
+//}
 inline bool operator<(const Node2 &n1, const Node2 &n2) {
-    return n1.c < n2.c || (n1.c == n2.c && n1.e < n2.e);
+    return n1.c < n2.c;
 }
 
 typedef std::vector<Node2> SparseCol;
@@ -353,6 +356,7 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
                 for (int iii = i; iii < SM.size(); iii++) {
                     auto ii = SM.begin() + iii;
 
+#if 0
                     auto jj1 = ii->end();
                     auto jj2 = ii->end();
                     for (auto jj = ii->begin(); jj != ii->end(); jj++) {
@@ -361,6 +365,12 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
                         if (jj1 != ii->end() && jj2 != ii->end()) break;
                         if (jj->getRow() > j && jj->getRow() > nextstairrow) break;
                     }
+#else
+                    auto jj1 = std::lower_bound(ii->begin(), ii->end(), Node2(0, j));
+                    auto jj2 = std::lower_bound(ii->begin(), ii->end(), Node2(0, nextstairrow));
+                    if(jj1 != ii->end() && jj1->getRow() != j) jj1 = ii->end();
+                    if(jj2 != ii->end() && jj2->getRow() != nextstairrow) jj2 = ii->end();
+#endif
                     if (jj1 != ii->end() && jj2 != ii->end()) {
                         auto t = jj1->getElement();
                         jj1->setElement(jj2->getElement());
