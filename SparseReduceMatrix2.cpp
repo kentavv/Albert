@@ -68,6 +68,8 @@ struct Node2 {
     }
 };
 
+static bool cmp_row(const Node2 &n1, const Node2 &n2) { return n1.c < n2.c; }
+
 inline bool operator==(const Node2 &n1, const Node2 &n2) {
     return n1.e == n2.e && n1.c == n2.c;
 }
@@ -263,7 +265,7 @@ int SparseReduceMatrix2(SparseMatrix &SM, int nCols, int *Rank) {
                 SM[j->getRow()].push_back(Node(j->getElement(), i));
             }
         }
-        if(SM != SMa) {
+        if (SM != SMa) {
             abort();
         }
     }
@@ -355,8 +357,7 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
                         if (jj->getRow() == nextstairrow) jj2 = jj;
                         // TODO Check if
                         if (jj1 != ii->end() && jj2 != ii->end()) break;
-//                        if (jj1 == ii->end() && jj->getRow() > j) break;
-//                        if (jj2 == ii->end() && jj->getRow() > nextstairrow) break;
+                        if (jj->getRow() > j && jj->getRow() > j && nextstairrow) break;
                     }
                     if (jj1 != ii->end() && jj2 != ii->end()) {
                         auto t = jj1->getElement();
@@ -506,12 +507,20 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
     Scalar x_inv = S_inv(x);
     SparseRow sr;
     for (int j = col; j < (int) SM.size(); j++) {
+#if 1
+        auto ii = lower_bound(SM[j].begin(), SM[j].end(), Node2(0, row), cmp_row);
+        if (ii != SM[j].end() && ii->getRow() == row) {
+            ii->setElement(S_mul(ii->getElement(), x_inv));
+            sr.push_back(Node(ii->getElement(), j));
+        }
+#else
         for (auto ii = SM[j].begin(); ii != SM[j].end() && ii->getRow() <= row; ii++) {
             if (ii->getRow() == row) {
                 ii->setElement(S_mul(ii->getElement(), x_inv));
                 sr.push_back(Node(ii->getElement(), j));
             }
         }
+#endif
     }
 
     /* try to knockout elements in column in the rows above */
@@ -522,23 +531,31 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
     for (int j0 = 0; j0 < (int) sr.size(); j0++) {
         Scalar e = sr[j0].getElement();
         int j = sr[j0].getColumn();
+//        printf("j0:%d j:%d sn.size:%d\n", j0, j, sr.size());
 
         vector<Node2> tmp;
+        auto iii = ss.begin();
         for (int i = 0; i < nRows; i++) {
             if (i == row) {
                 tmp.push_back(Node2(e, i));
                 continue;
             }
 
-//            Scalar x3 = Get_Matrix_Element2(SM, i, col);
             Scalar x3 = S_zero();
-            auto iii = ss.begin();
-            for (; iii != ss.end(); iii++) {
-                if (iii->getRow() == i) {
-                    x3 = iii->getElement();
-                    break;
-                }
+//            auto iii = ss.begin();
+//            puts("=-=-=-=-=-=-=-=-=");
+            for (; iii != ss.end() && iii->getRow() < i; iii++) {
+//            for(; iii != ss.end(); iii++) {
+//                printf("%d ", iii->getRow());
+//                if (iii->getRow() == i) {
+//                    x3 = iii->getElement();
+//                    break;
+//                }
             }
+            if (iii != ss.end() && iii->getRow() == i) {
+                x3 = iii->getElement();
+            }
+//            puts("\n");
 
             if (x3 == S_zero()) {
                 Scalar x3b = Get_Matrix_Element2(SM, i, j);
@@ -658,27 +675,12 @@ void Print_Rows(int Row1, int Row2, int nCols) {
 
 #endif
 
-#if 0
+#if 1
 
-static bool cmp_column(const Node &n1, const Node &n2) { return n1.column < n2.column; }
-
-#if 0
-
-struct A {
-    bool operator()(const Node &n1, const Node &n2) const { return n1.column < n2.column; }
-};
-
-#endif
-
-Scalar Get_Matrix_Element2(const SparseMatrix &SM, int i, int j) {
-    Node n;
-    n.column = j;
-
-    SparseRow::const_iterator ii = lower_bound(SM[i].begin(), SM[i].end(), n, cmp_column);
-    //SparseRow::const_iterator ii = lower_bound(SM[i].begin(), SM[i].end(), n, A());
-    //SparseRow::const_iterator ii = lower_bound(SM[i].begin(), SM[i].end(), n);
-    if (ii != SM[i].end() && ii->column == j) {
-        return ii->element;
+Scalar Get_Matrix_Element2(const SparseMatrix2 &SM, int i, int j) {
+    auto ii = lower_bound(SM[j].begin(), SM[j].end(), Node2(0, i), cmp_row);
+    if (ii != SM[j].end() && ii->getRow() == i) {
+        return ii->getElement();
     }
 
     return S_zero();
