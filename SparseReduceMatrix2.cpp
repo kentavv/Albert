@@ -535,6 +535,8 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
 
         vector<Node2> tmp;
         auto iii = ss.begin();
+        auto &ss2 = SM[j];
+        auto iii2 = ss2.begin();
         for (int i = 0; i < nRows; i++) {
             if (i == row) {
                 tmp.push_back(Node2(e, i));
@@ -557,18 +559,19 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
             }
 //            puts("\n");
 
-            if (x3 == S_zero()) {
-                Scalar x3b = Get_Matrix_Element2(SM, i, j);
-                if (x3b != S_zero()) {
-                    tmp.push_back(Node2(x3b, i));
-                }
-                continue;
+            Scalar x5;
+//            Scalar x3b = Get_Matrix_Element2(SM, i, j);
+            Scalar x3b = S_zero();
+            for (; iii2 != ss2.end() && iii2->getRow() < i; iii2++) {
             }
-            x3 = S_minus(x3);
-            Scalar x4 = S_mul(x3, e);
-
-            Scalar x3b = Get_Matrix_Element2(SM, i, j);
-            Scalar x5 = S_add(x3b, x4);
+            if (iii2 != ss2.end() && iii2->getRow() == i) {
+                x3b = iii2->getElement();
+            }
+            if (x3 == S_zero()) {
+                x5 = x3b;
+            } else {
+                x5 = S_add(x3b, S_mul(S_minus(x3), e));
+            }
             if (x5 != S_zero()) {
                 tmp.push_back(Node2(x5, i));
             }
