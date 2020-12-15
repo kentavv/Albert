@@ -349,15 +349,17 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
         if (j < nRows) {
 //            SM[nextstairrow].swap(SM[j]);
             if (nextstairrow != j) {
-                for (auto ii = SM.begin(); ii != SM.end(); ii++) {
+#pragma omp parallel for shared(SM, i, j, nextstairrow) schedule(dynamic, 10) default(none)
+                for (int iii = i; iii < SM.size(); iii++) {
+                    auto ii = SM.begin() + iii;
+
                     auto jj1 = ii->end();
                     auto jj2 = ii->end();
                     for (auto jj = ii->begin(); jj != ii->end(); jj++) {
                         if (jj->getRow() == j) jj1 = jj;
                         if (jj->getRow() == nextstairrow) jj2 = jj;
-                        // TODO Check if
                         if (jj1 != ii->end() && jj2 != ii->end()) break;
-                        if (jj->getRow() > j && jj->getRow() > j && nextstairrow) break;
+                        if (jj->getRow() > j && jj->getRow() > nextstairrow) break;
                     }
                     if (jj1 != ii->end() && jj2 != ii->end()) {
                         auto t = jj1->getElement();
@@ -525,13 +527,13 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
 
     /* try to knockout elements in column in the rows above */
 
-    auto ss = SM[col];
+    const auto ss = SM[col];
 
+//    printf("sr.size:%d\n", sr.size());
 #pragma omp parallel for shared(sr, nRows, row, ss, SM) schedule(dynamic, 10) default(none)
     for (int j0 = 0; j0 < (int) sr.size(); j0++) {
         Scalar e = sr[j0].getElement();
         int j = sr[j0].getColumn();
-//        printf("j0:%d j:%d sn.size:%d\n", j0, j, sr.size());
 
         vector<Node2> tmp;
         auto iii = ss.begin();
@@ -544,29 +546,19 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
             }
 
             Scalar x3 = S_zero();
-//            auto iii = ss.begin();
-//            puts("=-=-=-=-=-=-=-=-=");
             for (; iii != ss.end() && iii->getRow() < i; iii++) {
-//            for(; iii != ss.end(); iii++) {
-//                printf("%d ", iii->getRow());
-//                if (iii->getRow() == i) {
-//                    x3 = iii->getElement();
-//                    break;
-//                }
             }
             if (iii != ss.end() && iii->getRow() == i) {
                 x3 = iii->getElement();
             }
-//            puts("\n");
 
-            Scalar x5;
-//            Scalar x3b = Get_Matrix_Element2(SM, i, j);
             Scalar x3b = S_zero();
             for (; iii2 != ss2.end() && iii2->getRow() < i; iii2++) {
             }
             if (iii2 != ss2.end() && iii2->getRow() == i) {
                 x3b = iii2->getElement();
             }
+            Scalar x5;
             if (x3 == S_zero()) {
                 x5 = x3b;
             } else {
@@ -576,8 +568,8 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
                 tmp.push_back(Node2(x5, i));
             }
         }
-//        SM[j].swap(tmp);
-        SparseCol(tmp.begin(), tmp.end()).swap(SM[j]); // shrink capacity while assigning
+//        SparseCol(tmp.begin(), tmp.end()).swap(SM[j]); // shrink capacity while assigning
+        SM[j] = tmp;
     }
 //
 //    if (x != S_one()) {
