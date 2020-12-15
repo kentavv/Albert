@@ -218,9 +218,48 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
+#define DEBUG_MATRIX 0
+
+#if DEBUG_MATRIX
+        printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, SM.size(), j < (int) SM.size());
+        {
+            printf("Start\n");
+            for (int i = 0; i < (int) SM.size(); i++) {
+                for (int j = 0; j<(int)nCols; j++) {
+                    Scalar s = Get_Matrix_Element(SM, i, j);
+                    printf(" %3d", s);
+                }
+                putchar('\n');
+            }
+        }
+#endif
         if (j < (int) SM.size()) {
             SM[nextstairrow].swap(SM[j]);
+#if DEBUG_MATRIX
+            {
+                printf("After swap\n");
+                for (int i = 0; i < (int) SM.size(); i++) {
+                    for (int j = 0; j<(int)nCols; j++) {
+                        Scalar s = Get_Matrix_Element(SM, i, j);
+                        printf(" %3d", s);
+                    }
+                    putchar('\n');
+                }
+            }
+#endif
             SparseKnockOut(SM, nextstairrow, i);
+#if DEBUG_MATRIX
+            {
+                printf("After reduce\n");
+                for (int i = 0; i < (int) SM.size(); i++) {
+                    for (int j = 0; j<(int)nCols; j++) {
+                        Scalar s = Get_Matrix_Element(SM, i, j);
+                        printf(" %3d", s);
+                    }
+                    putchar('\n');
+                }
+            }
+#endif
             nextstairrow++;
         }
 
@@ -230,6 +269,19 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
 
     putchar('\n');
+
+#if DEBUG_MATRIX
+    {
+        printf("Final\n");
+        for (int i = 0; i < (int) SM.size(); i++) {
+            for (int j = 0; j<(int)nCols; j++) {
+                Scalar s = Get_Matrix_Element(SM, i, j);
+                printf(" %3d", s);
+            }
+            putchar('\n');
+        }
+    }
+#endif
 
     return OK;
 }
