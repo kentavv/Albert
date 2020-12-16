@@ -30,3 +30,5 @@ To compile Albert, the development version of libreadline must be available. The
 
   apt install libreadline-dev
 
+While we have switched to Cmake, the last Makefile can be retrieved with:
+https://raw.githubusercontent.com/kentavv/Albert/ab721d77cac301864b6dce244660a30905accfee/Makefile
