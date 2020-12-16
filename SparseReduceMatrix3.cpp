@@ -45,11 +45,17 @@ using std::lower_bound;
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
 
+typedef std::vector<uint8_t> DenseRow;
+
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
-void SparseAddRow3(Scalar Factor, const SparseRow &r1, SparseRow &r2);
+static void SparseAddRow3(Scalar Factor, const SparseRow &r1, SparseRow &r2);
+
+static void DenseAddRow3(Scalar Factor, const SparseRow &r1, DenseRow &r2);
 
 static void SparseKnockOut(SparseMatrix &SM, int row, int col);
+
+static Scalar Get_Matrix_Element3(const SparseMatrix &SM, int i, int j);
 
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
@@ -120,7 +126,7 @@ struct stats {
         }
 #endif
         if (n_elements != capacity) {
-            printf(" ce:%lu", capacity);
+            printf("  ce:%lu (%.1fMB)", capacity, capacity * sizeof(Node) / 1024. / 1024.);
         }
         printf("  zr:%lu  lr:%d/%lu  lc:%d/%lu",
                n_zero_rows,
@@ -274,6 +280,9 @@ int SparseReduceMatrix3(SparseMatrix &SM, int nCols, int *Rank) {
     }
     *Rank = nextstairrow;
 
+    s1.update(SM, nextstairrow, nCols, nCols, -1, true);
+    printf("\nReplaying lazy calculations\n");
+
 #if 0
     {
         for(auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
@@ -290,18 +299,36 @@ int SparseReduceMatrix3(SparseMatrix &SM, int nCols, int *Rank) {
     }
 #else
     {
-#pragma omp parallel for shared(SM, replay) schedule(dynamic) default(none)
-        for(int j=0; j<SM.size(); j++) {
-            for(auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
-                int row = ii->first.first;
-                if (row == j) continue;
-                int col = ii->first.second;
-                const auto &ss = ii->second;
-
-                SparseAddRow3(S_minus(Get_Matrix_Element3(SM, j, col)), ss, SM[j]);
+//        int nn2 = 0;
+#pragma omp parallel for shared(SM, replay, nCols) schedule(dynamic, 10) default(none)
+        for (int j = 0; j < SM.size(); j++) {
+            DenseRow tmp(nCols, S_zero());
+            for (const auto &ii : SM[j]) {
+                tmp[ii.getColumn()] = ii.getElement();
             }
-            SparseRow(SM[j].begin(), SM[j].end()).swap(SM[j]); // shrink capacity while assigning
-//            s1.update(SM, row, col, nCols, 60, true);
+            for (const auto &ii : replay) {
+                if (ii.first.first != j) {
+                    DenseAddRow3(S_minus(tmp[ii.first.second]), ii.second, tmp);
+                }
+            }
+            int nn = 0;
+            for (auto i : tmp) {
+                if (i != S_zero()) nn++;
+            }
+            SparseRow tmp2(nn);
+            for (int i = 0, j2 = 0; i < tmp.size(); i++) {
+                if (tmp[i] != S_zero()) {
+                    tmp2[j2++] = Node(tmp[i], i);
+                }
+            }
+            tmp2.swap(SM[j]);
+//#pragma omp critical
+//            {
+//                nn2++;
+//            }
+//            if (omp_get_thread_num() == 0) {
+//                s1.update(SM, nn2, nCols, nCols, 60, true);
+//            }
         }
     }
 #endif
@@ -403,17 +430,33 @@ void SparseAddRow3(Scalar Factor, const SparseRow &r1, SparseRow &r2) {
         //}
     }
 
-    // append r2 with remaining r1 nodes
-    for (; r2i != r2.cend(); r2i++) {
-        tmp.push_back(*r2i);
+    // append r2 with remaining r2 nodes
+    tmp.insert(tmp.end(), r2i, r2.cend());
+//    for (; r2i != r2.cend(); r2i++) {
+//        tmp.push_back(*r2i);
+//    }
+
+    // vector<>.shrink_to_fit() is non-binding may not perform a shrink.
+//    if (r2.empty()) {
+//        r2.shrink_to_fit();
+//    }
+//    tmp.swap(r2);
+
+//    if (!r2.empty()) {
+        // SparseRow(tmp.begin(), tmp.end()).swap(r2); // shrink capacity while assigning
+        tmp.swap(r2); // does not shrink capacity while assigning, the waste be less than the effort of allocation
+//    } else {
+//        SparseRow().swap(r2);
+//    }
+}
+
+void DenseAddRow3(Scalar Factor, const SparseRow &r1, DenseRow &r2) {
+    if (Factor != S_zero()) {
+        for (auto r1i : r1) {
+            int c = r1i.getColumn();
+            r2[c] = S_add(r2[c], S_mul(Factor, r1i.getElement()));
+        }
     }
-//    SparseRow(tmp.begin(), tmp.end()).swap(r2); // shrink capacity while assigning
-    tmp.swap(r2); // shrink capacity while assigning
-    //r2 = SparseRow(tmp.begin(), tmp.end());
-    //shrink_capacity(tmp);
-    //printf("<%d %d %d %d>", (int)r2.size(), (int)r2.capacity(),  (int)tmp.size(), (int)tmp.capacity());
-    //r2 = tmp;
-    //r2.swap(tmp);
 }
 
 void SparseKnockOut(SparseMatrix &SM, int row, int col) {
@@ -424,6 +467,11 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col) {
     }
 
     /* try to knockout elements in column in the rows above */
+
+    // Reduce row's memory footprint before saving to replay list.
+    if (SM[row].size() != SM[row].capacity()) {
+        SparseRow(SM[row].begin(), SM[row].end()).swap(SM[row]);
+    }
 
     replay.push_back(make_pair(make_pair(row, col), SM[row]));
 
@@ -436,8 +484,12 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col) {
     }
 #else
 #pragma omp parallel for shared(SM, row, col) schedule(dynamic, 10) default(none)
-    for (int j = row+1; j < (int) SM.size(); j++) {
-        SparseAddRow3(S_minus(Get_Matrix_Element3(SM, j, col)), SM[row], SM[j]);
+    for (int j = row + 1; j < (int) SM.size(); j++) {
+        Scalar e = Get_Matrix_Element3(SM, j, col);
+        SparseAddRow3(S_minus(e), SM[row], SM[j]);
+        if(SM[j].empty() && SM[j].capacity()) {
+            SparseRow().swap(SM[j]);
+        }
     }
 #endif
 }
