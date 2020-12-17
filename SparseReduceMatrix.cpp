@@ -656,9 +656,9 @@ void SparseAddRow(AutoMatrix &SM, Scalar Factor, int Row1, int Row2, int nCols) 
 void DenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols) {
     if (Factor != S_zero()) {
         if (r1.d_start_col < r2.d_start_col) {
-            for (int i = 0; i < r1.d.size(); i++) {
+            for (int i = 0; i < r2.d.size(); i++) {
                 int j = i + (r2.d_start_col - r1.d_start_col);
-                r2.d[j] = S_add(r2.d[j], S_mul(Factor, r1.d[i]));
+                r2.d[j] = S_add(r2.d[i], S_mul(Factor, r1.d[j]));
             }
         } else {
 //        int n = max(r1.d_start_col + r1.d.size(), r2.d_start_col + r1.d.size());
