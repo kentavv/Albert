@@ -729,7 +729,7 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
             abort();
         }
 
-        if (!r2.s.empty())
+        if (!r2.s.empty()) {
             if (r1.d_start_col < r2.d_start_col) {
                 for (int i = 0; i < r2.d.size(); i++) {
                     int j = i + (r2.d_start_col - r1.d_start_col);
@@ -746,6 +746,7 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
                     r2.d[j] = S_add(r2.d[j], S_mul(Factor, r1.d[i]));
                 }
             }
+        }
     }
 }
 
