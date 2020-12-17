@@ -86,6 +86,7 @@ public:
         }
         return 99999999;
     }
+
     int firstElement() const {
         if (!s.empty()) {
             return s.front().getElement();
@@ -146,6 +147,8 @@ static void SparseMultRow(AutoMatrix &SM, int Row, Scalar Factor);
 void SparseAddRow(Scalar Factor, const SparseRow &r1, SparseRow &r2);
 
 static void SparseAddRow(AutoMatrix &SM, Scalar Factor, int Row1, int Row2, int nCols);
+
+static void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2);
 
 static void DenseAddRow3(Scalar Factor, const Row &r1, Row &r2);
 
@@ -683,7 +686,7 @@ void SparseAddRow(Scalar Factor, const SparseRow &r1, SparseRow &r2) {
 }
 
 void SparseAddRow(AutoMatrix &SM, Scalar Factor, int Row1, int Row2, int nCols) {
-    auto &r1 = SM[Row1];
+    const auto &r1 = SM[Row1];
     auto &r2 = SM[Row2];
 
     if (!r1.s.empty() && !r2.s.empty()) {
@@ -695,10 +698,54 @@ void SparseAddRow(AutoMatrix &SM, Scalar Factor, int Row1, int Row2, int nCols) 
             }
         }
     } else {
-        promote_to_dense(r1, nCols);
+//        promote_to_dense(r1, nCols);
         promote_to_dense(r2, nCols);
 
-        DenseAddRow3(Factor, r1, r2);
+        SparseDenseAddRow3(Factor, r1, r2);
+//        DenseAddRow3(Factor, r1, r2);
+    }
+}
+
+void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols) {
+    if (Factor != S_zero()) {
+        if (!r1.s.empty() && !r2.d.empty()) {
+            if (r2.firstColumn() <= r1.firstColumn()) {
+                for (auto ii = r1.s.begin(); ii != r1.s.end(); ii++) {
+                    int j = ii->getColumn() - r2.d_start_col;
+                    r2.d[j] = S_add(r2.d[j], S_mul(Factor, ii->getElement()));
+                }
+            } else {
+                abort();
+            }
+        } else if (!r1.d.empty() && !r2.s.empty()) {
+            if (r2.firstColumn() <= r1.firstColumn()) {
+                abort();
+            } else {
+                abort();
+            }
+        } else if (!r1.d.empty() && !r2.d.empty()) {
+            DenseAddRow3(Factor, r1, r2);
+        } else {
+            abort();
+        }
+
+        if (!r2.s.empty())
+            if (r1.d_start_col < r2.d_start_col) {
+                for (int i = 0; i < r2.d.size(); i++) {
+                    int j = i + (r2.d_start_col - r1.d_start_col);
+                    r2.d[i] = S_add(r2.d[i], S_mul(Factor, r1.d[j]));
+                }
+            } else {
+//        int n = max(r1.d_start_col + r1.d.size(), r2.d_start_col + r1.d.size());
+//        for (int i = min(r1.d_start_col, r1.d_start_col); i<n; i++) {
+//            int c = r1i.getColumn();
+//            r2[c] = S_add(r2[c], S_mul(Factor, r1i.getElement()));
+//        }
+                for (int i = 0; i < r1.d.size(); i++) {
+                    int j = i + (r1.d_start_col - r2.d_start_col);
+                    r2.d[j] = S_add(r2.d[j], S_mul(Factor, r1.d[i]));
+                }
+            }
     }
 }
 
@@ -732,7 +779,7 @@ void SparseKnockOut(AutoMatrix &SM, int row, int col, int last_row, int nCols) {
 
     /* try to knockout elements in column in the rows above */
 
-//#pragma omp parallel for shared(SM, row, col, last_row, nCols) schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(SM, row, col, last_row, nCols) schedule(dynamic, 10) default(none)
 //    for (int j = 0; j < (int) SM.size(); j++) {
     for (int j = 0; j < last_row; j++) {
         if (j != row) {
