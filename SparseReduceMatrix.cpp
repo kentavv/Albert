@@ -84,7 +84,7 @@ public:
                 }
             }
         }
-        abort();
+        return 99999999;
     }
     int firstElement() const {
         if (!s.empty()) {
