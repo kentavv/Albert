@@ -78,6 +78,13 @@ static Basis Current_dimension;
 /*     For each degree, New Basis are created and New Products are */
 /*     entered.                                                    */
 /*******************************************************************/
+// Variables controlling saving images of the matrix as it's reduced.
+bool __trigger = false;
+bool __record = false;
+int __deg = 0;
+int __nn1 = 0;
+int __nn2 = 0;
+
 int Build(list<id_queue_node> &Idq_node, Type Target_type) {
     int status = OK;
 
@@ -91,6 +98,10 @@ int Build(list<id_queue_node> &Idq_node, Type Target_type) {
     int Target_degree = GetDegreeName(TypeToName(Target_type));
     if (status == OK) {
         for (int i = 1; i <= Target_degree; i++) {
+
+            // __record = trigger_ && i == Target_degree;
+            __record = __trigger && i == 5;
+
             status = ProcessDegree(i, Idq_node);
             if (sigIntFlag == 1) {
 /*	      printf("Returning from Build().\n");*/
@@ -194,6 +205,12 @@ int ProcessDegree(int i, const list<id_queue_node> &First_id_node) {
             begin_basis = GetNextBasisTobeFilled();
             printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis);
             fflush(NULL);
+
+            __deg = i-1;
+            __nn1 = nn1;
+            __nn2 = nn2;
+            __record = __record && __nn1 == 1;
+
             status = ProcessType(n, First_id_node, SM);
             if (sigIntFlag == 1) {    /* TW 10/5/93 - Ctrl-C check */
 /*	     printf("Returning from ProcessDegree().\n");*/

@@ -28,6 +28,8 @@
 #include <vector>
 #include <algorithm>
 
+using std::max;
+using std::min;
 using std::list;
 using std::vector;
 using std::lower_bound;
@@ -47,7 +49,7 @@ static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
 static void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2);
 
-static void SparseKnockOut(SparseMatrix &SM, int row, int col);
+static void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row);
 
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
@@ -192,12 +194,133 @@ struct stats {
     }
 };
 
+extern bool __record;
+extern int __deg;
+extern int __nn1;
+extern int __nn2;
+
+static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCols) {
+    int mh = SM.size();
+    int mw = nCols;
+
+    const int iih = 2160;
+    const int iiw = 3840;
+
+    int ih = min(mh, iih);
+    int iw = min(mw, iiw);
+
+//  if(mh < ih || mw < iw) return;
+
+    auto img = new unsigned char[ih * iw]();
+
+    for (int r = 0; r < (int) SM.size(); r++) {
+        for (int j = 0; j < (int) SM[r].size(); j++) {
+            if (SM[r][j].getElement() != S_zero()) {
+                int col = SM[r][j].getColumn();
+
+                int y = r;
+                int x = col;
+                if (ih < mh) y = int(y / float(mh) * ih);
+                if (iw < mw) x = int(x / float(mw) * iw);
+//if(x >= iw) abort();
+//if(y >= ih) abort();
+                if (img[y * iw + x] < 255) {
+                    img[y * iw + x]++;
+                }
+            }
+        }
+    }
+
+#if 0
+    int mv = 0;
+    for (int i = 0; i < ih * iw; i++) {
+        mv = max(int(img[i]), mv);
+    }
+
+    for (int i = 0; i < ih * iw; i++) {
+        if (img[i] != 0) {
+            img[i] = int(float(img[i]) / float(mv) * (255 - 63) + 63 + .5);
+        }
+    }
+#else
+    for (int i = 0; i < ih * iw; i++) {
+        if (img[i]) {
+            img[i] = 255;
+        }
+    }
+#endif
+
+    {
+        int s = 1;
+        if (ih >= iw) {
+            s = iih / ih;
+        } else {
+            s = iih / iw;
+        }
+        int hoff = (iih - s * ih) / 2;
+        int woff = (iiw - s * iw) / 2;
+
+        auto s_img = new unsigned char[iih * iiw]();
+
+        for (int i=0; i<ih; i++) {
+            for (int j=0; j<iw; j++) {
+                for(int ii=0; ii<s; ii++) {
+                    for(int jj=0; jj<s; jj++) {
+                        s_img[((i * s + hoff + ii) * iiw) + woff + j * s + jj] = img[i * iw + j];
+                    }
+                }
+            }
+        }
+
+        delete[] img;
+        img = s_img;
+        ih = iih;
+        iw = iiw;
+    }
+
+    char fn[128];
+    static int ind = 0;
+    //sprintf(fn, "%d_%d_%d__%d_%d_%d__%d.pgm", __deg, __nn1, __nn2, a, b, c, ind);
+    sprintf(fn, "%08d_%03d_%03d_%03d_%06d_%06d.pgm", ind, __deg, __nn1, __nn2, c, nCols);
+    ind++;
+    FILE *f = fopen(fn, "wb");
+    fprintf(f, "P5\n%d %d 255\n", iw, ih);
+    fwrite(img, 1, ih * iw, f);
+    fclose(f);
+
+    delete[] img;
+}
+
+static bool SM_sort (const SparseRow &r1, const SparseRow &r2) {
+    if (r1.empty() && r2.empty()) return false;
+    if (!r1.empty() && r2.empty()) return true;
+    if (r1.empty() && !r2.empty()) return false;
+
+    if (r1.front().getColumn() < r2.front().getColumn()) return true;
+    if (r1.front().getColumn() > r2.front().getColumn()) return false;
+#if 1
+    // Generally results in greater sparsity
+    if (r1.size() < r2.size()) return true;
+    if (r1.size() > r2.size()) return false;
+#else
+    // Generally results in greater density, i.e. more non-zero intermediate entries
+    if (r1.size() > r2.size()) return true;
+    if (r1.size() < r2.size()) return false;
+#endif
+    if (r1.front().getElement() < r2.front().getElement()) return true;
+    if (r1.front().getElement() > r2.front().getElement()) return false;
+
+    return false;
+}
 
 int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     if (SM.empty() || nCols == 0) {
         return OK;
     }
 
+    bool do_sort = true;
+
+    if(do_sort) sort(SM.begin(), SM.end(), SM_sort);
 //random_shuffle(SM.begin(), SM.end());
 
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
@@ -207,7 +330,13 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     stats s1;
     s1.update(SM, 0, 0, nCols, -1, true);
 
+    float nper = .1;
+    if (__record) {
+        save_mat_image(0, 0, 0, SM, nCols);
+    }
+
     int nextstairrow = 0;
+    int last_row = SM.size();
     for (int i = 0; i < nCols; i++) {
         int j;
         for (j = nextstairrow; j < (int) SM.size(); j++) {
@@ -247,7 +376,34 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 #endif
-            SparseKnockOut(SM, nextstairrow, i);
+            SparseKnockOut(SM, nextstairrow, i, last_row);
+            for(int iii = last_row; iii > 0; iii--) {
+                if (!SM[iii - 1].empty()) {
+                    last_row = iii;
+                    break;
+                }
+            }
+//            printf("%d %d\n", SM.size(), last_row);
+//            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
+            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+
+            if (__record) {
+                printf(">> %d", nextstairrow);
+                long aa = 0;
+                long bb = 0;
+                for(int ii=nextstairrow; ii<SM.size(); ii++) {
+//                    printf("(%.2f %.2f) ", SM[i].size() / float(nCols - nextstairrow) * 100, SM[ii].size() * 4 / float(nCols - nextstairrow + 4));
+                    if(!SM[ii].empty()) {
+                        int a = SM[ii].size() * 4;
+                        int b = (nCols - SM[ii].front().getColumn() + 1) * 1 + 4;
+                        printf(" %.2f", a / float(b));
+                        aa += a;
+                        bb += b;
+                    }
+                }
+                printf("\n  %.2f\n", aa / float(bb));
+            }
+
 #if DEBUG_MATRIX
             {
                 printf("After reduce\n");
@@ -263,12 +419,21 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
             nextstairrow++;
         }
 
+        if (__record && (1 || i / float(nCols) > nper)) {
+            nper += .1;
+            save_mat_image(0, 1, i, SM, nCols);
+        }
+
         s1.update(SM, nextstairrow, i, nCols, 60, true);
     }
     *Rank = nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
 
     putchar('\n');
+
+    if (__record) {
+        save_mat_image(0, 2, nCols, SM, nCols);
+    }
 
 #if DEBUG_MATRIX
     {
@@ -375,7 +540,7 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2) {
     //r2.swap(tmp);
 }
 
-void SparseKnockOut(SparseMatrix &SM, int row, int col) {
+void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row) {
     Scalar x = Get_Matrix_Element(SM, row, col);
     if (x != S_one()) {
         /* if the rightmost element in the current row is not one then multiply*/
@@ -384,8 +549,9 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col) {
 
     /* try to knockout elements in column in the rows above */
 
-#pragma omp parallel for shared(SM, row, col) schedule(dynamic, 10) default(none)
-    for (int j = 0; j < (int) SM.size(); j++) {
+#pragma omp parallel for shared(SM, row, col, last_row) schedule(dynamic, 10) default(none)
+//    for (int j = 0; j < (int) SM.size(); j++) {
+    for (int j = 0; j < last_row; j++) {
         if (j != row) {
             SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
         }
