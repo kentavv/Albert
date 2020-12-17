@@ -73,6 +73,31 @@ public:
     size_t size() const {
         return max(s.size(), d.size());
     }
+
+    int firstColumn() const {
+        if (!s.empty()) {
+            return s.front().getColumn();
+        } else if (!d.empty()) {
+            for (int i = 0; i < d.size(); i++) {
+                if (d[i] != S_zero()) {
+                    return d_start_col + i;
+                }
+            }
+        }
+        abort();
+    }
+    int firstElement() const {
+        if (!s.empty()) {
+            return s.front().getElement();
+        } else if (!d.empty()) {
+            for (int i = 0; i < d.size(); i++) {
+                if (d[i] != S_zero()) {
+                    return d[i];
+                }
+            }
+        }
+        return S_zero();
+    }
 };
 
 typedef std::vector<Row> AutoMatrix;
@@ -390,6 +415,30 @@ static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
     return false;
 }
 
+static bool AM_sort(const Row &r1, const Row &r2) {
+    if (r1.empty() && r2.empty()) return false;
+    if (!r1.empty() && r2.empty()) return true;
+    if (r1.empty() && !r2.empty()) return false;
+
+    if (r1.firstColumn() < r2.firstColumn()) return true;
+    if (r1.firstColumn() > r2.firstColumn()) return false;
+#if 0
+#if 1
+    // Generally results in greater sparsity
+    if (r1.size() < r2.size()) return true;
+    if (r1.size() > r2.size()) return false;
+#else
+    // Generally results in greater density, i.e. more non-zero intermediate entries
+    if (r1.size() > r2.size()) return true;
+    if (r1.size() < r2.size()) return false;
+#endif
+#endif
+    if (r1.firstElement() < r2.firstElement()) return true;
+    if (r1.firstElement() > r2.firstElement()) return false;
+
+    return false;
+}
+
 int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
     if (SM_.empty() || nCols == 0) {
         return OK;
@@ -400,7 +449,7 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
 
     bool do_sort = true;
 
-//    if(do_sort) sort(SM.begin(), SM.end(), AM_sort);
+    if (do_sort) sort(SM.begin(), SM.end(), AM_sort);
 //random_shuffle(SM.begin(), SM.end());
 
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
@@ -427,7 +476,7 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-#define DEBUG_MATRIX 1
+#define DEBUG_MATRIX 0
 
 #if DEBUG_MATRIX
         printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, SM.size(),
@@ -466,7 +515,7 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
             }
 //            printf("%d %d\n", SM.size(), last_row);
 //            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
-//            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, AM_sort);
 
 //            if (__record || 1) {
 //                printf(">> %d", nextstairrow);
@@ -658,7 +707,7 @@ void DenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols) {
         if (r1.d_start_col < r2.d_start_col) {
             for (int i = 0; i < r2.d.size(); i++) {
                 int j = i + (r2.d_start_col - r1.d_start_col);
-                r2.d[j] = S_add(r2.d[i], S_mul(Factor, r1.d[j]));
+                r2.d[i] = S_add(r2.d[i], S_mul(Factor, r1.d[j]));
             }
         } else {
 //        int n = max(r1.d_start_col + r1.d.size(), r2.d_start_col + r1.d.size());
