@@ -43,6 +43,7 @@ using std::vector;
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
 #include "SparseReduceMatrix.h"
+#include "SparseReduceMatrix4.h"
 #include "Debug.h"
 
 static int InitializeStructures(Type Target_type);
@@ -359,7 +360,22 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
 
     int rank = 0;
     printf("Matrix:(%d X %d)\n", (int) SM.size(), cols);
-    int status = SparseReduceMatrix(SM, cols, &rank);
+
+    SparseMatrix SM1 = SM;
+    SparseMatrix SM2 = SM;
+    int status1 = SparseReduceMatrix(SM1, cols, &rank);
+    if(cols == 12 || 1) {
+        printf("Reducing in lazy mode\n");
+        int status2 = SparseReduceMatrix4(SM2, cols, &rank);
+        if(status1 != status2) {
+            abort();
+        }
+        if(SM1 != SM2) {
+            abort();
+        }
+    }
+    SM = SM1;
+    int status = status1;
 
     tt = 0;
     for (int i = 0; i < (int) SM.size(); i++) {
