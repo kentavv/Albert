@@ -50,9 +50,9 @@ typedef std::vector<Scalar> DenseRow;
 
 class Row {
 public:
-    Row() : d_start_col(0), d_nz(0) {}
+    Row() : d_start_col(0), d_nz(0), d_fc(0) {}
 
-    Row(const Row &r) : s(r.s), d(r.d), d_start_col(r.d_start_col), d_nz(r.d_nz) {};
+    Row(const Row &r) : s(r.s), d(r.d), d_start_col(r.d_start_col), d_nz(r.d_nz), d_fc(r.d_fc) {};
 
 //    Row &operator=(const Row &r) = delete;
     inline Row &operator=(const Row &r) {
@@ -61,6 +61,7 @@ public:
             d = r.d;
             d_start_col = r.d_start_col;
             d_nz = r.d_nz;
+            d_fc = r.d_fc;
         }
         return *this;
     }
@@ -69,12 +70,14 @@ public:
     DenseRow d;
     int d_start_col;
     int d_nz;
+    int d_fc;
 
     inline void swap(Row &r) {
         s.swap(r.s);
         d.swap(r.d);
         std::swap(d_start_col, r.d_start_col);
         std::swap(d_nz, r.d_nz);
+        std::swap(d_fc, r.d_fc);
     }
 
     inline bool empty() const {
@@ -93,13 +96,14 @@ public:
         if (!s.empty()) {
             return s.front().getColumn();
         } else if (!d.empty()) {
-            for (auto i = d.cbegin(); i != d.cend(); i++) {
-                if (*i != S_zero()) {
-                    return d_start_col + (i - d.cbegin());
-                }
-//                DenseRow().swap(d);
-//                d_start_col = 0;
-            }
+            return d_fc;
+//            for (auto i = d.cbegin(); i != d.cend(); i++) {
+//                if (*i != S_zero()) {
+//                    return d_start_col + (i - d.cbegin());
+//                }
+////                DenseRow().swap(d);
+////                d_start_col = 0;
+//            }
         }
         return 99999999;
     }
@@ -117,6 +121,28 @@ public:
         return S_zero();
     }
 
+    void update_cache() {
+        if(!d.empty()) {
+            d_fc = 99999999;
+            d_nz = 0;
+            auto i = d.cbegin();
+            for (; i != d.cend(); i++) {
+                if (*i != S_zero()) {
+                    d_nz++;
+                    d_fc = d_start_col + (i - d.cbegin());
+                    break;
+                }
+//                DenseRow().swap(d);
+//                d_start_col = 0;
+            }
+            for (; i != d.cend(); i++) {
+                if (*i != S_zero()) {
+                    d_nz ++;
+                }
+            }
+        }
+    }
+
     inline void promote_if_needed(int nCols) {
         if (!s.empty()) {
             int n = nCols - s.front().getColumn() + 1;
@@ -124,23 +150,18 @@ public:
                 promote_to_dense(nCols);
             }
         } else if (!d.empty()) {
+            update_cache();
+
             int fc = firstColumn();
             if (fc == 99999999) {
                 DenseRow().swap(d);
                 d_start_col = 0;
                 d_nz = 0;
-            } else {
-                d_nz = 0;
-                for (auto ii = d.cbegin(); ii != d.cend(); ii++) {
-                    if (*ii != S_zero()) d_nz++;
-                }
-
-                if (fc - d_start_col > d.size() / 2) {
-                    int s = fc - d_start_col;
-                    DenseRow tmp(d.begin() + s, d.end());
-                    tmp.swap(d);
-                    d_start_col += s;
-                }
+            } else if (fc - d_start_col > d.size() / 2) {
+                int s = fc - d_start_col;
+                DenseRow tmp(d.begin() + s, d.end());
+                tmp.swap(d);
+                d_start_col += s;
             }
         }
     }
@@ -150,6 +171,8 @@ public:
             d_start_col = s.front().getColumn();
             d.clear();
             d.resize(nCols - d_start_col + 1, S_zero());
+            d_nz = 0;
+            d_fc = s.front().getColumn();
             for (auto i = s.cbegin(); i != s.end(); i++) {
                 assert(i->getColumn() - d_start_col >= 0);
                 if (i->getColumn() - d_start_col >= d.size()) {
@@ -159,6 +182,7 @@ public:
                     abort();
                 }
                 d[i->getColumn() - d_start_col] = i->getElement();
+                d_nz++;
             }
             SparseRow().swap(s);
         }
@@ -204,6 +228,7 @@ inline void swap(Row &lhs, Row &rhs) {
         lhs.d.swap(rhs.d);
         std::swap(lhs.d_start_col, rhs.d_start_col);
         std::swap(lhs.d_nz, rhs.d_nz);
+        std::swap(lhs.d_fc, rhs.d_fc);
     }
 }
 
