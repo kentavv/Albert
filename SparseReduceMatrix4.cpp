@@ -180,7 +180,7 @@ static void promote_to_auto(SparseMatrix &sm, AutoMatrix &am) {
 static void promote_to_sparse(AutoMatrix &am, SparseMatrix &sm) {
     sm.resize(am.size());
     for (int i = 0; i < am.size(); i++) {
-        if (am[i].s.size() && am[i].s.size()) {
+        if (!am[i].s.empty() && !am[i].d.empty()) {
             abort();
         }
         if (!am[i].s.empty()) {
