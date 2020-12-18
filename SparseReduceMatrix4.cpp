@@ -54,6 +54,7 @@ public:
 
     Row(const Row &r) : s(r.s), d(r.d), d_start_col(r.d_start_col), d_nz(r.d_nz) {};
 
+//    Row &operator=(const Row &r) = delete;
     inline Row &operator=(const Row &r) {
         if (this != &r) {
             s = r.s;
@@ -72,9 +73,8 @@ public:
     inline void swap(Row &r) {
         s.swap(r.s);
         d.swap(r.d);
-        int t = d_start_col;
-        d_start_col = r.d_start_col;
-        r.d_start_col = t;
+        std::swap(d_start_col, r.d_start_col);
+        std::swap(d_nz, r.d_nz);
     }
 
     inline bool empty() const {
@@ -188,7 +188,7 @@ public:
         }
     }
 
-    int non_zero_count() const {
+    inline int non_zero_count() const {
         if (!s.empty()) {
             return s.size();
         } else if (!d.empty()) {
@@ -197,6 +197,15 @@ public:
         return 0;
     }
 };
+
+inline void swap(Row &lhs, Row &rhs) {
+    if(&lhs != &rhs) {
+        lhs.s.swap(rhs.s);
+        lhs.d.swap(rhs.d);
+        std::swap(lhs.d_start_col, rhs.d_start_col);
+        std::swap(lhs.d_nz, rhs.d_nz);
+    }
+}
 
 typedef std::vector<Row> AutoMatrix;
 
@@ -563,7 +572,7 @@ int SparseReduceMatrix4(SparseMatrix &SM_, int nCols, int *Rank) {
     AutoMatrix SM;
     promote_to_auto(SM_, SM);
 
-    bool do_sort = false;
+    bool do_sort = true;
 
     if (do_sort) sort(SM.begin(), SM.end(), AM_sort);
 //random_shuffle(SM.begin(), SM.end());
@@ -592,7 +601,7 @@ int SparseReduceMatrix4(SparseMatrix &SM_, int nCols, int *Rank) {
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-#define DEBUG_MATRIX 1
+#define DEBUG_MATRIX 0
 
 #if DEBUG_MATRIX
         printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, SM.size(),
