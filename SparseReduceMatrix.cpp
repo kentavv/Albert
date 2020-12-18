@@ -50,11 +50,23 @@ typedef std::vector<Scalar> DenseRow;
 
 class Row {
 public:
+    Row() : d_start_col(0) {}
+    Row(const Row &r) : s(r.s), d(r.d), d_start_col(r.d_start_col) {};
+
+    inline Row & operator=(const Row &r) {
+        if (this != &r) {
+            s = r.s;
+            d = r.d;
+            d_start_col = r.d_start_col;
+        }
+        return *this;
+    }
+
     SparseRow s;
     DenseRow d;
     int d_start_col;
 
-    void swap(Row &r) {
+    inline void swap(Row &r) {
         s.swap(r.s);
         d.swap(r.d);
         int t = d_start_col;
@@ -62,19 +74,19 @@ public:
         r.d_start_col = t;
     }
 
-    bool empty() const {
+    inline bool empty() const {
         return s.empty() && d.empty();
     }
 
-    size_t capacity() const {
+    inline size_t capacity() const {
         return max(s.capacity(), d.capacity());
     }
 
-    size_t size() const {
+    inline size_t size() const {
         return max(s.size(), d.size());
     }
 
-    int firstColumn() const {
+    inline int firstColumn() const {
         if (!s.empty()) {
             return s.front().getColumn();
         } else if (!d.empty()) {
@@ -87,7 +99,7 @@ public:
         return 99999999;
     }
 
-    int firstElement() const {
+    inline int firstElement() const {
         if (!s.empty()) {
             return s.front().getElement();
         } else if (!d.empty()) {
@@ -103,26 +115,33 @@ public:
 
 typedef std::vector<Row> AutoMatrix;
 
-void promote_to_auto(SparseMatrix &sm, AutoMatrix &am) {
+static void promote_to_auto(SparseMatrix &sm, AutoMatrix &am) {
     am.resize(sm.size());
     for (int i = 0; i < sm.size(); i++) {
         am[i].s.swap(sm[i]);
     }
 }
 
-void promote_to_dense(Row &r, int nCols) {
+static void promote_to_dense(Row &r, int nCols) {
     if (!r.s.empty()) {
         r.d_start_col = r.s.front().getColumn();
         r.d.clear();
         r.d.resize(nCols - r.d_start_col + 1, S_zero());
         for (auto i = r.s.cbegin(); i != r.s.end(); i++) {
+assert(i->getColumn() - r.d_start_col >= 0);
+if(!(i->getColumn() - r.d_start_col < nCols - r.d_start_col + 1)) {
+for (auto i2 = r.s.cbegin(); i2 != r.s.end(); i2++) {
+  printf("%d %d %d %d\n", i2->getColumn(), i2->getColumn() - r.d_start_col, r.d.size(), nCols);
+}
+abort();
+}
             r.d[i->getColumn() - r.d_start_col] = i->getElement();
         }
         SparseRow().swap(r.s);
     }
 }
 
-void promote_to_sparse(AutoMatrix &am, SparseMatrix &sm) {
+static void promote_to_sparse(AutoMatrix &am, SparseMatrix &sm) {
     sm.resize(am.size());
     for (int i = 0; i < am.size(); i++) {
         if (am[i].s.size() && am[i].s.size()) {
@@ -304,7 +323,7 @@ extern int __deg;
 extern int __nn1;
 extern int __nn2;
 
-static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCols) {
+static void save_mat_image(int a, int b, int c, const AutoMatrix &SM, int nCols) {
     int mh = SM.size();
     int mw = nCols;
 
@@ -320,9 +339,21 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
 
     for (int r = 0; r < (int) SM.size(); r++) {
         for (int j = 0; j < (int) SM[r].size(); j++) {
-            if (SM[r][j].getElement() != S_zero()) {
-                int col = SM[r][j].getColumn();
+            int col = 0;
+            Scalar e = S_zero();
 
+            if (!SM[r].s.empty()) {
+                col = SM[r].s[j].getColumn();
+                e = SM[r].s[j].getElement();
+            } else if(!SM[r].d.empty()) {
+                col = SM[r].d_start_col + j;
+                e = SM[r].d[j];
+                img[r * iw + 0] = 255;
+            } else {
+                continue;
+            }
+
+            if (e != S_zero()) {
                 int y = r;
                 int x = col;
                 if (ih < mh) y = int(y / float(mh) * ih);
@@ -396,7 +427,7 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
     delete[] img;
 }
 
-static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
+static inline bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
     if (r1.empty() && r2.empty()) return false;
     if (!r1.empty() && r2.empty()) return true;
     if (r1.empty() && !r2.empty()) return false;
@@ -418,7 +449,7 @@ static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
     return false;
 }
 
-static bool AM_sort(const Row &r1, const Row &r2) {
+static inline bool AM_sort(const Row &r1, const Row &r2) {
     if (r1.empty() && r2.empty()) return false;
     if (!r1.empty() && r2.empty()) return true;
     if (r1.empty() && !r2.empty()) return false;
@@ -450,7 +481,7 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
     AutoMatrix SM;
     promote_to_auto(SM_, SM);
 
-    bool do_sort = true;
+    bool do_sort = false;
 
     if (do_sort) sort(SM.begin(), SM.end(), AM_sort);
 //random_shuffle(SM.begin(), SM.end());
@@ -463,9 +494,9 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
     s1.update(SM, 0, 0, nCols, -1, true);
 
     float nper = .1;
-//    if (__record) {
-//        save_mat_image(0, 0, 0, SM, nCols);
-//    }
+    if (__record) {
+        save_mat_image(0, 0, 0, SM, nCols);
+    }
 
     int nextstairrow = 0;
     int last_row = SM.size();
@@ -552,10 +583,10 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
             nextstairrow++;
         }
 
-//        if (__record && (1 || i / float(nCols) > nper)) {
-//            nper += .1;
-//            save_mat_image(0, 1, i, SM, nCols);
-//        }
+        if (__record && (1 || i / float(nCols) > nper)) {
+            nper += .1;
+            save_mat_image(0, 1, i, SM, nCols);
+        }
 
         s1.update(SM, nextstairrow, i, nCols, 60, true);
     }
@@ -564,9 +595,9 @@ int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
 
     putchar('\n');
 
-//    if (__record) {
-//        save_mat_image(0, 2, nCols, SM, nCols);
-//    }
+    if (__record) {
+        save_mat_image(0, 2, nCols, SM, nCols);
+    }
 
 #if DEBUG_MATRIX
     {
@@ -699,10 +730,16 @@ void SparseAddRow(AutoMatrix &SM, Scalar Factor, int Row1, int Row2, int nCols) 
         }
     } else {
 //        promote_to_dense(r1, nCols);
-        promote_to_dense(r2, nCols);
+        //promote_to_dense(r2, nCols);
 
         SparseDenseAddRow3(Factor, r1, r2);
 //        DenseAddRow3(Factor, r1, r2);
+        if (!r2.s.empty()) {
+            int n = nCols - r2.s.front().getColumn() + 1;
+            if (n < r2.size() * sizeof(Node)) {
+                promote_to_dense(r2, nCols);
+            }
+        }
     }
 }
 
@@ -718,17 +755,56 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
                 abort();
             }
         } else if (!r1.d.empty() && !r2.s.empty()) {
-            if (r2.firstColumn() <= r1.firstColumn()) {
-                abort();
-            } else {
-                abort();
+    SparseRow tmp;
+    tmp.reserve(r1.size() + r2.size());
+
+    auto r1i = 0;
+    auto r2i = r2.s.cbegin();
+
+    for (; r1i < r1.d.size() && r2i != r2.s.cend();) {
+        if (r1i + r1.firstColumn() == r2i->getColumn()) {
+            Scalar x = S_add(r2i->getElement(), S_mul(Factor, r1.d[r1i]));
+            if (x != S_zero()) {
+                Node n = *r2i;
+                n.setElement(x);
+                tmp.push_back(n);
             }
+            r1i++;
+            r2i++;
+        } else if (r1i + r1.firstColumn() < r2i->getColumn()) {
+            Scalar x = S_mul(Factor, r1.d[r1i]);
+            if(x != S_zero()) {
+                Node n(x, r1i + r1.firstColumn());
+                tmp.push_back(n);
+            }
+            r1i++;
+        } else { //if(r1i->column > r2i->column) {
+            tmp.push_back(*r2i);
+            r2i++;
+        }
+    }
+
+    // append r2 with remaining r1 nodes
+    for (; r1i < r1.d.size(); r1i++) {
+        Scalar x = S_mul(Factor, r1.d[r1i]);
+        if(x != S_zero()) {
+            Node n(x, r1i + r1.firstColumn());
+            tmp.push_back(n);
+        }
+    }
+
+    // append r2 with remaining r1 nodes
+    for (; r2i != r2.s.cend(); r2i++) {
+        tmp.push_back(*r2i);
+    }
+    SparseRow(tmp.begin(), tmp.end()).swap(r2.s); // shrink capacity while assigning
         } else if (!r1.d.empty() && !r2.d.empty()) {
             DenseAddRow3(Factor, r1, r2);
         } else {
             abort();
         }
 
+#if 0
         if (!r2.s.empty()) {
             if (r1.d_start_col < r2.d_start_col) {
                 for (int i = 0; i < r2.d.size(); i++) {
@@ -747,6 +823,7 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
                 }
             }
         }
+#endif
     }
 }
 

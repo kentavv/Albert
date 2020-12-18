@@ -79,7 +79,7 @@ static Basis Current_dimension;
 /*     entered.                                                    */
 /*******************************************************************/
 // Variables controlling saving images of the matrix as it's reduced.
-bool __trigger = false;
+bool __trigger = true;
 bool __record = false;
 int __deg = 0;
 int __nn1 = 0;
