@@ -361,20 +361,26 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     int rank = 0;
     printf("Matrix:(%d X %d)\n", (int) SM.size(), cols);
 
+    int rank1 = 0;
     SparseMatrix SM1 = SM;
     SparseMatrix SM2 = SM;
-    int status1 = SparseReduceMatrix(SM1, cols, &rank);
+    int status1 = SparseReduceMatrix(SM1, cols, &rank1);
     if(cols == 12 || 1) {
-        printf("Reducing in lazy mode\n");
-        int status2 = SparseReduceMatrix4(SM2, cols, &rank);
+        printf("Reducing in auto-sparse-dense mode\n");
+        int rank2 = 0;
+        int status2 = SparseReduceMatrix4(SM2, cols, &rank2);
         if(status1 != status2) {
             abort();
         }
         if(SM1 != SM2) {
             abort();
         }
+        if(rank1 != rank2) {
+            abort();
+        }
     }
     SM = SM1;
+    rank = rank1;
     int status = status1;
 
     tt = 0;
