@@ -44,7 +44,9 @@ pair_present.o
 *.gcno
 coverage.info
 cmake-build-debug
+cmake-build-minsizerel
 cmake-build-release
+cmake-build-relwithdebinfo
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
