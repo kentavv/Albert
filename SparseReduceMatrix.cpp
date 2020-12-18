@@ -51,9 +51,10 @@ typedef std::vector<Scalar> DenseRow;
 class Row {
 public:
     Row() : d_start_col(0) {}
+
     Row(const Row &r) : s(r.s), d(r.d), d_start_col(r.d_start_col) {};
 
-    inline Row & operator=(const Row &r) {
+    inline Row &operator=(const Row &r) {
         if (this != &r) {
             s = r.s;
             d = r.d;
@@ -128,13 +129,13 @@ static void promote_to_dense(Row &r, int nCols) {
         r.d.clear();
         r.d.resize(nCols - r.d_start_col + 1, S_zero());
         for (auto i = r.s.cbegin(); i != r.s.end(); i++) {
-assert(i->getColumn() - r.d_start_col >= 0);
-if(!(i->getColumn() - r.d_start_col < nCols - r.d_start_col + 1)) {
-for (auto i2 = r.s.cbegin(); i2 != r.s.end(); i2++) {
-  printf("%d %d %d %d\n", i2->getColumn(), i2->getColumn() - r.d_start_col, r.d.size(), nCols);
-}
-abort();
-}
+            assert(i->getColumn() - r.d_start_col >= 0);
+            if (!(i->getColumn() - r.d_start_col < nCols - r.d_start_col + 1)) {
+                for (auto i2 = r.s.cbegin(); i2 != r.s.end(); i2++) {
+                    printf("%d %d %d %d\n", i2->getColumn(), i2->getColumn() - r.d_start_col, r.d.size(), nCols);
+                }
+                abort();
+            }
             r.d[i->getColumn() - r.d_start_col] = i->getElement();
         }
         SparseRow().swap(r.s);
@@ -345,7 +346,7 @@ static void save_mat_image(int a, int b, int c, const AutoMatrix &SM, int nCols)
             if (!SM[r].s.empty()) {
                 col = SM[r].s[j].getColumn();
                 e = SM[r].s[j].getElement();
-            } else if(!SM[r].d.empty()) {
+            } else if (!SM[r].d.empty()) {
                 col = SM[r].d_start_col + j;
                 e = SM[r].d[j];
                 img[r * iw + 0] = 255;
@@ -755,49 +756,49 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
                 abort();
             }
         } else if (!r1.d.empty() && !r2.s.empty()) {
-    SparseRow tmp;
-    tmp.reserve(r1.size() + r2.size());
+            SparseRow tmp;
+            tmp.reserve(r1.size() + r2.size());
 
-    auto r1i = 0;
-    auto r2i = r2.s.cbegin();
+            auto r1i = 0;
+            auto r2i = r2.s.cbegin();
 
-    for (; r1i < r1.d.size() && r2i != r2.s.cend();) {
-        if (r1i + r1.firstColumn() == r2i->getColumn()) {
-            Scalar x = S_add(r2i->getElement(), S_mul(Factor, r1.d[r1i]));
-            if (x != S_zero()) {
-                Node n = *r2i;
-                n.setElement(x);
-                tmp.push_back(n);
+            for (; r1i < r1.d.size() && r2i != r2.s.cend();) {
+                if (r1i + r1.firstColumn() == r2i->getColumn()) {
+                    Scalar x = S_add(r2i->getElement(), S_mul(Factor, r1.d[r1i]));
+                    if (x != S_zero()) {
+                        Node n = *r2i;
+                        n.setElement(x);
+                        tmp.push_back(n);
+                    }
+                    r1i++;
+                    r2i++;
+                } else if (r1i + r1.firstColumn() < r2i->getColumn()) {
+                    Scalar x = S_mul(Factor, r1.d[r1i]);
+                    if (x != S_zero()) {
+                        Node n(x, r1i + r1.firstColumn());
+                        tmp.push_back(n);
+                    }
+                    r1i++;
+                } else { //if(r1i->column > r2i->column) {
+                    tmp.push_back(*r2i);
+                    r2i++;
+                }
             }
-            r1i++;
-            r2i++;
-        } else if (r1i + r1.firstColumn() < r2i->getColumn()) {
-            Scalar x = S_mul(Factor, r1.d[r1i]);
-            if(x != S_zero()) {
-                Node n(x, r1i + r1.firstColumn());
-                tmp.push_back(n);
+
+            // append r2 with remaining r1 nodes
+            for (; r1i < r1.d.size(); r1i++) {
+                Scalar x = S_mul(Factor, r1.d[r1i]);
+                if (x != S_zero()) {
+                    Node n(x, r1i + r1.firstColumn());
+                    tmp.push_back(n);
+                }
             }
-            r1i++;
-        } else { //if(r1i->column > r2i->column) {
-            tmp.push_back(*r2i);
-            r2i++;
-        }
-    }
 
-    // append r2 with remaining r1 nodes
-    for (; r1i < r1.d.size(); r1i++) {
-        Scalar x = S_mul(Factor, r1.d[r1i]);
-        if(x != S_zero()) {
-            Node n(x, r1i + r1.firstColumn());
-            tmp.push_back(n);
-        }
-    }
-
-    // append r2 with remaining r1 nodes
-    for (; r2i != r2.s.cend(); r2i++) {
-        tmp.push_back(*r2i);
-    }
-    SparseRow(tmp.begin(), tmp.end()).swap(r2.s); // shrink capacity while assigning
+            // append r2 with remaining r1 nodes
+            for (; r2i != r2.s.cend(); r2i++) {
+                tmp.push_back(*r2i);
+            }
+            SparseRow(tmp.begin(), tmp.end()).swap(r2.s); // shrink capacity while assigning
         } else if (!r1.d.empty() && !r2.d.empty()) {
             DenseAddRow3(Factor, r1, r2);
         } else {
