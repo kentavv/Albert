@@ -93,7 +93,7 @@ public:
         if (!s.empty()) {
             return s.front().getColumn();
         } else if (!d.empty()) {
-            for (auto i=d.cbegin(); i!= d.cend(); i++) {
+            for (auto i = d.cbegin(); i != d.cend(); i++) {
                 if (*i != S_zero()) {
                     return d_start_col + (i - d.cbegin());
                 }
@@ -131,13 +131,16 @@ public:
                 d_nz = 0;
             } else {
                 d_nz = 0;
-                for (auto ii = d.begin(); ii != d.end(); ii++) {
+                for (auto ii = d.cbegin(); ii != d.cend(); ii++) {
                     if (*ii != S_zero()) d_nz++;
                 }
 
-//                if (fc - d_start_col > d.size() / 2) {
-//                    puts("hi");
-//                }
+                if (fc - d_start_col > d.size() / 2) {
+                    int s = fc - d_start_col;
+                    DenseRow tmp(d.begin() + s, d.end());
+                    tmp.swap(d);
+                    d_start_col += s;
+                }
             }
         }
     }
@@ -186,9 +189,9 @@ public:
     }
 
     int non_zero_count() const {
-        if(!s.empty()) {
+        if (!s.empty()) {
             return s.size();
-        } else if(!d.empty()) {
+        } else if (!d.empty()) {
             return d_nz;
         }
         return 0;
@@ -538,11 +541,11 @@ void print_matrix(AutoMatrix &SM, int nCols, const char *header) {
     if (header) printf(header);
     for (int i = 0; i < (int) SM.size(); i++) {
         if (!SM[i].s.empty()) {
-            printf("S    ");
+            printf("S%04d          ", SM[i].non_zero_count());
         } else if (!SM[i].d.empty()) {
-            printf("D%04d", SM[i].d.size());
+            printf("D%04d/%04d/%04d", SM[i].non_zero_count(), nCols - SM[i].firstColumn() + 1, SM[i].d.size());
         } else {
-            printf("E    ");
+            printf("E              ");
         }
         for (int j = 0; j < (int) nCols; j++) {
             Scalar s = Get_Matrix_Element(SM, i, j);
@@ -589,7 +592,7 @@ int SparseReduceMatrix4(SparseMatrix &SM_, int nCols, int *Rank) {
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-#define DEBUG_MATRIX 0
+#define DEBUG_MATRIX 1
 
 #if DEBUG_MATRIX
         printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, SM.size(),
@@ -739,10 +742,10 @@ void SparseAddRow(AutoMatrix &SM, Scalar Factor, int Row1, int Row2, int nCols) 
 
     if (!r1.s.empty() && !r2.s.empty()) {
         SparseAddRow(Factor, r1.s, r2.s);
-        r2.promote_if_needed(nCols);
+//        r2.promote_if_needed(nCols);
     } else {
         SparseDenseAddRow3(Factor, r1, r2);
-        r2.promote_if_needed(nCols);
+//        r2.promote_if_needed(nCols);
     }
 }
 
@@ -774,7 +777,8 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
                 }
                 r1i++;
                 r2i++;
-            } else if (r1i + r1.firstColumn() < r2i->getColumn()) {
+//            } else if (r1i + r1.firstColumn() < r2i->getColumn()) {
+            } else if (r1i + r1.d_start_col < r2i->getColumn()) {
                 Scalar x = S_mul(Factor, r1.d[r1i]);
                 if (x != S_zero()) {
                     Node n(x, r1i + r1.d_start_col);
@@ -801,6 +805,7 @@ void SparseDenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols
             tmp.push_back(*r2i);
         }
         SparseRow(tmp.begin(), tmp.end()).swap(r2.s); // shrink capacity while assigning
+//        r2.promote_if_needed(nCols);
     } else if (!r1.d.empty() && !r2.d.empty()) {
         DenseAddRow3(Factor, r1, r2);
     } else {
@@ -828,12 +833,13 @@ void DenseAddRow3(Scalar Factor, const Row &r1, Row &r2) { // }, int nCols) {
         }
     }
 
-    r2.promote_if_needed(-1);
+//    r2.promote_if_needed(-1);
 }
 
 void SparseKnockOut(AutoMatrix &SM, int row, int col, int last_row, int nCols) {
     Scalar x = Get_Matrix_Element(SM, row, col);
     SM[row].divide(x);
+    SM[row].promote_if_needed(nCols);
 
     /* try to knockout elements in column in the rows above */
 
@@ -842,6 +848,7 @@ void SparseKnockOut(AutoMatrix &SM, int row, int col, int last_row, int nCols) {
     for (int j = 0; j < last_row; j++) {
         if (j != row) {
             SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j, nCols);
+            SM[j].promote_if_needed(nCols);
         }
     }
 }
