@@ -40,26 +40,26 @@ using std::vector;
 #include "Memory_routines.h"
 
 static void EnterBeginBasis(int TTindex, Basis basis);
-static void InitStoreblocksizes(void);
+static void InitStoreblocksizes();
 static void FillTypecount(int Cur_scan_pos);
-static int InitTypetable(void);
+static int InitTypetable();
 static int FillTypetable(int Cur_scan_pos, vector<int> &Temp_dttt_index);
-static int GetIndex(const Type Pntr);
+static int GetIndex(Type Pntr);
 static void PrintType(Type Pntr, FILE *filePtr);
 #if 0
-static void PrintTypetable(void);
-static void PrintTypetableindex(void);
+static void PrintTypetable();
+static void PrintTypetableindex();
 #endif
 
-static Type Target_type = 0;                /* Input from higher level module. */
-static int Target_type_len = 0;             /* Computed from Target_type.      */
-static int Target_type_deg = 0;             /* Computed from Target_type.      */
-static int *Type_count = NULL;              /* Used to fill Type_table.        */
-static TT_node *Type_table = NULL;          /* Heart of the matter.            */
-static int *Type_table_index = NULL;        /* Map type to Type_table.         */
-static int Tot_subtypes = 0;                /* Computed from Type_count. Size of Type_table. */
-static int *Deg_to_type_table_index = NULL; /* Map Degree to Type_table.*/
-static vector<int> Store_block_sizes;       /* To find offset into Type_table. */
+static Type Target_type = 0;                   /* Input from higher level module. */
+static int Target_type_len = 0;                /* Computed from Target_type.      */
+static int Target_type_deg = 0;                /* Computed from Target_type.      */
+static int *Type_count = nullptr;              /* Used to fill Type_table.        */
+static TT_node *Type_table = nullptr;          /* Heart of the matter.            */
+static int *Type_table_index = nullptr;        /* Map type to Type_table.         */
+static int Tot_subtypes = 0;                   /* Computed from Type_count. Size of Type_table. */
+static int *Deg_to_type_table_index = nullptr; /* Map Degree to Type_table.*/
+static vector<int> Store_block_sizes;          /* To find offset into Type_table. */
 
 /*******************************************************************/
 /* GLOBALS INITIALIZED:                                            */
@@ -119,13 +119,13 @@ int CreateTypeTable(Type Cur_type)
     return(OK);
 }
 
-int GetTargetLen(void)
+int GetTargetLen()
 {
     return(Target_type_len);
 }
 
 
-Type GetNewType(void)
+Type GetNewType()
 {
     Type temp_type;
     int i;
@@ -230,7 +230,7 @@ void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis)
 /* FUNCTION:                                                       */
 /*     Fill the Store_block_sizes[].                               */ 
 /*******************************************************************/ 
-void InitStoreblocksizes(void)
+void InitStoreblocksizes()
 {
     Store_block_sizes.resize(Target_type_len);
 
@@ -290,7 +290,7 @@ void FillTypecount(int Cur_scan_pos)
 /*     Initialize Type_table_index[] -- Type to Type_table.        */ 
 /*     Initialize Deg_to_type_table_index[] -- Degree to Type.     */ 
 /*******************************************************************/ 
-int InitTypetable(void)
+int InitTypetable()
 {
     int i;
 
@@ -330,7 +330,7 @@ int InitTypetable(void)
 }
 
 
-void DestroyTypeTable(void)
+void DestroyTypeTable()
 {
     if(Type_table) {
       for(int i=0;i<Tot_subtypes;i++) {
@@ -516,7 +516,7 @@ void PrintTypeName(Name n, FILE *filePtr)
 
 
 #if 0
-void PrintTypetable(void)
+void PrintTypetable()
 {
     int i,j;
 
@@ -531,7 +531,7 @@ void PrintTypetable(void)
 }
 
 
-void PrintTypetableindex(void)
+void PrintTypetableindex()
 {
     int i,j;
 
@@ -541,3 +541,66 @@ void PrintTypetableindex(void)
 }
 #endif
 
+bool save_type_table(FILE *f) {
+//    typedef struct tt_node {
+//        Basis begin_basis;
+//        Basis end_basis;            /* indices into Base table. */
+//        Type type;
+//    } TT_node;
+//    static Type Target_type = 0;                   /* Input from higher level module. */
+//    static int Target_type_len = 0;                /* Computed from Target_type.      */
+//    static int Target_type_deg = 0;                /* Computed from Target_type.      */
+//    static int *Type_count = nullptr;              /* Used to fill Type_table.        */
+//    static TT_node *Type_table = nullptr;          /* Heart of the matter.            */
+//    static int *Type_table_index = nullptr;        /* Map type to Type_table.         */
+//    static int Tot_subtypes = 0;                   /* Computed from Type_count. Size of Type_table. */
+//    static int *Deg_to_type_table_index = nullptr; /* Map Degree to Type_table.*/
+//    static vector<int> Store_block_sizes;          /* To find offset into Type_table. */
+
+//    {
+//        int n = Basis_table.size();
+//        fwrite(&n, sizeof(n), 1, f);
+//        for(int i=0; i<n; i++) {
+//            auto a = Basis_table[i];
+//            fwrite(&a, sizeof(a), 1, f);
+//        }
+//    }
+//    {
+//        int n = Deg_to_basis_table.size();
+//        fwrite(&n, sizeof(n), 1, f);
+//        for(int i=0; i<n; i++) {
+//            auto a = Deg_to_basis_table[i].first;
+//            auto b = Deg_to_basis_table[i].second;
+//            fwrite(&a, sizeof(a), 1, f);
+//            fwrite(&b, sizeof(b), 1, f);
+//        }
+//    }
+
+    return true;
+}
+
+bool restore_type_table(FILE *f) {
+//    Basis_table.clear();
+//    {
+//        int n = 0;
+//        if(fread(&n, sizeof(n), 1, f) != 1) return false;
+//        Basis_table.resize(n);
+//        for(int i=0; i<n; i++) {
+//            if(fread(&Basis_table[i], sizeof(Basis_table[i]), 1, f) != 1) return false;
+//        }
+//    }
+//    Deg_to_basis_table.clear();
+//    {
+//        int n = 0;
+//        if(fread(&n, sizeof(n), 1, f) != 1) return false;
+//        Deg_to_basis_table.resize(n);
+//        for(int i=0; i<n; i++) {
+//            Basis a, b;
+//            if(fread(&a, sizeof(a), 1, f) != 1) return false;
+//            if(fread(&b, sizeof(b), 1, f) != 1) return false;
+//            Deg_to_basis_table[i] = make_pair(a, b);
+//        }
+//    }
+
+    return true;
+}
