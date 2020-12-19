@@ -56,11 +56,15 @@ using std::list;
 #include "Type_table.h"
 #include "Mult_table.h"
 
-static void Print_title(void);
+static void Print_title();
 static Type CreateTargetType(struct P_type ptype);
 static int Compatible(struct polynomial *Poly, struct P_type ptype);
-static void usage(void);
+static void usage();
 static void sigCatch(int x);
+
+static const unsigned short mult_file_version = 0xabef;
+static bool save_tables(const char *filename);
+static bool restore_tables(const char *filename);
 
 
 #define  NOT_PRESENT  0
@@ -78,9 +82,9 @@ int main(int argc, char *argv[])
 /* TW 9/18/93 - code to support save, view, & output commands */
     char tableFileName[100];
     char table;
-    FILE *tableFilePtr = NULL;
+    FILE *tableFilePtr = nullptr;
 
-    Type Target_type = NULL;
+    Type Target_type = nullptr;
 
 /* TW 9/18/93 - end of code to support save, view, & output commands */
 
@@ -95,7 +99,7 @@ int main(int argc, char *argv[])
     struct polynomial *Cur_id;
     struct polynomial *Cur_poly;
     int Cur_poly_len;     /* length of the expanded Cur_poly string */
-    struct P_type ptype,Temp_type;   /* structure for problem type */
+    P_type ptype,Temp_type;   /* structure for problem type */
     char c;
 
     int mtable_status = NOT_PRESENT;
@@ -163,9 +167,9 @@ int main(int argc, char *argv[])
 
     Print_title();
 
-    Dalberthead.lhs = NULL;
-    Dalberthead.rhs = NULL;
-    Dalberthead.next = NULL;
+    Dalberthead.lhs = nullptr;
+    Dalberthead.rhs = nullptr;
+    Dalberthead.next = nullptr;
     ReadDotAlbert(&Dalberthead, dir);
     printf("Type h for help.\n");
     Command_len = COMMAND_LEN;
@@ -175,8 +179,10 @@ int main(int argc, char *argv[])
 
     S_init();
 
-    for (i = 0;i<NUM_LETTERS;i++)   /* initialize the problem type */
+    /* initialize the problem type */
+    for (i = 0;i<NUM_LETTERS;i++) {
         ptype.degrees[i] = 0;
+    }
     ptype.tot_degree = 0;
 
     /* TW 10/5/93 - Ctrl-C sig handler instantiation */
@@ -187,7 +193,7 @@ int main(int argc, char *argv[])
       sigemptyset(&na.sa_mask);
       na.sa_flags = 0;
      
-      sigaction(SIGINT, &na, NULL);
+      sigaction(SIGINT, &na, nullptr);
     }
 
     while (!quit) {
@@ -226,7 +232,7 @@ int main(int argc, char *argv[])
                  }
                  out_of_memory = FALSE;
                  Cur_id = Create_poly(Operand,&Cur_poly_len,&out_of_memory);
-                 if (Cur_id != NULL) {
+                 if (Cur_id != nullptr) {
                      if (!Homogeneous(Cur_id)) {
                          printf("Given identity is not homogeneous.");
                          break;
@@ -457,7 +463,7 @@ int main(int argc, char *argv[])
                  }
                  out_of_memory = FALSE;
                  Cur_poly = Create_poly(Operand,&Cur_poly_len,&out_of_memory);
-                 if (Cur_poly == NULL) {
+                 if (Cur_poly == nullptr) {
                      if (!out_of_memory)
                          printf("%s is not a polynomial.",Operand);
                      break;
@@ -495,7 +501,7 @@ int main(int argc, char *argv[])
                  }
                  out_of_memory = FALSE;
                  Cur_poly = Create_poly(Operand,&Cur_poly_len,&out_of_memory);
-                 if (Cur_poly != NULL) {
+                 if (Cur_poly != nullptr) {
                      if (!Homogeneous(Cur_poly)) {
                          printf("Given polynomial is not homogeneous.");
                          DestroyPoly(Cur_poly);
@@ -630,12 +636,12 @@ type to show */
                  }
                  out_of_memory = FALSE;
                  Cur_poly = Create_poly(Operand,&Cur_poly_len,&out_of_memory);
-                 if (Cur_poly == NULL) {
+                 if (Cur_poly == nullptr) {
                      if (!out_of_memory)
                          printf("%s is not a nonassociative word.",Operand);
                      break;
                  }
-                 else if (Cur_poly->terms->next != NULL)
+                 else if (Cur_poly->terms->next != nullptr)
                      printf("%s is not a nonassociative word.",Operand);
                  else {
                      i = Assoc_number(Cur_poly->terms->term);
@@ -687,7 +693,7 @@ type to show */
    return 0;
 }
 
-void Print_title(void)
+void Print_title()
 {
     printf("\n\n         ((Albert)), Version 4.0, 2008\n"
            "Dept. of Computer Science, Clemson University\n"
@@ -704,9 +710,9 @@ void Print_title(void)
 /* Called from S_init() of Scalar_arithmetic.c Used to build the inverse
  * table as a part of initialization. */
 
-Scalar GetField(void)
+Scalar GetField()
 {
-    return(Field);
+    return Field;
 }
 
 
@@ -719,21 +725,24 @@ Type CreateTargetType(struct P_type ptype)
     int i,cur_tt_index = 0;
     Type ttype;
 
-     for (i = 0;i<NUM_LETTERS;i++)
-         if (ptype.degrees[i] > 0)
+     for (i = 0;i<NUM_LETTERS;i++) {
+         if (ptype.degrees[i] > 0) {
              ttype_len++;
+         }
+     }
 
      ttype = (Type) (Mymalloc(ttype_len * sizeof(Degree)));
 
-     if (ttype == NULL)
-         return(NULL);
+     if (ttype != nullptr) {
+         for (i = 0; i < NUM_LETTERS; i++) {
+             if (ptype.degrees[i] > 0) {
+                 ttype[cur_tt_index++] = ptype.degrees[i];
+             }
+         }
+         ttype[cur_tt_index] = 0;
+     }
 
-     for (i = 0;i<NUM_LETTERS;i++)
-         if (ptype.degrees[i] > 0)
-             ttype[cur_tt_index++] = ptype.degrees[i];
-     ttype[cur_tt_index] = 0;
-
-     return(ttype);
+     return ttype;
 }
 
 
@@ -746,18 +755,20 @@ int Compatible(struct polynomial *Poly, struct P_type ptype)
 {
     int i;
 
-    if (Poly == NULL)
-        return(0);
+    if (Poly == nullptr)
+        return 0;
 
-    for (i=0;i<NUM_LETTERS;i++)
-        if (Poly->deg_letter[i] > ptype.degrees[i])
-            return(0);
+    for (i=0;i<NUM_LETTERS;i++) {
+        if (Poly->deg_letter[i] > ptype.degrees[i]) {
+            return 0;
+        }
+    }
 
-    return(1);
+    return 1;
 }
 
 
-void usage(void)
+void usage()
 {
     printf("Usage:  albert [-a dirname]\n");
 }
@@ -768,3 +779,40 @@ void sigCatch(int)
   sigIntFlag = 1;
 }
 
+bool save_tables(const char *fn) {
+    FILE *f = fopen(fn, "wb");
+    if (!f) {
+        printf("Unable to open %s for writing\n", fn);
+        return false;
+    }
+
+    fwrite(&mult_file_version, sizeof(mult_file_version), 1, f);
+
+    bool rv = save_mult_table(f) && save_basis_table(f) && save_type_table(f);
+
+    fclose(f);
+
+    return rv;
+}
+
+bool restore_tables(const char *fn) {
+    FILE *f = fopen(fn, "rb");
+    if (!f) {
+        printf("Unable to open %s for reading\n", fn);
+        return false;
+    }
+
+    unsigned short v;
+    fread(&v, sizeof(v), 1, f);
+    if(v != mult_file_version) {
+        printf("Found incompatible file version while reading %s\n", fn);
+        fclose(f);
+        return false;
+    }
+
+    bool rv = restore_mult_table(f) && restore_basis_table(f) && restore_type_table(f);
+
+    fclose(f);
+
+    return rv;
+}
