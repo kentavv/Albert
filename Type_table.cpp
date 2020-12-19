@@ -94,7 +94,8 @@ int CreateTypeTable(Type Cur_type)
         Target_type_len++;
     }
 
-    last_type = vector<Degree>(Cur_type, Cur_type + Target_type_len);
+    // Include +1 in length so that the above Target_type_len calculations see the trailing 0.
+    last_type = vector<Degree>(Cur_type, Cur_type + Target_type_len + 1);
 
     Target_type = GetNewType();
 
