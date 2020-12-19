@@ -62,6 +62,7 @@ static int Compatible(struct polynomial *Poly, struct P_type ptype);
 static void usage();
 static void sigCatch(int x);
 
+static const char *enhanced_version = "4.0.5";
 static const unsigned short mult_file_version = 0xabef;
 static bool save_tables(const char *filename);
 static bool restore_tables(const char *filename);
@@ -698,8 +699,8 @@ void Print_title()
     printf("\n\n         ((Albert)), Version 4.0, 2008\n"
            "Dept. of Computer Science, Clemson University\n"
            "\n"
-           "Enhanced V4.0.4 by kent.vandervelden@gmail.com\n"
-           "Compiled " __DATE__ ", " __TIME__ "\n");
+           "Enhanced Version %s by kent.vandervelden@gmail.com\n"
+           "Compiled " __DATE__ ", " __TIME__ "\n", enhanced_version);
 #if defined(_OPENMP)
     printf("Parallel processing enabled: %d processors.\n\n\n", omp_get_num_procs());
 #else
