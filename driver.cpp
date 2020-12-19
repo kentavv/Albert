@@ -513,46 +513,40 @@ int main(int argc, char *argv[])
                  }
                  break;
 
-/* "save" the multiplication table or the basis table to a file */
-	    case 's':
-		 if(!Substr(Command, "save")){
-                   printf("Illegal command.");
-                   break;
-		 }
+/* "checkout" save or restore the multiplication table from a file */
+            case 'c':
+                if(!Substr(Command, "checkpoint")){
+                    printf("Illegal command.");
+                    break;
+                }
 
-                 table = Operand[0];                    /* get the table
-type to show */
-                 if (table != 'b' && table != 'm') {
-                     printf("Invalid table type.  Specify \"m\" or \"b\".\n");
-                     break;
-                 } else if(mtable_status != PRESENT) {
-                     if (table == 'b') {
-                         printf("Basis Table not present.\n");
-                     } else {
-                         printf("Multiplication Table not present.\n");
-                     }
-                 } else {
-                   const char *fn = rl_gets("File Name --> ");
-                   printf("\n");
-		           if(fn && *fn){
-		             FILE *f = fopen(fn, "w");
-		             if(!f){
-    		           printf("Unable to open file, %s.\n", fn);
-	    	           break;
-		             }
-		             if (table == 'b') {
-                         PrintBasisTable(f);
-                     } else {
-                         Print_MultTable(f);
-		             }
-                    fclose(f);
-		        }
-		        else{
-		             printf("No file name was entered.  Command aborted.\n");
-		            break;
-		        }
-		        }
-		 break;
+                table = Operand[0];
+                if (table != 'l' && table != 's') {
+                    printf("Invalid command.  Specify \"l\" or \"s\".\n");
+                    break;
+                } else if(mtable_status != PRESENT && table == 's') {
+                    printf("Multiplication Table not present.\n");
+                } else {
+                    const char *fn = rl_gets("File Name --> ");
+                    printf("\n");
+                    if(fn && *fn){
+                        if (table == 'l') {
+                            if(!restore_mult_table(fn)) {
+                                printf("Unable to load multiplication table from %s\n", fn);
+                            } else {
+                                mtable_status = PRESENT;
+                            }
+                        } else {
+                            if(!save_mult_table(fn)) {
+                                printf("Unable to save multiplication table to %s\n", fn);
+                            }
+                        }
+                    } else{
+                        printf("No file name was entered.  Command aborted.\n");
+                        break;
+                    }
+                }
+                break;
 
 /* "view" the multiplication table or the basis table on screen */
 	    case 'v':
