@@ -76,7 +76,7 @@ int Build(list<id_queue_node> &Idq_node, Type Target_type)
 {
     int status = OK;
 
-    Start_time = time(NULL);
+    Start_time = time(nullptr);
     const char *convtime = ctime(&Start_time);
     printf("\nBuild begun at %s\n", convtime);
     printf("Degree    Current Dimension   Elapsed Time(in seconds) \n");
@@ -89,7 +89,7 @@ int Build(list<id_queue_node> &Idq_node, Type Target_type)
             status = ProcessDegree(i, Idq_node);
 	    if(sigIntFlag == 1){
 /*	      printf("Returning from Build().\n");*/
-	      return(-1);
+	      return -1;
 	    }
             if (status != OK) 
                 break;
@@ -120,7 +120,7 @@ int Build(list<id_queue_node> &Idq_node, Type Target_type)
         printf("Build incomplete.\n");
     }
 
-    return (status);
+    return status;
 }
 
 
@@ -141,12 +141,12 @@ int InitializeStructures(Type Target_type)
         status = CreateBasisTable();
     }
 
-    return (status);
+    return status;
 }
 
 
 long ElapsedTime(void) {
-    return time(NULL) - Start_time;
+    return time(nullptr) - Start_time;
 }
   
 void PrintProgress(int i, int n)
@@ -187,11 +187,11 @@ SparseMatrix SM;
        n = FirstTypeDegree(i);
        while ((status == OK) && (n != -1)) {
            begin_basis = GetNextBasisTobeFilled();
-           printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis); fflush(NULL);
+           printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis); fflush(nullptr);
            status = ProcessType(n, First_id_node, SM);
 	   if(sigIntFlag == 1){	/* TW 10/5/93 - Ctrl-C check */
 /*	     printf("Returning from ProcessDegree().\n");*/
-	     return(-1);
+	     return -1;
 	   }
            end_basis = GetNextBasisTobeFilled() - 1;
            if (end_basis < begin_basis)
@@ -202,7 +202,7 @@ SparseMatrix SM;
        }
        Current_dimension = end_basis;
    }
-   return(status);
+   return status;
 }
 
 
@@ -212,7 +212,7 @@ SparseMatrix SM;
 /*     All Degree 1 Basis i.e Generators are entered into Basis    */
 /*     Table.                                                      */ 
 /*******************************************************************/
-void InstallDegree1(void)
+void InstallDegree1()
 {
     Basis end_basis = 0;
 
@@ -257,29 +257,29 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
   {
     Equations equations;
 
-    printf("Generating..."); fflush(NULL);
+    printf("Generating..."); fflush(nullptr);
 
-    list<id_queue_node>::const_iterator ii = First_id_node.begin();
-    for(; ii != First_id_node.end() && status == OK; ii++) {
-        const polynomial *f = ii->identity;
+    for(auto ii : First_id_node) {
+        const polynomial *f = ii.identity;
 
         if(f->degree <= GetDegreeName(n)) {
             status = GenerateEquations(f, n, equations);
+            if (status != OK) break;
         }
 
-	if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
-	  return(-1);
-	}
+        if(sigIntFlag == 1){		/* TW 10/5/93 - Ctrl-C check */
+          return -1;
+        }
     }
 
     if (status == OK) {
 #if 1
    {
      int tt=0;
-     for(int i=0; i<(int)equations.size(); i++) {
-       tt += equations[i].size();
+     for(auto & equation : equations) {
+       tt += equation.size();
      } 
-     printf("neqn:%d (ne:%d MB:%.2f)...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(NULL);
+     printf("neqn:%d (ne:%d MB:%.2f)...", (int)equations.size(), tt, tt*sizeof(Basis_pair)/1024./1024.); fflush(nullptr);
    }
 #endif
 
@@ -287,7 +287,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
     PrintEqns(equations);
 #endif
 
-    printf("(%lds)...Solving...", ElapsedTime()); fflush(NULL);
+    printf("(%lds)...Solving...", ElapsedTime()); fflush(nullptr);
     status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
     //printf("BPtoCol:(%d MB:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
@@ -301,7 +301,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
       printf("\t\tDone: %lds\n", ElapsedTime());
   }
 
-  return(status);
+  return status;
 }
 
 /*******************************************************************/
@@ -342,7 +342,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
          printf("\t\tFill: (%.1f%% %.1fMB)->", p_tt / double(SM.size() * cols) * 100., p_tt * sizeof(Node) / 1024. / 1024.);
          printf("(%.1f%% %.1fMB)\n", tt / double(SM.size() * cols) * 100., tt * sizeof(Node) / 1024. / 1024.);
      }
-     fflush(NULL);
+     fflush(nullptr);
 
 #if DEBUG_MATRIX
    PrintTheRMatrix();
@@ -356,5 +356,5 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
    PrintDependent();
 #endif
 
-   return(status);
+   return status;
 }

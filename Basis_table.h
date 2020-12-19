@@ -15,10 +15,13 @@
 
 int CreateBasisTable();
 Basis EnterBasis(Basis Left_factor, Basis Right_factor, Name Cur_type);
-Basis GetNextBasisTobeFilled(void);
+Basis GetNextBasisTobeFilled();
 Basis BasisStart(Degree Deg);
 Basis BasisEnd(Degree Deg);
 Name GetType(Basis B);
 void PrintBasisTable(FILE *filePtr);
+
+bool save_basis_table(FILE *f);
+bool restore_basis_table(FILE *f);
 
 #endif

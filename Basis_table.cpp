@@ -8,7 +8,7 @@
 /***  PUBLIC ROUTINES:                                           ***/
 /***      int CreateBasisTable()                                 ***/
 /***      Basis EnterBasis()                                     ***/
-/***      int GetNextbasistobefilled()                           ***/
+/***      int GetNextBasisTobeFilled()                           ***/
 /***      Basis LeftFactor()                                     ***/
 /***      Basis RightFactor()                                    ***/
 /***      int Getdeg()                                           ***/
@@ -72,7 +72,7 @@ int CreateBasisTable()
 
     Deg_to_basis_table.clear();
 
-    return(OK);
+    return OK;
 }
     
 
@@ -121,7 +121,7 @@ void UpdateDegToBasisTable(int Deg, Basis Cur_basis)
 /* RETURNS:                                                        */
 /*     Nextbasistobefilled --                                      */
 /*******************************************************************/ 
-Basis GetNextBasisTobeFilled(void)
+Basis GetNextBasisTobeFilled()
 {
     return Basis_table.size();
 }
@@ -129,13 +129,13 @@ Basis GetNextBasisTobeFilled(void)
 
 Basis BasisStart(Degree Deg)
 {
-    return(Deg_to_basis_table[Deg-1].first);
+    return Deg_to_basis_table[Deg-1].first;
 }
 
 
 Basis BasisEnd(Degree Deg)
 {
-    return(Deg_to_basis_table[Deg-1].second);
+    return Deg_to_basis_table[Deg-1].second;
 }
 
 
@@ -148,7 +148,7 @@ Basis BasisEnd(Degree Deg)
 /*******************************************************************/ 
 Name GetType(Basis B)
 {
-    return(Basis_table[B].type);
+    return Basis_table[B].type;
 }
 
 
@@ -195,4 +195,65 @@ void PrintBasis(Basis b, FILE *filePtr) /* TW 9/19/93 - added param to support v
         PrintBasis(Basis_table[b].right_factor, filePtr);
         fprintf(filePtr, ")");
     }
+}
+
+bool save_basis_table(FILE *f) {
+//    typedef int Basis;
+//    typedef int Name;
+//    typedef struct {
+//        Basis left_factor;
+//        Basis right_factor;
+//        Name type;
+//    } BT_rec;
+//    static vector<BT_rec> Basis_table;
+//    static vector<pair<Basis, Basis> > Deg_to_basis_table; // maps degree to first and last indices in Basis_table associated with that degree
+
+    {
+        int n = Basis_table.size();
+        fwrite(&n, sizeof(n), 1, f);
+        for(int i=0; i<n; i++) {
+            auto a = Basis_table[i];
+            fwrite(&a, sizeof(a), 1, f);
+        }
+    }
+
+    {
+        int n = Deg_to_basis_table.size();
+        fwrite(&n, sizeof(n), 1, f);
+        for(int i=0; i<n; i++) {
+            auto a = Deg_to_basis_table[i].first;
+            auto b = Deg_to_basis_table[i].second;
+            fwrite(&a, sizeof(a), 1, f);
+            fwrite(&b, sizeof(b), 1, f);
+        }
+    }
+
+    return true;
+}
+
+bool restore_basis_table(FILE *f) {
+    Basis_table.clear();
+    {
+        int n = 0;
+        if(fread(&n, sizeof(n), 1, f) != 1) return false;
+        Basis_table.resize(n);
+        for(int i=0; i<n; i++) {
+            if(fread(&Basis_table[i], sizeof(Basis_table[i]), 1, f) != 1) return false;
+        }
+    }
+
+    Deg_to_basis_table.clear();
+    {
+        int n = 0;
+        if(fread(&n, sizeof(n), 1, f) != 1) return false;
+        Deg_to_basis_table.resize(n);
+        for(int i=0; i<n; i++) {
+            Basis a, b;
+            if(fread(&a, sizeof(a), 1, f) != 1) return false;
+            if(fread(&b, sizeof(b), 1, f) != 1) return false;
+            Deg_to_basis_table[i] = make_pair(a, b);
+        }
+    }
+
+    return true;
 }
