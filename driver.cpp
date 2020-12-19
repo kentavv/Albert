@@ -562,7 +562,7 @@ type to show */
                 }
 
                 table = Operand[0];
-                if (table != 'l' && table != 's') {
+                if (table != 'r' && table != 's') {
                     printf("Invalid command.  Specify \"l\" or \"s\".\n");
                     break;
                 } else if(mtable_status != PRESENT && table == 's') {
@@ -571,15 +571,15 @@ type to show */
                     const char *fn = rl_gets("File Name --> ");
                     printf("\n");
                     if(fn && *fn){
-                        if (table == 'l') {
-                            if(!restore_mult_table(fn)) {
-                                printf("Unable to load multiplication table from %s\n", fn);
+                        if (table == 'r') {
+                            if(!restore_tables(fn)) {
+                                printf("Unable to load tables from %s\n", fn);
                             } else {
                                 mtable_status = PRESENT;
                             }
                         } else {
-                            if(!save_mult_table(fn)) {
-                                printf("Unable to save multiplication table to %s\n", fn);
+                            if(!save_tables(fn)) {
+                                printf("Unable to save tables to %s\n", fn);
                             }
                         }
                     } else{
