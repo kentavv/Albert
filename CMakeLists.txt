@@ -78,6 +78,8 @@ add_executable(albert
         Ty_routines.cpp
         Ty_routines.h
         Ty_routines_pri.h
+        matrix_reduce.cpp
+        matrix_reduce.h
         )
 
 find_package(OpenMP REQUIRED)
