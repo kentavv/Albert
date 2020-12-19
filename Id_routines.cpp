@@ -75,7 +75,7 @@ int Add_id(struct polynomial *Id, const char *Str, list<id_queue_node> &Id_queue
 bool Remove_id(int Id_no, list<id_queue_node> &Id_queue)
 {
   if(0 < Id_no && Id_no < (int)Id_queue.size() + 1) {
-    list<id_queue_node>::iterator ii = Id_queue.begin();
+    auto ii = Id_queue.begin();
     advance(ii, Id_no - 1);
 
     free(ii->user_str);
@@ -101,10 +101,11 @@ bool Remove_id(int Id_no, list<id_queue_node> &Id_queue)
 /********************************************************************/ 
 void Remove_all_ids(list<id_queue_node> &Id_queue)
 {
-    for(list<id_queue_node>::iterator ii=Id_queue.begin(); ii!=Id_queue.end(); ii++) {
-      free(ii->user_str);
-      DestroyPoly(ii->identity);
+    for(auto & ii : Id_queue) {
+      free(ii.user_str);
+      DestroyPoly(ii.identity);
     }
+    Id_queue.clear();
 }
 
 
@@ -123,7 +124,7 @@ void Print_ids(const list<id_queue_node> &Id_queue)
 {
     int i = 1;
    
-    for(list<id_queue_node>::const_iterator ii=Id_queue.begin(); ii!=Id_queue.end(); ii++) {
-        printf("  %d. %s \n", i++, ii->user_str);
+    for(auto ii : Id_queue) {
+        printf("  %d. %s \n", i++, ii.user_str);
     }
 }

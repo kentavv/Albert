@@ -16,17 +16,17 @@ typedef struct tt_node {
 } TT_node; 
 
 int CreateTypeTable(Type Cur_type);
-int GetTargetLen(void);
-Type GetNewType(void);
+int GetTargetLen();
+Type GetNewType();
 void NameToType(Name N, Type T);
 void SubtractTypeName(Name n1, Name n2, Name *res_name);
 int GetDegree(Type Pntr);
 int GetDegreeName(Name n);
-Name TypeToName(const Type T);
+Name TypeToName(Type T);
 bool IsSubtype(Name n1, Name n2);
 void EnterEndBasis(int TTindex, Basis basis);
 void UpdateTypeTable(Name n, Basis Begin_basis, Basis End_basis);
-void DestroyTypeTable(void);
+void DestroyTypeTable();
 void PrintTypeName(Name n, FILE *filePtr);
 Name FirstTypeDegree(Degree D);
 Name NextTypeSameDegree(Name n);
@@ -34,5 +34,8 @@ Basis FirstBasis(Name N);
 Basis NextBasisSameType(Basis B);
 Basis BeginBasis(Name n);
 Basis EndBasis(Name n);
+
+bool save_type_table(FILE *f);
+bool restore_type_table(FILE *f);
 
 #endif

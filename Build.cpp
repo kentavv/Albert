@@ -204,7 +204,7 @@ int ProcessDegree(int i, const list<id_queue_node> &First_id_node) {
         while ((status == OK) && (n != -1)) {
             begin_basis = GetNextBasisTobeFilled();
             printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis);
-            fflush(NULL);
+            fflush(nullptr);
 
             __deg = i-1;
             __nn1 = nn1;
@@ -281,7 +281,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
         Equations equations;
 
         printf("Generating...");
-        fflush(NULL);
+        fflush(nullptr);
 
         list<id_queue_node>::const_iterator ii = First_id_node.begin();
         for (; ii != First_id_node.end() && status == OK; ii++) {
@@ -306,7 +306,7 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
                 printf("neqn:%d (ne:%d MB:%.2f)...",
                        (int) equations.size(), tt,
                        tt * sizeof(Basis_pair) / 1024. / 1024.);
-                fflush(NULL);
+                fflush(nullptr);
             }
 #endif
 
@@ -315,13 +315,12 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
 #endif
 
             printf("(%lds)...Solving...", ElapsedTime());
-            fflush(NULL);
+            fflush(nullptr);
             status = SparseCreateTheMatrix(equations, SM, &cols, BPtoCol, n);
 
             //printf("BPtoCol:(%d MB:%.2f)...", (int)BPtoCol.size(), BPtoCol.size()*sizeof(Unique_basis_pair)/1024./1024.);
         }
     }
-
 
     if (status == OK) { /*SM.shrink_to_fit();*/
         status = SolveEquations(SM, cols, BPtoCol, n);
@@ -373,7 +372,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                tt / double(SM.size() * cols) * 100.,
                tt * sizeof(Node) / 1024. / 1024.);
     }
-    fflush(NULL);
+    fflush(nullptr);
 
 #if DEBUG_MATRIX
     PrintTheRMatrix();
