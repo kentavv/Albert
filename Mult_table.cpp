@@ -38,11 +38,12 @@
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
 #include "Basis_table.h"
+#include "Type_table.h"
 
 //using std::map;
 using namespace std;
 
-map<pair<Basis, Basis>, vector<pair<Basis, Scalar> > > mult_table;
+mult_table_t mult_table;
 
 static void Print_AE(const Alg_element &ae, FILE *filePtr);
 
@@ -58,7 +59,7 @@ static void Print_AE(const Alg_element &ae, FILE *filePtr);
 /*     Free the memory occupaid by Multiplication table and        */
 /*     all the Terms_blocks.                                       */
 /*******************************************************************/ 
-void DestroyMultTable(void)
+void DestroyMultTable()
 {
   mult_table.clear();
 }
@@ -124,3 +125,58 @@ void Print_AE(const Alg_element &ae, FILE *filePtr) /* TW 9/19/93 - add 2 params
   }
 }
 
+bool save_mult_table(FILE *f) {
+//    typedef std::map<std::pair<Basis, Basis>, std::vector<std::pair<Basis, Scalar> > > mult_table_t;
+//    typedef unsigned char Scalar;
+//    typedef int Basis;
+
+    const int ni = mult_table.size();
+    fwrite(&ni, sizeof(ni), 1, f);
+
+    for (const auto & i : mult_table) {
+        auto bb = i.first;
+        fwrite(&bb.first, sizeof(bb.first), 1, f);
+        fwrite(&bb.second, sizeof(bb.second), 1, f);
+
+        int nj = i.second.size();
+        fwrite(&nj, sizeof(nj), 1, f);
+
+        for (auto bs : i.second) {
+            fwrite(&bs.first, sizeof(bs.first), 1, f);
+            fwrite(&bs.second, sizeof(bs.second), 1, f);
+        }
+    }
+
+    return true;
+}
+
+bool restore_mult_table(FILE *f) {
+    mult_table.clear();
+
+    int ni;
+    fread(&ni, sizeof(ni), 1, f);
+
+    for (int i=0; i<ni; i++) {
+        Basis b1, b2;
+        fread(&b1, sizeof(b1), 1, f);
+        fread(&b2, sizeof(b2), 1, f);
+        pair<Basis, Basis> key(b1, b2);
+
+        int nj;
+        fread(&nj, sizeof(nj), 1, f);
+
+        vector<pair<Basis, Scalar> > row(nj);
+
+        for (int j=0; j<nj; j++) {
+            Basis b;
+            Scalar s;
+            fread(&b, sizeof(b), 1, f);
+            fread(&s, sizeof(s), 1, f);
+            row[j] = make_pair(b, s);
+        }
+
+        mult_table.insert(make_pair(key, row));
+    }
+
+    return true;
+}
