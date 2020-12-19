@@ -22,8 +22,8 @@ extern mult_table_t mult_table;
 void DestroyMultTable();
 void Print_MultTable(FILE *filePtr);
 
-bool save_mult_table(const char *filename);
-bool restore_mult_table(const char *filename);
+bool save_mult_table(FILE *f);
+bool restore_mult_table(FILE *f);
 
 inline bool EnterProduct(Basis B1, Basis B2, const std::vector<std::pair<Basis, Scalar> > &tl)
 {

@@ -38,6 +38,7 @@
 #include "Memory_routines.h"
 #include "Scalar_arithmetic.h"
 #include "Basis_table.h"
+#include "Type_table.h"
 
 //using std::map;
 using namespace std;
@@ -124,20 +125,10 @@ void Print_AE(const Alg_element &ae, FILE *filePtr) /* TW 9/19/93 - add 2 params
   }
 }
 
-static const unsigned short mult_file_version = 0xabef;
-
-bool save_mult_table(const char *fn) {
-    FILE *f = fopen(fn, "wb");
-    if (!f) {
-        printf("Unable to open %s for writing\n", fn);
-        return false;
-    }
-
+bool save_mult_table(FILE *f) {
 //    typedef std::map<std::pair<Basis, Basis>, std::vector<std::pair<Basis, Scalar> > > mult_table_t;
 //    typedef unsigned char Scalar;
 //    typedef int Basis;
-
-    fwrite(&mult_file_version, sizeof(mult_file_version), 1, f);
 
     const int ni = mult_table.size();
     fwrite(&ni, sizeof(ni), 1, f);
@@ -156,27 +147,11 @@ bool save_mult_table(const char *fn) {
         }
     }
 
-    fclose(f);
-
     return true;
 }
 
-bool restore_mult_table(const char *fn) {
-    FILE *f = fopen(fn, "rb");
-    if (!f) {
-        printf("Unable to open %s for reading\n", fn);
-        return false;
-    }
-
+bool restore_mult_table(FILE *f) {
     mult_table.clear();
-
-    unsigned short v;
-    fread(&v, sizeof(v), 1, f);
-    if(v != mult_file_version) {
-        printf("Found incompatible file version while reading %s\n", fn);
-        fclose(f);
-        return false;
-    }
 
     int ni;
     fread(&ni, sizeof(ni), 1, f);
@@ -202,8 +177,6 @@ bool restore_mult_table(const char *fn) {
 
         mult_table.insert(make_pair(key, row));
     }
-
-    fclose(f);
 
     return true;
 }
