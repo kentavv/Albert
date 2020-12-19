@@ -513,6 +513,47 @@ int main(int argc, char *argv[])
                  }
                  break;
 
+/* "save" the multiplication table or the basis table to a file */
+            case 's':
+                if(!Substr(Command, "save")){
+                    printf("Illegal command.");
+                    break;
+                }
+
+                table = Operand[0];                    /* get the table
+type to show */
+                if (table != 'b' && table != 'm') {
+                    printf("Invalid table type.  Specify \"m\" or \"b\".\n");
+                    break;
+                } else if(mtable_status != PRESENT) {
+                    if (table == 'b') {
+                        printf("Basis Table not present.\n");
+                    } else {
+                        printf("Multiplication Table not present.\n");
+                    }
+                } else {
+                    const char *fn = rl_gets("File Name --> ");
+                    printf("\n");
+                    if(fn && *fn){
+                        FILE *f = fopen(fn, "w");
+                        if(!f){
+                            printf("Unable to open file, %s.\n", fn);
+                            break;
+                        }
+                        if (table == 'b') {
+                            PrintBasisTable(f);
+                        } else {
+                            Print_MultTable(f);
+                        }
+                        fclose(f);
+                    }
+                    else{
+                        printf("No file name was entered.  Command aborted.\n");
+                        break;
+                    }
+                }
+                break;
+
 /* "checkout" save or restore the multiplication table from a file */
             case 'c':
                 if(!Substr(Command, "checkpoint")){
