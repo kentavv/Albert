@@ -147,7 +147,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
         r1i = r2.start_col - r1.start_col;
     } else if (r2.start_col < r1.start_col) {
         r2i = r1.start_col - r2.start_col;
-        for(int i=0; i<r2i; i++) {
+        for (int i = 0; i < r2i; i++) {
             if (r2.d[i]) r2.nz++;
         }
     }
@@ -156,6 +156,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
         r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
         if (r2.d[r2i]) r2.nz++;
     }
+
+    if (r2.nz == 0) r2.clear();
 
 //    for (; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
 //    }
@@ -326,7 +328,7 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
         for (; src != rows.end(); src++, dst++) {
             if (src->nz > 0) {
                 SparseRow tmp(src->nz);
-                for (int j = 0, k=0; j < src->sz; j++) {
+                for (int j = 0, k = 0; j < src->sz; j++) {
                     if (src->d[j] != 0) {
                         tmp[k++] = Node(src->d[j], j + src->start_col);
                     }
