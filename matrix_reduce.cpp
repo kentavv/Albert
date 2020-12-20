@@ -290,8 +290,8 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
                         tmp[k++] = Node(src->d[j], j + src->start_col);
                     }
 //                    SparseRow(tmp.begin(), tmp.end()).swap(*dst);
-                    tmp.swap(*dst);
                 }
+                tmp.swap(*dst);
                 (*Rank)++;
             }
             src->clear();
