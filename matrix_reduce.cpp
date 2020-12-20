@@ -141,13 +141,16 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     int r1i = 0;
     int r2i = 0;
 
+    r2.nz = 0;
     if (r1.start_col < r2.start_col) {
         r1i = r2.start_col - r1.start_col;
     } else if (r2.start_col < r1.start_col) {
         r2i = r1.start_col - r2.start_col;
+        for(int i=0; i<r2i; i++) {
+            if (r2.d[i]) r2.nz++;
+        }
     }
 
-    r2.nz = 0;
     for (; r1i < r1.sz; r1i++, r2i++) {
         r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
         if (r2.d[r2i]) r2.nz++;
@@ -155,10 +158,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
 //    for (; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
 //    }
-    r2.nz = 0;
-    for (int i = 0; i < r2.sz; i++) {
-        if (r2.d[i]) r2.nz++;
-    }
+//    r2.nz = 0;
+//    for (int i = 0; i < r2.sz; i++) {
+//        if (r2.d[i]) r2.nz++;
+//    }
     for (r2.fc = 0; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
     }
 }
