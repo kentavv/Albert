@@ -177,6 +177,11 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     }
 
     // TODO Advance pointers by fc, updating r2.nz if skipping values
+    for(int i=0; i<r1.fc; i++) {
+        if (r2.d[r2i]) r2.nz++;
+        r1i++;
+        r2i++;
+    }
 
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
@@ -333,7 +338,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 
 #if 0
     for(int i=0; i<rows.size(); i++) {
-        printf("%d %d %d\n", i, rows[i].nz, rows[i].empty());
+        printf("%d %d %d %d %d %d\n", i, rows[i].sz, rows[i].nz, rows[i].empty(), rows[i].start_col, rows[i].fc);
     }
 #endif
 }
