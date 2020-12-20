@@ -25,6 +25,17 @@ static const uint8_t prime = 251;
 //
 //};
 
+inline uint8_t mod(int x) {
+//    return x == 0 ? 0 : x % prime;
+    return x == 0 ? 0 : x - int(float(x) / float(prime)) * prime;
+
+//    if (x == 0) return 0;
+//    uint8_t rv = x - int(float(x) / float(prime)) * prime;
+//    //printf("%d %d %d\n", x, x % prime, rv);
+//    //printf("%d %d %d\n", x, x % prime, rv);
+//    return rv;
+}
+
 class TruncatedDenseRow {
 public:
     TruncatedDenseRow() : start_col(0), fc(0), nz(0), sz(0), d(nullptr) {}
@@ -76,7 +87,8 @@ public:
         for (int i = fc; i < sz; i++) {
 //        for (int i = 0; i < sz; i++) {
             if (d[i]) {
-                d[i] = (d[i] * s) % prime;
+                //d[i] = (d[i] * s) % prime;
+                d[i] = mod(d[i] * s);
             }
         }
     }
@@ -169,9 +181,15 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
+#if 0
         if (r2.d[r2i] == 0) { r2.d[r2i] = (s * r1.d[r1i]) % prime; }
         else if (r1.d[r1i] == 0) {}
         else { r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime; }
+#else
+        if (r2.d[r2i] == 0) { r2.d[r2i] = mod(s * r1.d[r1i]); }
+        else if (r1.d[r1i] == 0) {}
+        else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
+#endif
         if (r2.d[r2i]) r2.nz++;
     }
 
@@ -299,6 +317,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 
     printf("\nReplaying lazy calculations\n");
     {
+        Profile p("Replaying lazy calculations");
         for(auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
             int r = ii->first.first;
             int c = ii->first.second;
