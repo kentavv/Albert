@@ -113,21 +113,21 @@ static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
 
 static uint8_t _inv_table[256] = {0};
 
-static uint8_t S_inv(uint8_t x) {
+inline uint8_t S_inv(uint8_t x) {
     return _inv_table[x];
 }
 
-static uint8_t S_minus(uint8_t x) {
+inline uint8_t S_minus(uint8_t x) {
     return (prime - x) % prime;
 }
 
-static uint8_t S_mul(uint8_t x, uint8_t y) {
+inline uint8_t S_mul(uint8_t x, uint8_t y) {
     return (x && y) ? (x * y) % 251 : 0;
 //    return (!x || !y) ? 0 : (x * y) % 251;
 //    return (x * y) % prime;
 }
 
-static uint8_t S_add(uint8_t x, uint8_t y) {
+inline uint8_t S_add(uint8_t x, uint8_t y) {
     return (x + y) % prime;
 }
 
@@ -153,7 +153,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     }
 
     for (; r1i < r1.sz; r1i++, r2i++) {
-        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
+//        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
+        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
         if (r2.d[r2i]) r2.nz++;
     }
 
