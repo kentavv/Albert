@@ -69,7 +69,7 @@ public:
         d = nullptr;
     }
 
-    inline bool empty() const { return !d || sz == 0 || nz == 0; }
+    inline bool empty() const { return nz == 0; }
 
     inline float first_element() const {
         return d ? d[fc] : 0;
@@ -173,9 +173,29 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         r1i = r2.start_col - r1.start_col;
     } else if (r2.start_col < r1.start_col) {
         r2i = r1.start_col - r2.start_col;
+#if 0
         for (int i = r2.fc; i < r2i; i++) {
             if (r2.d[i] != 0) r2.nz++;
         }
+#else
+	int i = r2.fc;
+        const __m256 _z = _mm256_set1_ps(0);
+        for (; i < r2i-7; i+=8) {
+#if 1
+        __m256 _r2 = _mm256_loadu_ps(r2.d + i);
+#else
+        __m256 _r2 = _mm256_load_ps(r2.d + i);
+#endif
+
+        __m256 _c = _mm256_cmp_ps(_z, _r2, _CMP_NEQ_UQ);
+        unsigned mask = _mm256_movemask_ps(_c);
+        int n = _mm_popcnt_u32(mask);
+        r2.nz += n;
+	}
+        for (; i < r2i; i++) {
+            if (r2.d[i] != 0) r2.nz++;
+        }
+#endif
     }
 
     {
@@ -200,9 +220,30 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
             // Skipped region of r2, is a stretch of zeros in r1, which can not create a change to r1.
             int n = r1.fc - r1i;
             r1i += n;
+#if 0
             for (int i = 0; i < n; i++, r2i++) {
                 if (r2.d[r2i] != 0) r2.nz++;
             }
+#else
+        int i = 0;
+        const __m256 _z = _mm256_set1_ps(0);
+        for (; i < n-7; i+=8) {
+#if 1
+        __m256 _r2 = _mm256_loadu_ps(r2.d + r2i + i);
+#else
+        __m256 _r2 = _mm256_load_ps(r2.d + i);
+#endif
+
+        __m256 _c = _mm256_cmp_ps(_z, _r2, _CMP_NEQ_UQ);
+        unsigned mask = _mm256_movemask_ps(_c);
+        int n = _mm_popcnt_u32(mask);
+        r2.nz += n;
+        }
+        for (; i < n; i++) {
+            if (r2.d[r2i + i] != 0) r2.nz++;
+        }
+	r2i += n;
+#endif
         }
 //        if (r2i < r2.fc) {
 //            // Unable to do anything.
@@ -267,6 +308,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     //__m256i _p = _mm256_set1_epi32(prime);
     const __m256 _p = _mm256_set1_ps(prime);
     const __m256 _s = _mm256_set1_ps(s);
+    const __m256 _z = _mm256_set1_ps(0);
 
     for (; r1i < r1.sz-7; r1i+=8, r2i+=8) {
         // float x = r2.d[r2i] + s * r1.d[r1i];
@@ -282,24 +324,37 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 
         // r2.d[r2i] = x - int(x / prime) * prime;
         __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO |_MM_FROUND_NO_EXC);
+        _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
 #if 1
-	_mm256_storeu_ps(r2.d + r2i, _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p)));
+	_mm256_storeu_ps(r2.d + r2i, _x2);
 #else
-	_mm256_store_ps(r2.d + r2i, _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p)));
+	_mm256_store_ps(r2.d + r2i, _x2);
 #endif
 
 //        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+
+	__m256 _c = _mm256_cmp_ps(_z, _x2, _CMP_NEQ_UQ);
+        unsigned mask = _mm256_movemask_ps(_c);
+	int n = _mm_popcnt_u32(mask);
+        r2.nz += n;
+	//if (n) {
+        //printf("%d\n", n);
+//	}
     }
 #if 1
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
         r2.d[r2i] = x - int(x / prime) * prime;
+        if (r2.d[r2i] != 0) r2.nz++;
     }
 #endif
+#if 0
     for (; a < r2.sz; a++) {
         if (r2.d[a] != 0) r2.nz++;
     }
+#else
+#endif
 #endif
 
     if (r2.nz == 0) r2.clear();
@@ -322,10 +377,16 @@ static void knock_out(vector<TruncatedDenseRow2> &rows, int r, int c, int last_r
         rows[r].multiply(S_inv(x));
     }
 
+#if 1
     replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
+#endif
 
 #pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
+#if 0
+    for (int j = 0; j < last_row; j++) {
+#else
     for (int j = r+1; j < last_row; j++) {
+#endif
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
         }
@@ -354,6 +415,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
     replay.reserve(rows.size());
 
     bool do_sort = true;
+    int ns = 0;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
@@ -418,12 +480,17 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
             }
 #endif
 
-            if (do_sort) sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+            if (do_sort) {
+		    if ((++ns) % 4 == 0) {
+		    sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+		    }
+	    }
 
             nextstairrow++;
         }
     }
 
+    if(!replay.empty()) {
     printf("\nReplaying lazy calculations\n");
     {
         Profile p("Replaying lazy calculations");
@@ -438,6 +505,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
             }
 //            s1.update(SM, row, col, nCols, 60, true);
         }
+    }
     }
 
 #if 0
