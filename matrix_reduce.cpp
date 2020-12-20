@@ -154,7 +154,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
-        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
+//        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
+        if (r2.d[r2i] == 0) { r2.d[r2i] = (s * r1.d[r1i]) % prime; }
+        else if (r1.d[r1i] == 0) { }
+        else { r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime; }
         if (r2.d[r2i]) r2.nz++;
     }
 
