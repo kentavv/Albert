@@ -15,7 +15,7 @@ using std::swap;
 typedef unsigned char uint8_t;
 static const uint8_t prime = 251;
 
-#define DEBUG_MATRIX 1
+#define DEBUG_MATRIX 0
 
 //class Scalar {
 //
@@ -155,6 +155,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
 //    for (; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
 //    }
+    r2.nz = 0;
+    for (int i = 0; i < r2.sz; i++) {
+        if (r2.d[i]) r2.nz++;
+    }
     for (r2.fc = 0; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
     }
 }
@@ -165,7 +169,7 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
         rows[r].multiply(S_inv(x));
     }
 
-//#pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
     for (int j = 0; j < last_row; j++) {
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
@@ -190,7 +194,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
         }
 //        }
     }
-    bool do_sort = false;
+    bool do_sort = true;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
