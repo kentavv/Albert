@@ -44,6 +44,7 @@ using std::vector;
 #include "Id_routines.h"
 #include "SparseReduceMatrix.h"
 #include "matrix_reduce.h"
+#include "matrix_reduce_float.h"
 #include "Debug.h"
 
 static int InitializeStructures(Type Target_type);
@@ -364,10 +365,12 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     SparseMatrix SM1 = SM;
     SparseMatrix SM2 = SM;
     int status1 = SparseReduceMatrix(SM1, cols, &rank1);
+    // int status1 = SparseReduceMatrix(SM1, cols, &rank1);
     if(cols == 12 || 1) {
         printf("Reducing in truncated-dense mode\n");
         int rank2 = 0;
         int status2 = SparseReduceMatrix5(SM2, cols, &rank2);
+        // int status2 = SparseReduceMatrix6(SM2, cols, &rank2);
         if(status1 != status2) {
             abort();
         }

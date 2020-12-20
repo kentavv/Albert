@@ -14,7 +14,7 @@ using std::swap;
 using std::pair;
 using std::make_pair;
 
-#include "matrix_reduce.h"
+#include "matrix_reduce_float.h"
 
 typedef unsigned char uint8_t;
 static const uint8_t prime = 251;
@@ -349,7 +349,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #include "CreateMatrix.h"
 #include "SparseReduceMatrix.h"
 
-int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
+int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
     Profile p1("SparseReduceMatrix5");
 
 #if DEBUG_MATRIX
