@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <immintrin.h>
 #include "profile.h"
 
 using std::vector;
@@ -220,8 +221,35 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
         if (r2.d[r2i] != 0) r2.nz++;
     }
-#else
+#endif
+#if 0
     int a = r2i;
+    for (; r1i < r1.sz; r1i++, r2i++) {
+        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+    }
+    for (; a < r2.sz; a++) {
+        if (r2.d[a] != 0) r2.nz++;
+    }
+#endif
+#if 0
+    int a = r2i;
+    for (; r1i < r1.sz; r1i++, r2i++) {
+        float x = r2.d[r2i] + s * r1.d[r1i];
+        r2.d[r2i] = x - int(x / prime) * prime;
+    }
+    for (; a < r2.sz; a++) {
+        if (r2.d[a] != 0) r2.nz++;
+    }
+#endif
+#if 1
+    int a = r2i;
+    __m256 _k = _mm256_set1_ps(1.0f / prime);
+    __m256i _p = _mm256_set1_epi32(prime);
+    for (; r1i < r1.sz; r1i+=8, r2i+=8) {
+//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        float x = r2.d[r2i] + s * r1.d[r1i];
+        r2.d[r2i] = x - int(x / prime) * prime;
+    }
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
