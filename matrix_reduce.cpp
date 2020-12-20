@@ -15,6 +15,8 @@ using std::swap;
 typedef unsigned char uint8_t;
 static const uint8_t prime = 251;
 
+#define DEBUG_MATRIX 1
+
 //class Scalar {
 //
 //};
@@ -47,7 +49,8 @@ public:
         fc = 0;
         nz = 0;
         sz = 0;
-        if (d) delete[] d;
+        delete[] d;
+        d = nullptr;
     }
 
     bool empty() const { return !d || sz == 0 || nz == 0; }
@@ -66,7 +69,8 @@ public:
     }
 
     void multiply(uint8_t s) {
-        for (int i = fc; i < sz; i++) {
+//        for (int i = fc; i < sz; i++) {
+        for (int i = 0; i < sz; i++) {
             d[i] = (d[i] * s) % prime;
         }
     }
@@ -150,7 +154,9 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
         if (r2.d[r2i]) r2.nz++;
     }
 
-    for (; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
+//    for (; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
+//    }
+    for (r2.fc = 0; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
     }
 }
 
@@ -185,7 +191,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
         }
 //        }
     }
-    bool do_sort = true;
+    bool do_sort = false;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
@@ -199,6 +205,19 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
                 break;
             }
         }
+
+        #if DEBUG_MATRIX
+        {
+            printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, n_cols, j, nextstairrow, rows.size(), j < (int) rows.size());
+            for (int i = 0; i < (int) rows.size(); i++) {
+                for (int j = 0; j < (int) n_cols; j++) {
+                    uint8_t s = rows[i].element(j);
+                    printf(" %3d", s);
+                }
+                putchar('\n');
+            }
+        }
+#endif
 
         if (j < last_row) {
             swap(rows[nextstairrow], rows[j]);
@@ -222,7 +241,6 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #include "SparseReduceMatrix.h"
 
 int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
-#define DEBUG_MATRIX 1
 
 #if DEBUG_MATRIX
     {
@@ -267,13 +285,14 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
         for (; src != rows.end(); src++, dst++) {
             if (src->nz > 0) {
                 SparseRow tmp(src->nz);
-                for (int j = 0; j < src->sz; j++) {
+                for (int j = 0, k=0; j < src->sz; j++) {
                     if (src->d[j] != 0) {
-                        tmp.push_back(Node(src->d[j], j + src->start_col));
+                        tmp[k++] = Node(src->d[j], j + src->start_col);
                     }
-                    SparseRow(tmp.begin(), tmp.end()).swap(*dst);
+//                    SparseRow(tmp.begin(), tmp.end()).swap(*dst);
+                    tmp.swap(*dst);
                 }
-                *Rank++;
+                (*Rank)++;
             }
             src->clear();
         }
