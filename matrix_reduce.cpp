@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdio.h>
+#include "profile.h"
 
 using std::vector;
 using std::sort;
@@ -273,6 +274,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #include "SparseReduceMatrix.h"
 
 int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
+    Profile p1("SparseReduceMatrix5");
 
 #if DEBUG_MATRIX
     {
@@ -289,6 +291,8 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
 
     vector<TruncatedDenseRow> rows(SM.size());
     {
+        Profile p1("SM->TRD");
+
         auto src = SM.cbegin();
         auto dst = rows.begin();
         for (; src != SM.cend(); src++, dst++) {
@@ -307,11 +311,16 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
 
     SM.clear();
 
-    matrix_reduce(rows, nCols);
+    {
+        Profile p2("reduce");
+        matrix_reduce(rows, nCols);
+    }
 
     *Rank = 0;
     SM.resize(rows.size());
     {
+        Profile p3("TRD->SM");
+
         auto src = rows.begin();
         auto dst = SM.begin();
         for (; src != rows.end(); src++, dst++) {
