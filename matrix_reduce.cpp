@@ -27,14 +27,7 @@ static const uint8_t prime = 251;
 //};
 
 inline uint8_t mod(int x) {
-//    return x == 0 ? 0 : x % prime;
-    return x == 0 ? 0 : x - int(float(x) / float(prime)) * prime;
-
-//    if (x == 0) return 0;
-//    uint8_t rv = x - int(float(x) / float(prime)) * prime;
-//    //printf("%d %d %d\n", x, x % prime, rv);
-//    //printf("%d %d %d\n", x, x % prime, rv);
-//    return rv;
+    return x == 0 ? 0 : x % prime;
 }
 
 class TruncatedDenseRow {
