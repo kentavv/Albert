@@ -210,6 +210,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 //        }
     }
 
+#if 0
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
@@ -219,6 +220,17 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
         if (r2.d[r2i] != 0) r2.nz++;
     }
+#else
+    int a = r2i;
+    for (; r1i < r1.sz; r1i++, r2i++) {
+//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        float x = r2.d[r2i] + s * r1.d[r1i];
+        r2.d[r2i] = x - int(x / prime) * prime;
+    }
+    for (; a < r2.sz; a++) {
+        if (r2.d[a] != 0) r2.nz++;
+    }
+#endif
 
     if (r2.nz == 0) r2.clear();
 
