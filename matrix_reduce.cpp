@@ -71,9 +71,7 @@ public:
     inline bool empty() const { return !d || sz == 0 || nz == 0; }
 
     inline uint8_t first_element() const {
-        uint8_t e = 0;
-        e = d[fc];
-        return e;
+        return d ? d[fc] : 0;
     }
 
     inline uint8_t element(int col) const {
@@ -195,14 +193,14 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
     if (r2.nz == 0) r2.clear();
 
-//    for (; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
-//    }
+    for (auto p = r2.d + r2.fc; r2.fc < r2.sz - 1 && *p == 0; r2.fc++, p++) {
+    }
 //    r2.nz = 0;
 //    for (int i = 0; i < r2.sz; i++) {
 //        if (r2.d[i]) r2.nz++;
 //    }
-    for (r2.fc = 0; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
-    }
+//    for (r2.fc = 0; r2.fc < r2.sz - 1 && r2.d[r2.fc] == 0; r2.fc++) {
+//    }
 }
 
 static vector<pair<pair<int, int>, TruncatedDenseRow> > replay;
@@ -216,7 +214,7 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
     replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
 
 #pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
-    for (int j = 0; j < last_row; j++) {
+    for (int j = r+1; j < last_row; j++) {
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
         }
@@ -330,6 +328,12 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 //            s1.update(SM, row, col, nCols, 60, true);
         }
     }
+
+#if 0
+    for(int i=0; i<rows.size(); i++) {
+        printf("%d %d %d\n", i, rows[i].nz, rows[i].empty());
+    }
+#endif
 }
 
 
