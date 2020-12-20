@@ -365,7 +365,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     SparseMatrix SM2 = SM;
     int status1 = SparseReduceMatrix(SM1, cols, &rank1);
     if(cols == 12 || 1) {
-        printf("Reducing in auto-sparse-dense mode\n");
+        printf("Reducing in truncated-dense mode\n");
         int rank2 = 0;
         int status2 = SparseReduceMatrix5(SM2, cols, &rank2);
         if(status1 != status2) {
