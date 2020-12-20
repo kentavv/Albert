@@ -142,10 +142,9 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     int r2i = 0;
 
     if (r1.start_col < r2.start_col) {
-        abort();
-        // should not happen, because r2
+        r1i = r2.start_col - r1.start_col;
     } else if (r2.start_col < r1.start_col) {
-        r1i = r1.start_col - r2.start_col;
+        r2i = r1.start_col - r2.start_col;
     }
 
     r2.nz = 0;
@@ -206,7 +205,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
             }
         }
 
-        #if DEBUG_MATRIX
+#if DEBUG_MATRIX
         {
             printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, n_cols, j, nextstairrow, rows.size(), j < (int) rows.size());
             for (int i = 0; i < (int) rows.size(); i++) {
@@ -222,12 +221,38 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
         if (j < last_row) {
             swap(rows[nextstairrow], rows[j]);
 
+#if DEBUG_MATRIX
+            {
+                printf("\nAfter swap\n");
+                for (int i = 0; i < (int) rows.size(); i++) {
+                    for (int j = 0; j < (int) n_cols; j++) {
+                        uint8_t s = rows[i].element(j);
+                        printf(" %3d", s);
+                    }
+                    putchar('\n');
+                }
+            }
+#endif
+
             knock_out(rows, nextstairrow, i, last_row);
             for (; last_row > 0; last_row--) {
                 if (!rows[last_row - 1].empty()) {
                     break;
                 }
             }
+
+#if DEBUG_MATRIX
+            {
+                printf("\nDone\n");
+                for (int i = 0; i < (int) rows.size(); i++) {
+                    for (int j = 0; j < (int) n_cols; j++) {
+                        uint8_t s = rows[i].element(j);
+                        printf(" %3d", s);
+                    }
+                    putchar('\n');
+                }
+            }
+#endif
 
             if (do_sort) sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
 
