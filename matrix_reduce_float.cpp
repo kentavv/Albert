@@ -481,7 +481,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
 #endif
 
             if (do_sort) {
-		    if ((++ns) % 4 == 0) {
+		    if ((++ns) % 20 == 0) {
 		    sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
 		    }
 	    }
