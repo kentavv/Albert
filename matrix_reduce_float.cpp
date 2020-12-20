@@ -17,8 +17,7 @@ using std::min;
 
 #include "matrix_reduce_float.h"
 
-typedef unsigned char uint8_t;
-static const uint8_t prime = 251;
+static const float prime = 251;
 
 #define DEBUG_MATRIX 0
 
@@ -26,7 +25,7 @@ static const uint8_t prime = 251;
 //
 //};
 
-inline uint8_t mod(int x) {
+inline float mod(float x) {
 //    return x == 0 ? 0 : x % prime;
     return x == 0 ? 0 : x - int(float(x) / float(prime)) * prime;
 
@@ -37,13 +36,13 @@ inline uint8_t mod(int x) {
 //    return rv;
 }
 
-class TruncatedDenseRow {
+class TruncatedDenseRow2 {
 public:
-    TruncatedDenseRow() : start_col(0), fc(0), nz(0), sz(0), d(nullptr) {}
+    TruncatedDenseRow2() : start_col(0), fc(0), nz(0), sz(0), d(nullptr) {}
 
-    TruncatedDenseRow(const TruncatedDenseRow &r) = default;
+    TruncatedDenseRow2(const TruncatedDenseRow2 &r) = default;
 
-    TruncatedDenseRow &operator=(const TruncatedDenseRow &r) {
+    TruncatedDenseRow2 &operator=(const TruncatedDenseRow2 &r) {
         if (this != &r) {
             start_col = r.start_col;
             fc = r.fc;
@@ -58,7 +57,7 @@ public:
     int fc;
     int nz;
     int sz;
-    uint8_t *d;
+    float *d;
 
     void clear() {
         start_col = 0;
@@ -71,38 +70,38 @@ public:
 
     inline bool empty() const { return !d || sz == 0 || nz == 0; }
 
-    inline uint8_t first_element() const {
+    inline float first_element() const {
         return d ? d[fc] : 0;
     }
 
-    inline uint8_t element(int col) const {
+    inline float element(int col) const {
         if (start_col <= col && col < start_col + sz) {
             return d[col - start_col];
         }
         return 0;
     }
 
-    inline void multiply(uint8_t s) {
+    inline void multiply(float s) {
         for (int i = fc; i < sz; i++) {
 //        for (int i = 0; i < sz; i++) {
-            if (d[i]) {
+            if (d[i] != 0) {
                 //d[i] = (d[i] * s) % prime;
                 d[i] = mod(d[i] * s);
             }
         }
     }
 
-    inline TruncatedDenseRow copy() const {
-        TruncatedDenseRow dst(*this);
+    inline TruncatedDenseRow2 copy() const {
+        TruncatedDenseRow2 dst(*this);
         if (dst.sz > 0) {
-            dst.d = new uint8_t[dst.sz];
-            memcpy(dst.d, d, dst.sz);
+            dst.d = new float[dst.sz];
+            memcpy(dst.d, d, dst.sz * sizeof(d[0]));
         }
         return dst;
     }
 };
 
-static void swap(TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
+static void swap(TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r2) {
     swap(r1.start_col, r2.start_col);
     swap(r1.fc, r2.fc);
     swap(r1.nz, r2.nz);
@@ -114,7 +113,7 @@ class ReduceMatrix {
 public:
 };
 
-static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
+static bool TDR_sort(const TruncatedDenseRow2 &r1, const TruncatedDenseRow2 &r2) {
     if (r1.empty() && r2.empty()) return false;
     if (!r1.empty() && r2.empty()) return true;
     if (r1.empty() && !r2.empty()) return false;
@@ -136,27 +135,26 @@ static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
     return false;
 }
 
-static uint8_t _inv_table[256] = {0};
+static float _inv_table[256] = {0};
 
-inline uint8_t S_inv(uint8_t x) {
-    return _inv_table[x];
+inline float S_inv(float x) {
+    return _inv_table[int(x)];
 }
 
-inline uint8_t S_minus(uint8_t x) {
-    return (prime - x) % prime;
+inline float S_minus(float x) {
+    return mod(prime - x);
 }
 
-inline uint8_t S_mul(uint8_t x, uint8_t y) {
-    return (x && y) ? (x * y) % 251 : 0;
-//    return (!x || !y) ? 0 : (x * y) % 251;
+inline float S_mul(float x, float y) {
+    return (x != 0 && y != 0) ? mod(x * y) : 0;
 //    return (x * y) % prime;
 }
 
-inline uint8_t S_add(uint8_t x, uint8_t y) {
-    return (x + y) % prime;
+inline float S_add(float x, float y) {
+    return mod(x + y);
 }
 
-static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
+static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r2) {
     // r2 = r2 + s * r1
     // where -s is the value of r2 in the leading column of r1
 
@@ -175,7 +173,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     } else if (r2.start_col < r1.start_col) {
         r2i = r1.start_col - r2.start_col;
         for (int i = r2.fc; i < r2i; i++) {
-            if (r2.d[i]) r2.nz++;
+            if (r2.d[i] != 0) r2.nz++;
         }
     }
 
@@ -202,7 +200,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
             int n = r1.fc - r1i;
             r1i += n;
             for (int i = 0; i < n; i++, r2i++) {
-                if (r2.d[r2i]) r2.nz++;
+                if (r2.d[r2i] != 0) r2.nz++;
             }
         }
 //        if (r2i < r2.fc) {
@@ -215,16 +213,11 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
-#if 0
-        if (r2.d[r2i] == 0) { r2.d[r2i] = (s * r1.d[r1i]) % prime; }
-        else if (r1.d[r1i] == 0) {}
-        else { r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime; }
-#else
+
         if (r2.d[r2i] == 0) { r2.d[r2i] = mod(s * r1.d[r1i]); }
         else if (r1.d[r1i] == 0) {}
         else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
-#endif
-        if (r2.d[r2i]) r2.nz++;
+        if (r2.d[r2i] != 0) r2.nz++;
     }
 
     if (r2.nz == 0) r2.clear();
@@ -239,10 +232,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //    }
 }
 
-static vector<pair<pair<int, int>, TruncatedDenseRow> > replay;
+static vector<pair<pair<int, int>, TruncatedDenseRow2> > replay;
 
-static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_row) {
-    uint8_t x = rows[r].element(c);
+static void knock_out(vector<TruncatedDenseRow2> &rows, int r, int c, int last_row) {
+    float x = rows[r].element(c);
     if (x != 1) {
         rows[r].multiply(S_inv(x));
     }
@@ -257,15 +250,15 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
     }
 }
 
-void matrix_reduce_float(vector<TruncatedDenseRow> &rows, int n_cols) {
+void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
     {
 //        void S_init(void)
 //        {
 //            Prime = GetField();    /* Initialize the global variable Prime. */
 //
 ///* Initialize the global table of inverses. */
-        for (uint8_t i = 1; i < prime; i++) {
-            for (uint8_t j = 1; j < prime; j++) {
+        for (uint8_t i = 1; i < int(prime); i++) {
+            for (uint8_t j = 1; j < int(prime); j++) {
                 if (S_mul(i, j) == 1) {
                     _inv_table[i] = j;
                     break;
@@ -392,7 +385,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
     }
 #endif
 
-    vector<TruncatedDenseRow> rows(SM.size());
+    vector<TruncatedDenseRow2> rows(SM.size());
     {
         Profile p1("SM->TRD");
 
@@ -403,7 +396,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
-            dst->d = new uint8_t[dst->sz]();
+            dst->d = new float[dst->sz]();
             dst->fc = 0;
             dst->nz = src->size();
             for (auto j : *src) {
@@ -433,7 +426,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
                 SparseRow tmp(src->nz);
                 for (int j = 0, k = 0; j < src->sz; j++) {
                     if (src->d[j] != 0) {
-                        tmp[k++] = Node(src->d[j], j + src->start_col);
+                        tmp[k++] = Node(int(src->d[j]), j + src->start_col);
                     }
 //                    SparseRow(tmp.begin(), tmp.end()).swap(*dst);
                 }
