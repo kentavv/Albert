@@ -13,6 +13,7 @@ using std::sort;
 using std::swap;
 using std::pair;
 using std::make_pair;
+using std::min;
 
 #include "matrix_reduce_float.h"
 
@@ -167,23 +168,49 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     int r2i = 0;
 
     r2.nz = 0;
+
+    // Align pointers to the shared start columns
     if (r1.start_col < r2.start_col) {
         r1i = r2.start_col - r1.start_col;
     } else if (r2.start_col < r1.start_col) {
         r2i = r1.start_col - r2.start_col;
-        for (int i = 0; i < r2i; i++) {
+        for (int i = r2.fc; i < r2i; i++) {
             if (r2.d[i]) r2.nz++;
         }
     }
 
-    // TODO Advance pointers by fc, updating r2.nz if skipping values
-#if 0
-    for(int i=0; i<r1.fc; i++) {
-        if (r2.d[r2i]) r2.nz++;
-        r1i++;
-        r2i++;
+    {
+        // Advance both pointers, skipping leading zeros or terms that will not
+        // create a changed. May be possible to merge this code with the
+        // start column alignment code, though improvement
+
+        // Advance both pointers by the number of proceeding shared zeros. No need to update r2.nz.
+        {
+            int n = min(r1.fc - r1i, r2.fc - r2i);
+            if (n > 0) {
+                r1i += n;
+                r2i += n;
+            }
+        }
+
+        // Advance both pointers by the number of proceeding zeros in r1.
+        // These terms will not change r2, but r2.nz needs to be updated.
+        if (r1i < r1.fc) {
+            // Able to skip.
+            // r2 = r2 + s * r1
+            // Skipped region of r2, is a stretch of zeros in r1, which can not create a change to r1.
+            int n = r1.fc - r1i;
+            r1i += n;
+            for (int i = 0; i < n; i++, r2i++) {
+                if (r2.d[r2i]) r2.nz++;
+            }
+        }
+//        if (r2i < r2.fc) {
+//            // Unable to do anything.
+//            // r2 = r2 + s * r1
+//            // r2 could update, can't skip zeros of r2, while skipping non-zeros of r1
+//        }
     }
-#endif
 
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
@@ -230,7 +257,7 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
     }
 }
 
-void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
+void matrix_reduce_float(vector<TruncatedDenseRow> &rows, int n_cols) {
     {
 //        void S_init(void)
 //        {
@@ -350,7 +377,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #include "SparseReduceMatrix.h"
 
 int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
-    Profile p1("SparseReduceMatrix5");
+    Profile p1("SparseReduceMatrix6");
 
 #if DEBUG_MATRIX
     {
@@ -391,7 +418,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 
     {
         Profile p2("reduce");
-        matrix_reduce(rows, nCols);
+        matrix_reduce_float(rows, nCols);
     }
 
     *Rank = 0;
