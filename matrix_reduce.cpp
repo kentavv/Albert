@@ -5,11 +5,14 @@
 #include <vector>
 #include <algorithm>
 #include <stdio.h>
+#include <string.h>
 #include "profile.h"
 
 using std::vector;
 using std::sort;
 using std::swap;
+using std::pair;
+using std::make_pair;
 
 #include "matrix_reduce.h"
 
@@ -76,6 +79,15 @@ public:
                 d[i] = (d[i] * s) % prime;
             }
         }
+    }
+
+    inline TruncatedDenseRow copy() const {
+        TruncatedDenseRow dst(*this);
+        if (dst.sz > 0) {
+            dst.d = new uint8_t[dst.sz];
+            memcpy(dst.d, d, dst.sz);
+        }
+        return dst;
     }
 };
 
@@ -158,7 +170,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
         if (r2.d[r2i] == 0) { r2.d[r2i] = (s * r1.d[r1i]) % prime; }
-        else if (r1.d[r1i] == 0) { }
+        else if (r1.d[r1i] == 0) {}
         else { r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime; }
         if (r2.d[r2i]) r2.nz++;
     }
@@ -175,11 +187,15 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     }
 }
 
+static vector<pair<pair<int, int>, TruncatedDenseRow> > replay;
+
 static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_row) {
     uint8_t x = rows[r].element(c);
     if (x != 1) {
         rows[r].multiply(S_inv(x));
     }
+
+    replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
 
 #pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
     for (int j = 0; j < last_row; j++) {
@@ -206,6 +222,10 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
         }
 //        }
     }
+
+    replay.clear();
+    replay.reserve(rows.size());
+
     bool do_sort = true;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
@@ -250,6 +270,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
             }
 #endif
 
+
             knock_out(rows, nextstairrow, i, last_row);
             for (; last_row > 0; last_row--) {
                 if (!rows[last_row - 1].empty()) {
@@ -273,6 +294,21 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
             if (do_sort) sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
 
             nextstairrow++;
+        }
+    }
+
+    printf("\nReplaying lazy calculations\n");
+    {
+        for(auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
+            int r = ii->first.first;
+            int c = ii->first.second;
+            const auto &row = ii->second;
+
+#pragma omp parallel for shared(rows, r, c, row) schedule(dynamic, 10) default(none)
+            for(int j=0; j<r; j++) {
+                add_row(S_minus(rows[j].element(c)), row, rows[j]);
+            }
+//            s1.update(SM, row, col, nCols, 60, true);
         }
     }
 }
@@ -301,7 +337,7 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
     {
         Profile p1("SM->TRD");
 
-        auto src = SM.cbegin();
+        auto src = SM.begin();
         auto dst = rows.begin();
         for (; src != SM.cend(); src++, dst++) {
             if (src->empty()) continue;
@@ -309,11 +345,13 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
             dst->d = new uint8_t[dst->sz]();
-            dst->fc = src->front().getColumn() - dst->start_col;
+            dst->fc = 0;
             dst->nz = src->size();
             for (auto j : *src) {
                 dst->d[j.getColumn() - dst->start_col] = j.getElement();
             }
+
+            src->clear();
         }
     }
 
