@@ -54,25 +54,27 @@ public:
         d = nullptr;
     }
 
-    bool empty() const { return !d || sz == 0 || nz == 0; }
+    inline bool empty() const { return !d || sz == 0 || nz == 0; }
 
-    uint8_t first_element() const {
+    inline uint8_t first_element() const {
         uint8_t e = 0;
         e = d[fc];
         return e;
     }
 
-    uint8_t element(int col) const {
+    inline uint8_t element(int col) const {
         if (start_col <= col && col < start_col + sz) {
             return d[col - start_col];
         }
         return 0;
     }
 
-    void multiply(uint8_t s) {
-//        for (int i = fc; i < sz; i++) {
-        for (int i = 0; i < sz; i++) {
-            d[i] = (d[i] * s) % prime;
+    inline void multiply(uint8_t s) {
+        for (int i = fc; i < sz; i++) {
+//        for (int i = 0; i < sz; i++) {
+            if (d[i]) {
+                d[i] = (d[i] * s) % prime;
+            }
         }
     }
 };
@@ -307,7 +309,7 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
             dst->d = new uint8_t[dst->sz]();
-            dst->fc = dst->start_col;
+            dst->fc = src->front().getColumn() - dst->start_col;
             dst->nz = src->size();
             for (auto j : *src) {
                 dst->d[j.getColumn() - dst->start_col] = j.getElement();
