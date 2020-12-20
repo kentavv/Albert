@@ -65,7 +65,7 @@ public:
         fc = 0;
         nz = 0;
         sz = 0;
-        delete[] d;
+        if(d) _mm_free(d);
         d = nullptr;
     }
 
@@ -95,7 +95,7 @@ public:
     inline TruncatedDenseRow2 copy() const {
         TruncatedDenseRow2 dst(*this);
         if (dst.sz > 0) {
-            dst.d = new float[dst.sz];
+            dst.d = (float*)_mm_malloc(sizeof(float) * dst.sz, 64);
             memcpy(dst.d, d, dst.sz * sizeof(d[0]));
         }
         return dst;
@@ -243,18 +243,60 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 #endif
 #if 1
     int a = r2i;
-    __m256 _k = _mm256_set1_ps(1.0f / prime);
-    __m256i _p = _mm256_set1_epi32(prime);
-    for (; r1i < r1.sz; r1i+=8, r2i+=8) {
+
+#if 0
+    int nn = (r1.sz - r1i) % 8;
+    for (int i=0; i<nn; i++, r1i++, r2i++) {
 //        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
         r2.d[r2i] = x - int(x / prime) * prime;
     }
+#endif
+#if 0
+    int nn = 8 - r1i % 8;
+    if (nn < 8) {
+    for (int i=0; i<nn; i++, r1i++, r2i++) {
+//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        float x = r2.d[r2i] + s * r1.d[r1i];
+        r2.d[r2i] = x - int(x / prime) * prime;
+    }
+    }
+#endif
+
+    const __m256 _k = _mm256_set1_ps(1.0f / prime);
+    //__m256i _p = _mm256_set1_epi32(prime);
+    const __m256 _p = _mm256_set1_ps(prime);
+    const __m256 _s = _mm256_set1_ps(s);
+
+    for (; r1i < r1.sz-7; r1i+=8, r2i+=8) {
+        // float x = r2.d[r2i] + s * r1.d[r1i];
+#if 1
+        __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
+        __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
+#else
+        __m256 _r2 = _mm256_load_ps(r2.d + r2i);
+        __m256 _r1 = _mm256_load_ps(r1.d + r1i);
+#endif
+
+        __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
+
+        // r2.d[r2i] = x - int(x / prime) * prime;
+        __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO |_MM_FROUND_NO_EXC);
+#if 1
+	_mm256_storeu_ps(r2.d + r2i, _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p)));
+#else
+	_mm256_store_ps(r2.d + r2i, _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p)));
+#endif
+
+//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+    }
+#if 1
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
         r2.d[r2i] = x - int(x / prime) * prime;
     }
+#endif
     for (; a < r2.sz; a++) {
         if (r2.d[a] != 0) r2.nz++;
     }
@@ -434,14 +476,27 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
         for (; src != SM.cend(); src++, dst++) {
             if (src->empty()) continue;
 
+#if 1
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
-            dst->d = new float[dst->sz]();
+            dst->d = (float*)_mm_malloc(sizeof(float) * dst->sz, 64);
+	    memset(dst->d, 0, sizeof(float) * dst->sz);
             dst->fc = 0;
             dst->nz = src->size();
             for (auto j : *src) {
                 dst->d[j.getColumn() - dst->start_col] = j.getElement();
             }
+#else
+            dst->start_col = 0;
+            dst->sz = nCols;
+            dst->d = (float*)_mm_malloc(sizeof(float) * dst->sz, 64);
+	    memset(dst->d, 0, sizeof(float) * dst->sz);
+            dst->fc = src->front().getColumn();
+            dst->nz = src->size();
+            for (auto j : *src) {
+                dst->d[j.getColumn()] = j.getElement();
+            }
+#endif
 
             src->clear();
         }
