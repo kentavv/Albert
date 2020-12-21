@@ -69,7 +69,7 @@ inline Scalar S_inv(Scalar x)
 
     if (x == 0) { 
         printf("WARNING: Division by 0 in S_inv.\n");
-        exit(0);
+        exit(1);
     }
     else
         return(Inverse_table[x]);

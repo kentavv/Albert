@@ -62,7 +62,7 @@ static int Compatible(struct polynomial *Poly, struct P_type ptype);
 static void usage();
 static void sigCatch(int x);
 
-static const char *enhanced_version = "4.0.5";
+static const char *enhanced_version = "4.0.6";
 static const unsigned short mult_file_version = 0xabef;
 static bool save_tables(const char *filename);
 static bool restore_tables(const char *filename);
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     dir[0] = '\0';			/* initialize dir */
     if(argc > 5){
       usage();
-      exit(-1);
+      exit(1);
     }
     else{
       for(i = 1; i < argc; ++i){
