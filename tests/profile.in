@@ -1,0 +1,17 @@
+r *
+i ab-ba
+i (xx)(xx)
+i ((xx)x)x
+i (((ax)x)x)x
+g aaa bbb ccc
+b
+d
+s b
+basis.txt
+s m
+mult.txt
+c s
+mult.bin
+c r
+mult.bin
+q
