@@ -1,0 +1,13 @@
+i (a,b,b)
+i [[a,b],c]
+g a b c d
+b
+d
+p [[a,b],c]
+p [[b,c],a]
+p [[c,a],b]
+s b
+basis_1
+s m
+mult_1
+q

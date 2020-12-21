@@ -13,15 +13,7 @@ retrieved from
 on Feb. 2, 2014
 
 
-For best performance, it is recommended that Albert be compiled in two stages. The first stage collects execution statistics that GCC can use in the second stage. To do this, edit the Makefile to enable the following options, compile, and perform an example of your typical work in Albert.
-
-	CFLAGS=-g -O3 -Wall -fopenmp -fprofile-generate -fprofile-correction
-	LDFLAGS=-fopenmp -fprofile-generate -fprofile-correction
-
-After a few minutes of having Albert calculate, enable the following Makefile flags, execute 'make clean', and rebuild Albert.
-
-	CFLAGS=-g -O3 -Wall -fopenmp -fprofile-use -fprofile-correction
-	LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
+For best performance, it is recommended that Albert be compiled in two stages. The first stage collects execution statistics that GCC can use in the second stage. To do this, edit the Makefile to enable the following options, compile, and perform an example of your typical work in Albert. This is most easily done by executing the ./profiled_make.sh command which compiles Albert, collects profiling information, and rebuild Albert optimizing using the profiling information.
 
 
 Dependencies
@@ -30,6 +22,5 @@ To compile Albert, the development version of libreadline must be available. The
 
   apt install libreadline-dev
 
-While we have switched to Cmake, the last Makefile can be retrieved with:
+Both Cmake and Makefile options are available, but the recommendation for most people is to use ./profiled_make.sh if performance is critical.
 
-	wget https://raw.githubusercontent.com/kentavv/Albert/ab721d77cac301864b6dce244660a30905accfee/Makefile
