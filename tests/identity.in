@@ -1,0 +1,9 @@
+r *
+i ab-ba
+i (xx)(xx)
+i ((xx)x)x
+i (((ax)x)x)x
+g a b c d xxx
+b
+p ((xx)x)J(a,b,c)
+p ((xx)x)((ab)c+(bc)a+(ca)b)

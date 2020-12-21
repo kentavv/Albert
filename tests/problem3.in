@@ -1,0 +1,9 @@
+i (a,b,b)
+i (a,b,c)+(b,c,a)+(c,a,b)
+i (x,x,[a,b])
+g aabbcdef
+b
+s b
+  -> basis_aabbcdef
+s m
+  -> mult_aabbcdef

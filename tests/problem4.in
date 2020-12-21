@@ -1,0 +1,9 @@
+r *
+i (a,b,b)
+i (a,b,c)+(b,c,a)+(c,a,b)
+g aaaaaaaabbbbbbbb
+b
+s b
+  -> b_aaaaaaaabbbbbbbb
+s m
+  -> m_aaaaaaaabbbbbbbb
