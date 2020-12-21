@@ -1,0 +1,17 @@
+i ab-ba
+i (xx)(xx)
+i ((xx)x)x
+i (((ax)x)x)x
+i $e1$
+i $e2$
+i $e3$
+i $e4$
+i $h2$
+g aaabbbccccd
+b
+
+s b
+ --> monster_b
+s m
+ --> monster_m
+
