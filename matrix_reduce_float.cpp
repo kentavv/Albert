@@ -100,22 +100,38 @@ public:
     }
 
     inline TruncatedDenseRow2 copy() const {
-	    puts("crap");
-	    abort();
         TruncatedDenseRow2 dst(*this);
         if (dst.sz > 0) {
-//            dst.d = (float *) _mm_malloc(sizeof(float) * dst.sz, alignment);
-            dst.d = (float *) malloc(sizeof(float) * dst.sz);
-#if 0
-            for(int i=16; i< 128; i*=2) {
-                if(((unsigned long)dst.d) & (unsigned long)(i-1)) {
-                    printf("%d %d %p\n", i, ((unsigned long) dst.d) & (unsigned long) (i - 1), dst.d);
-                }
-            }
-#endif
+            dst.allocate();
             memcpy(dst.d, d, dst.sz * sizeof(d[0]));
         }
         return dst;
+    }
+
+    inline void allocate() {
+//        dst->d = (float *) _mm_malloc(sizeof(float) * dst->sz, alignment);
+
+        size_t n = sizeof(float) * sz + (alignment - 1);
+        d_ = (float *) malloc(n);
+        memset(d_, 0, n);
+
+        d = d_;
+        int offset = ((unsigned long)(d + sz) & (alignment - 1)) / sizeof(float);
+//        printf("%p %d %p\n", d, offset, d + (alignment - offset));
+        if(offset) {
+            d += ((alignment / sizeof(float)) - offset);
+        }
+
+#if 0
+            for(int i=16; i< 128; i*=2) {
+                {
+                    void *p1 = d_ + sz;
+                    void *p2 = d + sz;
+                    printf("%d  %d %p  %d %p\n", i, ((unsigned long) p1) & (unsigned long) (i - 1), p1,
+                           ((unsigned long) p2) & (unsigned long) (i - 1), p2);
+                }
+            }
+#endif
     }
 };
 
@@ -582,25 +598,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 #if 1
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
-//            dst->d = (float *) _mm_malloc(sizeof(float) * dst->sz, alignement);
-            dst->d_ = (float *) malloc(sizeof(float) * dst->sz + (alignment-1));
-            dst->d = dst->d_;
-            int offset = ((unsigned long)(dst->d + dst->sz) & (alignment-1)) / sizeof(float);
-    //        printf("%p %d %p\n", dst->d, offset, dst->d + (alignment - offset));
-            if(offset) {
-                dst->d += ((alignment / sizeof(float)) - offset);
-            }
-#if 0
-            for(int i=16; i< 128; i*=2) {
-                {
-                    void *p1 = dst->d_ + dst->sz;
-                    void *p2 = dst->d + dst->sz;
-                    printf("%d  %d %p  %d %p\n", i, ((unsigned long) p1) & (unsigned long) (i - 1), p1,
-                           ((unsigned long) p2) & (unsigned long) (i - 1), p2);
-                }
-            }
-#endif
-            memset(dst->d, 0, sizeof(float) * dst->sz);
+	    dst->allocate();
             dst->fc = 0;
             dst->nz = src->size();
             for (auto j : *src) {
@@ -610,7 +608,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
             dst->start_col = 0;
             dst->sz = nCols;
             dst->d = (float*)_mm_malloc(sizeof(float) * dst->sz, 64);
-        memset(dst->d, 0, sizeof(float) * dst->sz);
+            memset(dst->d, 0, sizeof(float) * dst->sz);
             dst->fc = src->front().getColumn();
             dst->nz = src->size();
             for (auto j : *src) {
