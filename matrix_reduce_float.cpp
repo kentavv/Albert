@@ -22,7 +22,8 @@ static const float prime = 251;
 static const int alignment = 256 / 8; // AVX
 
 static bool do_sort = true;
-static bool use_replay = true;
+static bool use_replay = false;
+static int sort_freq = 1;
 
 #define DEBUG_MATRIX 0
 
@@ -527,8 +528,9 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
             }
 #endif
 
+	    printf("%d/%d %d/%d/%d\n", i, n_cols, nextstairrow, last_row, rows.size());
             if (do_sort) {
-                if ((++ns) % 20 == 0) {
+                if ((++ns) % sort_freq == 0) {
                     sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
                 }
             }
