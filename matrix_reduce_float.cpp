@@ -570,10 +570,11 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
             dst->sz = nCols - dst->start_col + 1;
 //            dst->d = (float *) _mm_malloc(sizeof(float) * dst->sz, 64);
             dst->d_ = (float *) malloc(sizeof(float) * (dst->sz + 63));
+            dst->d = dst->d_;
             int offset = ((unsigned long)(dst->d_ + dst->sz) & 63) / 4;
             printf("%p %d %p\n", dst->d_, offset, dst->d_ + (64 - offset));
             if(offset) {
-                dst->d = dst->d_ + (64 - offset);
+                dst->d_ += (64 - offset);
             }
             for(int i=16; i< 128; i*=2) {
                 {
