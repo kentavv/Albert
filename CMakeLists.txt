@@ -11,6 +11,8 @@ endif()
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
+
 add_executable(albert
         Alg_elements.cpp
         Alg_elements.h

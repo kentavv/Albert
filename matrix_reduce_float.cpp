@@ -39,7 +39,7 @@ inline float mod(float x) {
 
 class TruncatedDenseRow2 {
 public:
-    TruncatedDenseRow2() : start_col(0), fc(0), nz(0), sz(0), d(nullptr) {}
+    TruncatedDenseRow2() : start_col(0), fc(0), nz(0), sz(0), d(nullptr), d_(nullptr) {}
 
     TruncatedDenseRow2(const TruncatedDenseRow2 &r) = default;
 
@@ -50,6 +50,7 @@ public:
             nz = r.nz;
             sz = r.sz;
             d = r.d;
+            d_ = r.d_;
         }
         return *this;
     };
@@ -59,13 +60,15 @@ public:
     int nz;
     int sz;
     float *d;
+    float *d_;
 
     void clear() {
         start_col = 0;
         fc = 0;
         nz = 0;
         sz = 0;
-        if(d) _mm_free(d);
+        if (d_) free(d_);
+        d_ = nullptr;
         d = nullptr;
     }
 
@@ -95,7 +98,13 @@ public:
     inline TruncatedDenseRow2 copy() const {
         TruncatedDenseRow2 dst(*this);
         if (dst.sz > 0) {
-            dst.d = (float*)_mm_malloc(sizeof(float) * dst.sz, 64);
+//            dst.d = (float *) _mm_malloc(sizeof(float) * dst.sz, 64);
+            dst.d = (float *) malloc(sizeof(float) * dst.sz);
+            for(int i=16; i< 128; i*=2) {
+                if(((unsigned long)dst.d) & (unsigned long)(i-1)) {
+                    printf("%d %d %p\n", i, ((unsigned long) dst.d) & (unsigned long) (i - 1), dst.d);
+                }
+            }
             memcpy(dst.d, d, dst.sz * sizeof(d[0]));
         }
         return dst;
@@ -178,20 +187,20 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
             if (r2.d[i] != 0) r2.nz++;
         }
 #else
-	int i = r2.fc;
+        int i = r2.fc;
         const __m256 _z = _mm256_set1_ps(0);
-        for (; i < r2i-7; i+=8) {
+        for (; i < r2i - 7; i += 8) {
 #if 1
-        __m256 _r2 = _mm256_loadu_ps(r2.d + i);
+            __m256 _r2 = _mm256_loadu_ps(r2.d + i);
 #else
-        __m256 _r2 = _mm256_load_ps(r2.d + i);
+            __m256 _r2 = _mm256_load_ps(r2.d + i);
 #endif
 
-        __m256 _c = _mm256_cmp_ps(_z, _r2, _CMP_NEQ_UQ);
-        unsigned mask = _mm256_movemask_ps(_c);
-        int n = _mm_popcnt_u32(mask);
-        r2.nz += n;
-	}
+            __m256 _c = _mm256_cmp_ps(_z, _r2, _CMP_NEQ_UQ);
+            unsigned mask = _mm256_movemask_ps(_c);
+            int n = _mm_popcnt_u32(mask);
+            r2.nz += n;
+        }
         for (; i < r2i; i++) {
             if (r2.d[i] != 0) r2.nz++;
         }
@@ -225,24 +234,24 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
                 if (r2.d[r2i] != 0) r2.nz++;
             }
 #else
-        int i = 0;
-        const __m256 _z = _mm256_set1_ps(0);
-        for (; i < n-7; i+=8) {
+            int i = 0;
+            const __m256 _z = _mm256_set1_ps(0);
+            for (; i < n - 7; i += 8) {
 #if 1
-        __m256 _r2 = _mm256_loadu_ps(r2.d + r2i + i);
+                __m256 _r2 = _mm256_loadu_ps(r2.d + r2i + i);
 #else
-        __m256 _r2 = _mm256_load_ps(r2.d + i);
+                __m256 _r2 = _mm256_load_ps(r2.d + i);
 #endif
 
-        __m256 _c = _mm256_cmp_ps(_z, _r2, _CMP_NEQ_UQ);
-        unsigned mask = _mm256_movemask_ps(_c);
-        int n = _mm_popcnt_u32(mask);
-        r2.nz += n;
-        }
-        for (; i < n; i++) {
-            if (r2.d[r2i + i] != 0) r2.nz++;
-        }
-	r2i += n;
+                __m256 _c = _mm256_cmp_ps(_z, _r2, _CMP_NEQ_UQ);
+                unsigned mask = _mm256_movemask_ps(_c);
+                int n = _mm_popcnt_u32(mask);
+                r2.nz += n;
+            }
+            for (; i < n; i++) {
+                if (r2.d[r2i + i] != 0) r2.nz++;
+            }
+            r2i += n;
 #endif
         }
 //        if (r2i < r2.fc) {
@@ -310,9 +319,21 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     const __m256 _s = _mm256_set1_ps(s);
     const __m256 _z = _mm256_set1_ps(0);
 
-    for (; r1i < r1.sz-7; r1i+=8, r2i+=8) {
+    printf("b: %d %d\n", (unsigned long)(r1.d + r1i) & 63, (unsigned long)(r2.d + r2i) & 63);
+    int nn = 64 - ((unsigned long)(r1.d + r1i) & 63);
+
+    for (; 0 < nn && r1i < r1.sz; nn--, r1i++, r2i++) {
+//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        float x = r2.d[r2i] + s * r1.d[r1i];
+        r2.d[r2i] = x - int(x / prime) * prime;
+        if (r2.d[r2i] != 0) r2.nz++;
+    }
+
+    printf("a: %d %d\n", (unsigned long)(r1.d + r1i) & 63, (unsigned long)(r2.d + r2i) & 63);
+
+    for (; r1i < r1.sz - 7; r1i += 8, r2i += 8) {
         // float x = r2.d[r2i] + s * r1.d[r1i];
-#if 1
+#if 0
         __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
         __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
 #else
@@ -323,21 +344,21 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
 
         // r2.d[r2i] = x - int(x / prime) * prime;
-        __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO |_MM_FROUND_NO_EXC);
+        __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
         _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
-#if 1
-	_mm256_storeu_ps(r2.d + r2i, _x2);
+#if 0
+        _mm256_storeu_ps(r2.d + r2i, _x2);
 #else
-	_mm256_store_ps(r2.d + r2i, _x2);
+        _mm256_store_ps(r2.d + r2i, _x2);
 #endif
 
 //        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
 
-	__m256 _c = _mm256_cmp_ps(_z, _x2, _CMP_NEQ_UQ);
+        __m256 _c = _mm256_cmp_ps(_z, _x2, _CMP_NEQ_UQ);
         unsigned mask = _mm256_movemask_ps(_c);
-	int n = _mm_popcnt_u32(mask);
+        int n = _mm_popcnt_u32(mask);
         r2.nz += n;
-	//if (n) {
+        //if (n) {
         //printf("%d\n", n);
 //	}
     }
@@ -385,7 +406,7 @@ static void knock_out(vector<TruncatedDenseRow2> &rows, int r, int c, int last_r
 #if 0
     for (int j = 0; j < last_row; j++) {
 #else
-    for (int j = r+1; j < last_row; j++) {
+    for (int j = r + 1; j < last_row; j++) {
 #endif
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
@@ -414,7 +435,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
     replay.clear();
     replay.reserve(rows.size());
 
-    bool do_sort = true;
+    bool do_sort = false;
     int ns = 0;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
@@ -481,31 +502,31 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
 #endif
 
             if (do_sort) {
-		    if ((++ns) % 20 == 0) {
-		    sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
-		    }
-	    }
+                if ((++ns) % 20 == 0) {
+                    sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+                }
+            }
 
             nextstairrow++;
         }
     }
 
-    if(!replay.empty()) {
-    printf("\nReplaying lazy calculations\n");
-    {
-        Profile p("Replaying lazy calculations");
-        for(auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
-            int r = ii->first.first;
-            int c = ii->first.second;
-            const auto &row = ii->second;
+    if (!replay.empty()) {
+        printf("\nReplaying lazy calculations\n");
+        {
+            Profile p("Replaying lazy calculations");
+            for (auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
+                int r = ii->first.first;
+                int c = ii->first.second;
+                const auto &row = ii->second;
 
 #pragma omp parallel for shared(rows, r, c, row) schedule(dynamic, 10) default(none)
-            for(int j=0; j<r; j++) {
-                add_row(S_minus(rows[j].element(c)), row, rows[j]);
-            }
+                for (int j = 0; j < r; j++) {
+                    add_row(S_minus(rows[j].element(c)), row, rows[j]);
+                }
 //            s1.update(SM, row, col, nCols, 60, true);
+            }
         }
-    }
     }
 
 #if 0
@@ -547,8 +568,22 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 #if 1
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
-            dst->d = (float*)_mm_malloc(sizeof(float) * dst->sz, 64);
-	    memset(dst->d, 0, sizeof(float) * dst->sz);
+//            dst->d = (float *) _mm_malloc(sizeof(float) * dst->sz, 64);
+            dst->d_ = (float *) malloc(sizeof(float) * (dst->sz + 63));
+            int offset = ((unsigned long)(dst->d_ + dst->sz) & 63) / 4;
+            printf("%p %d %p\n", dst->d_, offset, dst->d_ + (64 - offset));
+            if(offset) {
+                dst->d = dst->d_ + (64 - offset);
+            }
+            for(int i=16; i< 128; i*=2) {
+                {
+                    void *p1 = dst->d_ + dst->sz;
+                    void *p2 = dst->d + dst->sz;
+                    printf("%d  %d %p  %d %p\n", i, ((unsigned long) p1) & (unsigned long) (i - 1), p1,
+                           ((unsigned long) p2) & (unsigned long) (i - 1), p2);
+                }
+            }
+            memset(dst->d, 0, sizeof(float) * dst->sz);
             dst->fc = 0;
             dst->nz = src->size();
             for (auto j : *src) {
@@ -558,7 +593,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
             dst->start_col = 0;
             dst->sz = nCols;
             dst->d = (float*)_mm_malloc(sizeof(float) * dst->sz, 64);
-	    memset(dst->d, 0, sizeof(float) * dst->sz);
+        memset(dst->d, 0, sizeof(float) * dst->sz);
             dst->fc = src->front().getColumn();
             dst->nz = src->size();
             for (auto j : *src) {
