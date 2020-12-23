@@ -116,21 +116,19 @@ public:
         memset(d_, 0, n);
 
         d = d_;
-        int offset = ((unsigned long)(d + sz) & (alignment - 1)) / sizeof(float);
+        int offset = ((unsigned long) (d + sz) & (alignment - 1)) / sizeof(float);
 //        printf("%p %d %p\n", d, offset, d + (alignment - offset));
-        if(offset) {
+        if (offset) {
             d += ((alignment / sizeof(float)) - offset);
         }
 
 #if 0
-            for(int i=16; i< 128; i*=2) {
-                {
-                    void *p1 = d_ + sz;
-                    void *p2 = d + sz;
-                    printf("%d  %d %p  %d %p\n", i, ((unsigned long) p1) & (unsigned long) (i - 1), p1,
-                           ((unsigned long) p2) & (unsigned long) (i - 1), p2);
-                }
-            }
+        for(int i=16; i< 128; i*=2) {
+            void *p1 = d_ + sz;
+            void *p2 = d + sz;
+            printf("%d  %d %p  %d %p\n", i, ((unsigned long) p1) & (unsigned long) (i - 1), p1,
+                   ((unsigned long) p2) & (unsigned long) (i - 1), p2);
+        }
 #endif
     }
 };
@@ -317,7 +315,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     }
 #endif
 #if 1
-    int a = r2i;
+//    int a = r2i;
 
 #if 0
     int nn = (r1.sz - r1i) % 8;
@@ -345,16 +343,16 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     const __m256 _z = _mm256_set1_ps(0);
 
     //printf("b: %d %d\n", (unsigned long)(r1.d + r1i) & (alignment-1), (unsigned long)(r2.d + r2i) & (alignment-1));
-    int nn = (alignment - ((unsigned long)(r1.d + r1i) & (alignment-1))) / sizeof(float);
+    int nn = (alignment - ((unsigned long) (r1.d + r1i) & (alignment - 1))) / sizeof(float);
     //printf("nn: %d\n", nn);
 
     for (; 0 < nn && r1i < r1.sz; nn--, r1i++, r2i++) {
         r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
-       // float x = r2.d[r2i] + s * r1.d[r1i];
+        // float x = r2.d[r2i] + s * r1.d[r1i];
         //r2.d[r2i] = x - int(x / prime) * prime;
         if (r2.d[r2i] != 0) r2.nz++;
     }
- 
+
     //printf("a: %d %d\n", (unsigned long)(r1.d + r1i) & (alignment-1), (unsigned long)(r2.d + r2i) & (alignment-1));
     //printf("sz-8: %d\n", r1.sz-8);
     //printf("ar: %d %d\n", r1i, r2i);
@@ -429,7 +427,7 @@ static void knock_out(vector<TruncatedDenseRow2> &rows, int r, int c, int last_r
         rows[r].multiply(S_inv(x));
     }
 
-    if(use_replay) {
+    if (use_replay) {
         replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
     }
 
@@ -460,7 +458,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
 //        }
     }
 
-    if(use_replay) {
+    if (use_replay) {
         replay.clear();
         replay.reserve(rows.size());
     }
@@ -508,7 +506,6 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
                 }
             }
 #endif
-
 
             knock_out(rows, nextstairrow, i, last_row);
             for (; last_row > 0; last_row--) {
@@ -598,7 +595,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 #if 1
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
-	    dst->allocate();
+            dst->allocate();
             dst->fc = 0;
             dst->nz = src->size();
             for (auto j : *src) {
@@ -637,7 +634,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
         for (; src != rows.end(); src++, dst++) {
             if (src->nz > 0) {
                 SparseRow tmp(src->nz);
-		//printf("aaa: %d %d\n", src->nz, src->sz);
+                //printf("aaa: %d %d\n", src->nz, src->sz);
                 for (int j = 0, k = 0; j < src->sz; j++) {
                     if (src->d[j] != 0) {
                         tmp[k++] = Node(int(src->d[j]), j + src->start_col);
