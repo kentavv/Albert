@@ -19,6 +19,10 @@ using std::min;
 #include "matrix_reduce_float.h"
 
 static const float prime = 251;
+static const int alignment = 256 / 8; // AVX
+
+static bool do_sort = true;
+static bool use_replay = true;
 
 #define DEBUG_MATRIX 0
 
@@ -96,15 +100,19 @@ public:
     }
 
     inline TruncatedDenseRow2 copy() const {
+	    puts("crap");
+	    abort();
         TruncatedDenseRow2 dst(*this);
         if (dst.sz > 0) {
-//            dst.d = (float *) _mm_malloc(sizeof(float) * dst.sz, 64);
+//            dst.d = (float *) _mm_malloc(sizeof(float) * dst.sz, alignment);
             dst.d = (float *) malloc(sizeof(float) * dst.sz);
+#if 0
             for(int i=16; i< 128; i*=2) {
                 if(((unsigned long)dst.d) & (unsigned long)(i-1)) {
                     printf("%d %d %p\n", i, ((unsigned long) dst.d) & (unsigned long) (i - 1), dst.d);
                 }
             }
+#endif
             memcpy(dst.d, d, dst.sz * sizeof(d[0]));
         }
         return dst;
@@ -117,6 +125,7 @@ static void swap(TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r2) {
     swap(r1.nz, r2.nz);
     swap(r1.sz, r2.sz);
     swap(r1.d, r2.d);
+    swap(r1.d_, r2.d_);
 }
 
 class ReduceMatrix {
@@ -319,22 +328,26 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     const __m256 _s = _mm256_set1_ps(s);
     const __m256 _z = _mm256_set1_ps(0);
 
-    printf("b: %d %d\n", (unsigned long)(r1.d + r1i) & 63, (unsigned long)(r2.d + r2i) & 63);
-    int nn = (64 - ((unsigned long)(r1.d + r1i) & 63)) / 4;
+    //printf("b: %d %d\n", (unsigned long)(r1.d + r1i) & (alignment-1), (unsigned long)(r2.d + r2i) & (alignment-1));
+    int nn = (alignment - ((unsigned long)(r1.d + r1i) & (alignment-1))) / sizeof(float);
+    //printf("nn: %d\n", nn);
 
     for (; 0 < nn && r1i < r1.sz; nn--, r1i++, r2i++) {
-//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
-        float x = r2.d[r2i] + s * r1.d[r1i];
-        r2.d[r2i] = x - int(x / prime) * prime;
+        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+       // float x = r2.d[r2i] + s * r1.d[r1i];
+        //r2.d[r2i] = x - int(x / prime) * prime;
         if (r2.d[r2i] != 0) r2.nz++;
     }
-
-    printf("a: %d %d\n", (unsigned long)(r1.d + r1i) & 63, (unsigned long)(r2.d + r2i) & 63);
+ 
+    //printf("a: %d %d\n", (unsigned long)(r1.d + r1i) & (alignment-1), (unsigned long)(r2.d + r2i) & (alignment-1));
+    //printf("sz-8: %d\n", r1.sz-8);
+    //printf("ar: %d %d\n", r1i, r2i);
 
 //    for (; r1i < r1.sz - 7; r1i += 8, r2i += 8) {
     for (; r1i < r1.sz - 8; r1i += 8, r2i += 8) {
+//	    puts("hi");
         // float x = r2.d[r2i] + s * r1.d[r1i];
-#if 1
+#if 0
         __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
         __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
 #else
@@ -347,7 +360,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         // r2.d[r2i] = x - int(x / prime) * prime;
         __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
         _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
-#if 1
+#if 0
         _mm256_storeu_ps(r2.d + r2i, _x2);
 #else
         _mm256_store_ps(r2.d + r2i, _x2);
@@ -363,11 +376,12 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         //printf("%d\n", n);
 //	}
     }
+    //printf("ar2: %d %d\n", r1i, r2i);
 #if 1
     for (; r1i < r1.sz; r1i++, r2i++) {
-//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
-        float x = r2.d[r2i] + s * r1.d[r1i];
-        r2.d[r2i] = x - int(x / prime) * prime;
+        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+//        float x = r2.d[r2i] + s * r1.d[r1i];
+//        r2.d[r2i] = x - int(x / prime) * prime;
         if (r2.d[r2i] != 0) r2.nz++;
     }
 #endif
@@ -391,7 +405,6 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 //    }
 }
 
-bool use_replay = false;
 static vector<pair<pair<int, int>, TruncatedDenseRow2> > replay;
 
 static void knock_out(vector<TruncatedDenseRow2> &rows, int r, int c, int last_row) {
@@ -436,7 +449,6 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
         replay.reserve(rows.size());
     }
 
-    bool do_sort = false;
     int ns = 0;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
@@ -570,14 +582,15 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 #if 1
             dst->start_col = src->front().getColumn();;
             dst->sz = nCols - dst->start_col + 1;
-//            dst->d = (float *) _mm_malloc(sizeof(float) * dst->sz, 64);
-            dst->d_ = (float *) malloc(sizeof(float) * dst->sz + 63);
+//            dst->d = (float *) _mm_malloc(sizeof(float) * dst->sz, alignement);
+            dst->d_ = (float *) malloc(sizeof(float) * dst->sz + (alignment-1));
             dst->d = dst->d_;
-            int offset = ((unsigned long)(dst->d + dst->sz) & 63) / 4;
-            printf("%p %d %p\n", dst->d, offset, dst->d + (64 - offset));
+            int offset = ((unsigned long)(dst->d + dst->sz) & (alignment-1)) / sizeof(float);
+    //        printf("%p %d %p\n", dst->d, offset, dst->d + (alignment - offset));
             if(offset) {
-                dst->d += (64 - offset);
+                dst->d += ((alignment / sizeof(float)) - offset);
             }
+#if 0
             for(int i=16; i< 128; i*=2) {
                 {
                     void *p1 = dst->d_ + dst->sz;
@@ -586,6 +599,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
                            ((unsigned long) p2) & (unsigned long) (i - 1), p2);
                 }
             }
+#endif
             memset(dst->d, 0, sizeof(float) * dst->sz);
             dst->fc = 0;
             dst->nz = src->size();
@@ -625,6 +639,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
         for (; src != rows.end(); src++, dst++) {
             if (src->nz > 0) {
                 SparseRow tmp(src->nz);
+		//printf("aaa: %d %d\n", src->nz, src->sz);
                 for (int j = 0, k = 0; j < src->sz; j++) {
                     if (src->d[j] != 0) {
                         tmp[k++] = Node(int(src->d[j]), j + src->start_col);
