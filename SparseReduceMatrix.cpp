@@ -57,6 +57,9 @@ static void Print_SLList(Node *SLHead_Ptr);
 static void Print_Node(NODE_PTR Prt_Node);
 #endif
 
+static bool do_sort = true;
+static int sort_freq = 10;
+
 struct stats {
   //size_t n_zero_elements;
   size_t n_elements;
@@ -240,8 +243,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         return(OK);
     }
 
-    bool do_sort = true;
-
     if(do_sort) sort(SM.begin(), SM.end(), SM_sort);
 //random_shuffle(SM.begin(), SM.end());
 
@@ -260,7 +261,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         int j;
         {
             Profile p("find next");
-        for (j = nextstairrow; j < (int) SM.size(); j++) {
+        for (j = nextstairrow; j < last_row; j++) {
             if (Get_Matrix_Element(SM, j, i) != S_zero()) {
                 break;
             }
@@ -269,21 +270,26 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-        if (j < (int) SM.size()) {
-            Profile p("a");
+        if (j < last_row) {
+		{
+                char s[128];
+                sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
+	//		Profile p2("1");
+           // Profile p("a");
 {
-            Profile p("b");
+          //  Profile p("b");
             SM[nextstairrow].swap(SM[j]);
 }
             {
-            Profile p0("c");
-                char s[128];
-                sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
+            //Profile p0("c");
                 Profile p(s);
                 SparseKnockOut(SM, nextstairrow, i, last_row);
             }
+}
 {
-            Profile p("d");
+//	Profile p1("2");
+{
+            //Profile p("d");
             for(int iii = last_row; iii > 0; iii--) {
                 if (!SM[iii - 1].empty()) {
                     last_row = iii;
@@ -291,19 +297,26 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
                 }
             }
 }
+}
+{
+	//Profile p1("3");
 //            printf("%d %d\n", SM.size(), last_row);
+	if (i % sort_freq == 0) {
+	Profile p1("sort");
             if (do_sort) {
-                Profile("sort");
+         //       Profile("sort");
 //                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
                 sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
             }
+	}
             nextstairrow++;
         }
 
         {
-            Profile p("update");
+//            Profile p("update");
         s1.update(SM, nextstairrow, i, nCols, 60, true);
         }
+}
     }
     *Rank=nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
@@ -414,7 +427,7 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row) {
 
     /* try to knockout elements in column in the rows above */ 
 
-#pragma omp parallel for shared(SM, row, col, last_row) schedule(static, 1000) default(none)
+#pragma omp parallel for shared(SM, row, col, last_row) schedule(static, 50) default(none)
 //    for (int j = 0; j < (int) SM.size(); j++) {
     for (int j = 0; j < last_row; j++) {
         if (j != row) {
