@@ -42,10 +42,14 @@ using std::lower_bound;
 #include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
+#include "profile.h"
 
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
+
 static void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2);
-static void SparseKnockOut(SparseMatrix &SM, int row, int col);
+
+static void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row);
+
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
 static void Print_Rows(int Row1, int Row2, int nCols);
@@ -187,6 +191,48 @@ struct stats {
 };
 
 
+static bool SM_sort (const SparseRow &r1, const SparseRow &r2) {
+    {
+        if (r1.empty()) return false;
+        if (r2.empty()) return true;
+        //auto a = r1.empty();
+        //auto b = r2.empty();
+        //if (!a && b) return true;
+        //if (a && b) return false;
+        //if (a && !b) return false;
+    }
+
+    auto r1i = r1.front();
+    auto r2i = r2.front();
+    {
+        auto a = r1i.getColumn();
+        auto b = r2i.getColumn();
+        if (a < b) return true;
+        if (a > b) return false;
+    }
+    {
+        auto a = r1.size();
+        auto b = r2.size();
+#if 1
+        // Generally results in greater sparsity
+        if (a < b) return true;
+        if (a > b) return false;
+#else
+        // Generally results in greater density, i.e. more non-zero intermediate entries
+        if (a > b) return true;
+        if (a < b) return false;
+#endif
+    }
+    {
+        auto a = r1i.getElement();
+        auto b = r2i.getElement();
+        if (a < b) return true;
+        //if (a > b) return false;
+    }
+
+    return false;
+}
+
 int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 {
     if(SM.empty() || nCols == 0)
@@ -194,6 +240,9 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         return(OK);
     }
 
+    bool do_sort = true;
+
+    if(do_sort) sort(SM.begin(), SM.end(), SM_sort);
 //random_shuffle(SM.begin(), SM.end());
 
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
@@ -204,27 +253,57 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
     s1.update(SM, 0, 0, nCols, -1, true);
 
     int nextstairrow = 0;
-    for (int i=0;i<nCols;i++)
-    {
+    int last_row = SM.size();
+    for (int i = 0; i < nCols; i++) {
+        putchar('\n');
+        Profile p("Iteration");
         int j;
-        for (j=nextstairrow; j < (int)SM.size(); j++)
         {
-            if(Get_Matrix_Element(SM, j,i) != S_zero())
-            {
+            Profile p("find next");
+        for (j = nextstairrow; j < (int) SM.size(); j++) {
+            if (Get_Matrix_Element(SM, j, i) != S_zero()) {
                 break;
             }
+        }
         }
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-        if (j < (int)SM.size())
-        {
-           SM[nextstairrow].swap(SM[j]);
-           SparseKnockOut(SM, nextstairrow, i);
-           nextstairrow++;
+        if (j < (int) SM.size()) {
+            Profile p("a");
+{
+            Profile p("b");
+            SM[nextstairrow].swap(SM[j]);
+}
+            {
+            Profile p0("c");
+                char s[128];
+                sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
+                Profile p(s);
+                SparseKnockOut(SM, nextstairrow, i, last_row);
+            }
+{
+            Profile p("d");
+            for(int iii = last_row; iii > 0; iii--) {
+                if (!SM[iii - 1].empty()) {
+                    last_row = iii;
+                    break;
+                }
+            }
+}
+//            printf("%d %d\n", SM.size(), last_row);
+            if (do_sort) {
+                Profile("sort");
+//                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
+                sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+            }
+            nextstairrow++;
         }
 
+        {
+            Profile p("update");
         s1.update(SM, nextstairrow, i, nCols, 60, true);
+        }
     }
     *Rank=nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
@@ -235,12 +314,11 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 }
 
 
-void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor)
-{
-   /* Step thru row ... multiplying each element by the factor */
-   for(SparseRow::iterator ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
-      ii->setElement(S_mul(ii->getElement(), Factor));
-   }
+void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor) {
+    /* Step thru row ... multiplying each element by the factor */
+    for (auto ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
+        ii->setElement(S_mul(ii->getElement(), Factor));
+    }
 }
 
 template< typename T, class Allocator >
@@ -277,8 +355,8 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
   SparseRow tmp;
   tmp.reserve(r1.size() + r2.size());
 
-  SparseRow::const_iterator r1i = r1.begin();
-  SparseRow::const_iterator r2i = r2.begin();
+    auto r1i = r1.cbegin();
+    auto r2i = r2.cbegin();
 
   for(; r1i != r1.end() && r2i != r2.end();) {
     if(r1i->getColumn() == r2i->getColumn()) {
@@ -326,8 +404,7 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
   //r2.swap(tmp); 
 }
 
-void SparseKnockOut(SparseMatrix &SM, int row, int col)
-{
+void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row) {
     Scalar x = Get_Matrix_Element(SM, row, col);
     if(x != S_one())
     {
@@ -337,11 +414,12 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col)
 
     /* try to knockout elements in column in the rows above */ 
 
-#pragma omp parallel for schedule(dynamic, 10)
-    for (int j=0; j < (int)SM.size(); j++) {
-      if(j != row) {
-        SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
-      }
+#pragma omp parallel for shared(SM, row, col, last_row) schedule(static, 1000) default(none)
+//    for (int j = 0; j < (int) SM.size(); j++) {
+    for (int j = 0; j < last_row; j++) {
+        if (j != row) {
+            SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
+        }
     }
 }
 
