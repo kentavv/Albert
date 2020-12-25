@@ -44,6 +44,7 @@ using std::lower_bound;
 #include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
+#include "profile.h"
 
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
@@ -292,23 +293,43 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
 }
 
 static bool SM_sort (const SparseRow &r1, const SparseRow &r2) {
-    if (r1.empty() && r2.empty()) return false;
-    if (!r1.empty() && r2.empty()) return true;
-    if (r1.empty() && !r2.empty()) return false;
+    {
+        if (r1.empty()) return false;
+        if (r2.empty()) return true;
+        //auto a = r1.empty();
+        //auto b = r2.empty();
+        //if (!a && b) return true;
+        //if (a && b) return false;
+        //if (a && !b) return false;
+    }
 
-    if (r1.front().getColumn() < r2.front().getColumn()) return true;
-    if (r1.front().getColumn() > r2.front().getColumn()) return false;
+    auto r1i = r1.front();
+    auto r2i = r2.front();
+    {
+        auto a = r1i.getColumn();
+        auto b = r2i.getColumn();
+        if (a < b) return true;
+        if (a > b) return false;
+    }
+    {
+        auto a = r1.size();
+        auto b = r2.size();
 #if 1
-    // Generally results in greater sparsity
-    if (r1.size() < r2.size()) return true;
-    if (r1.size() > r2.size()) return false;
+        // Generally results in greater sparsity
+        if (a < b) return true;
+        if (a > b) return false;
 #else
-    // Generally results in greater density, i.e. more non-zero intermediate entries
-    if (r1.size() > r2.size()) return true;
-    if (r1.size() < r2.size()) return false;
+        // Generally results in greater density, i.e. more non-zero intermediate entries
+        if (a > b) return true;
+        if (a < b) return false;
 #endif
-    if (r1.front().getElement() < r2.front().getElement()) return true;
-    if (r1.front().getElement() > r2.front().getElement()) return false;
+    }
+    {
+        auto a = r1i.getElement();
+        auto b = r2i.getElement();
+        if (a < b) return true;
+        //if (a > b) return false;
+    }
 
     return false;
 }
@@ -376,7 +397,12 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 #endif
-            SparseKnockOut(SM, nextstairrow, i, last_row);
+            {
+                char s[128];
+                sprintf(s, "%d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
+                Profile p(s);
+                SparseKnockOut(SM, nextstairrow, i, last_row);
+            }
             for(int iii = last_row; iii > 0; iii--) {
                 if (!SM[iii - 1].empty()) {
                     last_row = iii;
@@ -384,8 +410,11 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 //            printf("%d %d\n", SM.size(), last_row);
-//            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
-            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+            if (do_sort) {
+                Profile("sort");
+//                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
+                sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+            }
 
             if (__record) {
                 printf(">> %d", nextstairrow);
