@@ -27,6 +27,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 
 using std::list;
 using std::vector;
@@ -44,11 +45,44 @@ using std::lower_bound;
 #include "Scalar_arithmetic.h"
 #include "profile.h"
 
-static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
+static bool SM_sort (const SparseRow &r1, const SparseRow &r2);
 
-static void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2);
+class SparseMatrixCache {
+public:
+    SparseMatrixCache() = delete;
+    SparseMatrixCache(SparseMatrix &SM) : SM_(SM) {}
+    SparseMatrixCache(const SparseMatrixCache&) = delete;
+    SparseMatrixCache &operator = (const SparseMatrixCache &) = delete;
 
-static void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row);
+    SparseMatrix &SM_;
+    vector<int> idx_;
+
+    void sort() {
+        idx_.resize(SM_.size());
+        std::iota(idx_.begin(), idx_.end(), 0);
+        stable_sort(idx_.begin(), idx_.end(), [this](size_t i1, size_t i2) {return SM_sort(SM_[i1], SM_[i2]);});
+    }
+
+    SparseRow& operator[](int i) {
+        return SM_[idx_[i]];
+    }
+
+    const SparseRow& operator[](int i) const {
+        return SM_[idx_[i]];
+    }
+
+    size_t size() const {
+        return SM_.size();
+    }
+};
+
+static void SparseMultRow(SparseMatrixCache &SM, int Row, Scalar Factor);
+
+static void SparseAddRow(SparseMatrixCache &SMC, Scalar Factor, int Row1, int Row2);
+
+static void SparseKnockOut(SparseMatrixCache &SMC, int row, int col, int last_row);
+
+Scalar Get_Matrix_Element(const SparseMatrixCache &SMC, int i, int j);
 
 #if 0
 static void Print_Matrix(MAT_PTR Sparse_Matrix, int r, int c);
@@ -59,6 +93,13 @@ static void Print_Node(NODE_PTR Prt_Node);
 
 static bool do_sort = true;
 static int sort_freq = 10;
+
+//class RowStats {
+//public:
+//    int nz;
+//    int fc;
+//    int fe;
+//};
 
 struct stats {
   //size_t n_zero_elements;
@@ -150,7 +191,7 @@ struct stats {
     fflush(NULL);
   }
 
-  void update(const SparseMatrix &SM, int nextstairrow_, int last_col_, int nCols_, int timeout=-1, bool do_print=false) {
+  void update(const SparseMatrixCache &SM, int nextstairrow_, int last_col_, int nCols_, int timeout=-1, bool do_print=false) {
     time_t t = time(NULL);
     if(timeout != -1 && cur_update != 0 && t - cur_update < timeout) {
       return;
@@ -243,18 +284,19 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         return(OK);
     }
 
-    if(do_sort) sort(SM.begin(), SM.end(), SM_sort);
-//random_shuffle(SM.begin(), SM.end());
+    SparseMatrixCache SMC(SM);
+
+    if(do_sort) SMC.sort();
 
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
     /* Search for the rightmost nonzero element */
     /* Dependent on the current stairrow */
 
     stats s1;
-    s1.update(SM, 0, 0, nCols, -1, true);
+    s1.update(SMC, 0, 0, nCols, -1, true);
 
     int nextstairrow = 0;
-    int last_row = SM.size();
+    int last_row = SMC.size();
     for (int i = 0; i < nCols; i++) {
         putchar('\n');
         Profile p("Iteration");
@@ -262,7 +304,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         {
             Profile p("find next");
         for (j = nextstairrow; j < last_row; j++) {
-            if (Get_Matrix_Element(SM, j, i) != S_zero()) {
+            if (Get_Matrix_Element(SMC, j, i) != S_zero()) {
                 break;
             }
         }
@@ -273,17 +315,17 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
         if (j < last_row) {
 		{
                 char s[128];
-                sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
+                sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SMC.size());
 	//		Profile p2("1");
            // Profile p("a");
 {
           //  Profile p("b");
-            SM[nextstairrow].swap(SM[j]);
+            SMC[nextstairrow].swap(SMC[j]);
 }
             {
             //Profile p0("c");
                 Profile p(s);
-                SparseKnockOut(SM, nextstairrow, i, last_row);
+                SparseKnockOut(SMC, nextstairrow, i, last_row);
             }
 }
 {
@@ -291,7 +333,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 {
             //Profile p("d");
             for(int iii = last_row; iii > 0; iii--) {
-                if (!SM[iii - 1].empty()) {
+                if (!SMC[iii - 1].empty()) {
                     last_row = iii;
                     break;
                 }
@@ -300,13 +342,14 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 }
 {
 	//Profile p1("3");
-//            printf("%d %d\n", SM.size(), last_row);
+//            printf("%d %d\n", SMC.size(), last_row);
 	if (i % sort_freq == 0) {
 	Profile p1("sort");
             if (do_sort) {
          //       Profile("sort");
 //                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
-                sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+//                sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+                SMC.sort();
             }
 	}
             nextstairrow++;
@@ -319,7 +362,9 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 }
     }
     *Rank=nextstairrow;
-    s1.update(SM, nextstairrow, nCols, nCols, -1, true);
+    s1.update(SMC, nextstairrow, nCols, nCols, -1, true);
+
+    sort(SM.begin(), SM.end(), SM_sort);
 
     putchar('\n');
 
@@ -327,9 +372,9 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank)
 }
 
 
-void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor) {
+void SparseMultRow(SparseMatrixCache &SMC, int Row, Scalar Factor) {
     /* Step thru row ... multiplying each element by the factor */
-    for (auto ii = SM[Row].begin(); ii != SM[Row].end(); ii++) {
+    for (auto ii = SMC[Row].begin(); ii != SMC[Row].end(); ii++) {
         ii->setElement(S_mul(ii->getElement(), Factor));
     }
 }
@@ -352,7 +397,7 @@ void shrink_capacity(std::vector<T,Allocator>& v)
       the node.
 */
 /*********************************************************************/
-void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
+void SparseAddRow(SparseMatrixCache &SMC, Scalar Factor, int Row1, int Row2)
 {
   /* check for zero factor */
 
@@ -362,8 +407,8 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
 
   /* get the beginning of the two rows to work with */
 
-  const SparseRow &r1 = SM[Row1];
-  SparseRow &r2 = SM[Row2];
+  const SparseRow &r1 = SMC[Row1];
+  SparseRow &r2 = SMC[Row2];
 
   SparseRow tmp;
   tmp.reserve(r1.size() + r2.size());
@@ -417,21 +462,21 @@ void SparseAddRow(SparseMatrix &SM, Scalar Factor, int Row1, int Row2)
   //r2.swap(tmp); 
 }
 
-void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row) {
-    Scalar x = Get_Matrix_Element(SM, row, col);
+void SparseKnockOut(SparseMatrixCache &SMC, int row, int col, int last_row) {
+    Scalar x = Get_Matrix_Element(SMC, row, col);
     if(x != S_one())
     {
     /* if the rightmost element in the current row is not one then multiply*/
-        SparseMultRow(SM, row, S_inv(x));
+        SparseMultRow(SMC, row, S_inv(x));
     }
 
     /* try to knockout elements in column in the rows above */ 
 
-#pragma omp parallel for shared(SM, row, col, last_row) schedule(static, 50) default(none)
+#pragma omp parallel for shared(SMC, row, col, last_row) schedule(static, 50) default(none)
 //    for (int j = 0; j < (int) SM.size(); j++) {
     for (int j = 0; j < last_row; j++) {
         if (j != row) {
-            SparseAddRow(SM, S_minus(Get_Matrix_Element(SM, j, col)), row, j);
+            SparseAddRow(SMC, S_minus(Get_Matrix_Element(SMC, j, col)), row, j);
         }
     }
 }
@@ -577,6 +622,14 @@ Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j)
 {
     /* either return the element at location i,j or return a zero */
     for(SparseRow::const_iterator ii = SM[i].begin(); ii != SM[i].end() && ii->getColumn() <= j; ii++) {
+      if(ii->getColumn() == j) return ii->getElement();
+    }
+    return S_zero();
+}
+Scalar Get_Matrix_Element(const SparseMatrixCache &SMC, int i, int j)
+{
+    /* either return the element at location i,j or return a zero */
+    for(SparseRow::const_iterator ii = SMC[i].begin(); ii != SMC[i].end() && ii->getColumn() <= j; ii++) {
       if(ii->getColumn() == j) return ii->getElement();
     }
     return S_zero();
