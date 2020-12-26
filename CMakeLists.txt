@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 project(albert)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -67,10 +67,13 @@ add_executable(albert
         Po_semantics.h
         Po_syn_stack.cpp
         Po_syn_stack.h
+        profile.h
         Scalar_arithmetic.cpp
         Scalar_arithmetic.h
         SparseReduceMatrix.cpp
         SparseReduceMatrix.h
+        SparseReduceMatrix2.cpp
+        SparseReduceMatrix2.h
         Strings.cpp
         Strings.h
         Type_table.cpp
