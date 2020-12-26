@@ -29,6 +29,7 @@
 
 using std::list;
 using std::vector;
+using std::pair;
 
 #include <stdio.h>
 #include <time.h>
@@ -43,17 +44,24 @@ using std::vector;
 #include "Po_parse_exptext.h"
 #include "Id_routines.h"
 #include "SparseReduceMatrix.h"
+#include "SparseReduceMatrix2.h"
+#include "SparseReduceMatrix3.h"
+#include "SparseReduceMatrix4.h"
+#include "SparseReduceMatrix7.h"
+#include "matrix_reduce.h"
+#include "matrix_reduce_float.h"
 #include "Debug.h"
+#include "memory_usage.h"
 
 static int InitializeStructures(Type Target_type);
 
-static long ElapsedTime(void);
+static long ElapsedTime();
 
 static void PrintProgress(int i, int n);
 
 static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
 
-static void InstallDegree1(void);
+static void InstallDegree1();
 
 static int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &SM);
 
@@ -78,6 +86,7 @@ static Basis Current_dimension;
 /*     For each degree, New Basis are created and New Products are */
 /*     entered.                                                    */
 /*******************************************************************/
+
 // Variables controlling saving images of the matrix as it's reduced.
 bool __trigger = false;
 bool __record = false;
@@ -98,7 +107,6 @@ int Build(list<id_queue_node> &Idq_node, Type Target_type) {
     int Target_degree = GetDegreeName(TypeToName(Target_type));
     if (status == OK) {
         for (int i = 1; i <= Target_degree; i++) {
-
             // __record = trigger_ && i == Target_degree;
             __record = __trigger && i == 5;
 
@@ -206,7 +214,7 @@ int ProcessDegree(int i, const list<id_queue_node> &First_id_node) {
             printf("\tProcessing(%2d/%2d, begin_basis:%d)...", ++nn1, nn2, begin_basis);
             fflush(nullptr);
 
-            __deg = i-1;
+            __deg = i - 1;
             __nn1 = nn1;
             __nn2 = nn2;
             __record = __record && __nn1 == 1;
@@ -324,7 +332,6 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
 
     if (status == OK) { /*SM.shrink_to_fit();*/
         status = SolveEquations(SM, cols, BPtoCol, n);
-
         printf("\t\tDone: %lds\n", ElapsedTime());
     }
 
@@ -358,7 +365,51 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
 
     int rank = 0;
     printf("Matrix:(%d X %d)\n", (int) SM.size(), cols);
+
+    SparseMatrix saved_SM = SM;
     int status = SparseReduceMatrix(SM, cols, &rank);
+    if (cols == 12 || 1) {
+        int nfuncs = 6;
+        int (*funcs[])(SparseMatrix &SM, int nCols, int *Rank) = {SparseReduceMatrix2,
+                                                                  SparseReduceMatrix3,
+                                                                  SparseReduceMatrix4,
+                                                                  SparseReduceMatrix5,
+                                                                  SparseReduceMatrix6,
+                                                                  SparseReduceMatrix7};
+        const char *func_names[] = {"column-major",
+                                    "lazy-evaluation",
+                                    "auto-sparse-dense",
+                                    "truncated-dense",
+                                    "truncated-dense-avx-float",
+                                    "precompute-division-cache"};
+
+        vector<pair<double, int> > profiles[7];
+        profiles[0] = memory_usage;
+
+        for (int i = 0; i < nfuncs; i++) {
+            int rank2 = 0;
+            SparseMatrix SM2 = saved_SM;
+            printf("Reducing in %s mode\n", func_names[i]);
+            int status2 = funcs[i](SM2, cols, &rank2);
+            if (status != status2) {
+                abort();
+            }
+            if (rank != rank2) {
+                abort();
+            }
+            if (SM != SM2) {
+                abort();
+            }
+            profiles[i+1] = memory_usage;
+        }
+        for(int i=0; i<profiles[0].size(); i++) {
+            printf("Profile%07d:", i);
+            for(int j=0; j<nfuncs+1; j++) {
+                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024.);
+            }
+            putchar('\n');
+        }
+    }
 
     tt = 0;
     for (int i = 0; i < (int) SM.size(); i++) {

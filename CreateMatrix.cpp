@@ -84,9 +84,9 @@ static void Process(vector<Unique_basis_pair> &ColtoBP, Degree d1, Degree d2, in
 static int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pair> &ColtoBP, SparseMatrix &SM);
 
 #if 0
-static void PrintPairPresent(void);
-static void PrintColtoBP(void);
-static void PrintTheMatrix(void);
+static void PrintPairPresent();
+static void PrintColtoBP();
+static void PrintTheMatrix();
 #endif
 
 /* Added by DCL (8/92). This is virtually identical to CreateTheMatrix()
@@ -203,7 +203,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
     const int se = SM.size();
     SM.resize(se + equations.size());
 
-#pragma omp parallel for shared(equations, ColtoBP, se, SM), schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(equations, ColtoBP, SM, se), schedule(dynamic, 10) default(none)
     for (int eq_number = 0; eq_number < (int) equations.size(); eq_number++) {
         const Equation &eqn = equations[eq_number];
         SparseRow t_row;
@@ -280,7 +280,7 @@ int GetCol(const vector<Unique_basis_pair> &ColtoBP, Basis Left_basis, Basis Rig
 
 #if 0
 
-void PrintPairPresent(void) {
+void PrintPairPresent() {
     int i, j, k;
 
     assert_not_null_nv(Pair_present);
@@ -301,7 +301,7 @@ void PrintPairPresent(void) {
 }
 
 
-void PrintColtoBP(void) {
+void PrintColtoBP() {
     int i, j = 0;
 
     assert_not_null_nv(ColtoBP);
@@ -319,7 +319,7 @@ void PrintColtoBP(void) {
 }
 
 
-void PrintTheMatrix(void) {
+void PrintTheMatrix() {
     int i, j, k = 0;
     int thematrix_index;
 
