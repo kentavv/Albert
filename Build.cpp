@@ -79,6 +79,7 @@ static Basis Current_dimension;
 /*     For each degree, New Basis are created and New Products are */
 /*     entered.                                                    */
 /*******************************************************************/
+
 // Variables controlling saving images of the matrix as it's reduced.
 bool __trigger = false;
 bool __record = false;
@@ -99,7 +100,6 @@ int Build(list<id_queue_node> &Idq_node, Type Target_type) {
     int Target_degree = GetDegreeName(TypeToName(Target_type));
     if (status == OK) {
         for (int i = 1; i <= Target_degree; i++) {
-
             // __record = trigger_ && i == Target_degree;
             __record = __trigger && i == 5;
 
@@ -325,7 +325,6 @@ int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &
 
     if (status == OK) { /*SM.shrink_to_fit();*/
         status = SolveEquations(SM, cols, BPtoCol, n);
-
         printf("\t\tDone: %lds\n", ElapsedTime());
     }
 

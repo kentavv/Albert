@@ -156,7 +156,6 @@ struct stats {
         if (timeout != -1 && cur_update != 0 && t - cur_update < timeout) {
             return;
         }
-
         clear();
         if (first_update == 0) {
             first_update = t;
