@@ -8,7 +8,7 @@
 
 #include <vector>
 
-extern std::vector<std::pair<double, size_t> > memory_usage;
+extern std::vector<std::pair<double, int> > memory_usage;
 
 void memory_usage_init(int n);
 

@@ -8,6 +8,7 @@
 
 #ifdef __linux__
 #include <proc/readproc.h>
+#include <malloc.h>
 #endif
 
 using std::vector;
@@ -15,15 +16,21 @@ using std::fill;
 using std::pair;
 using std::make_pair;
 
-size_t memory_usage0;
+int memory_usage0;
 double t0;
-vector<pair<double, size_t> > memory_usage;
+vector<pair<double, int> > memory_usage;
 
-size_t current_memory_usage() {
+int current_memory_usage() {
 #ifdef __linux__
+#if 0
     proc_t usage;
     look_up_our_self(&usage);
     return usage.vsize;
+#else
+    struct mallinfo m = mallinfo();
+    //return m.arena;
+    return m.uordblks;
+#endif
 #else
     return 0;
 #endif

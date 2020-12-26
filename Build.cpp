@@ -383,7 +383,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                                     "truncated-dense-avx-float",
                                     "precompute-division-cache"};
 
-        vector<pair<double, size_t> > profiles[7];
+        vector<pair<double, int> > profiles[7];
         profiles[0] = memory_usage;
 
         for (int i = 0; i < nfuncs; i++) {
@@ -403,9 +403,9 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             profiles[i+1] = memory_usage;
         }
         for(int i=0; i<profiles[0].size(); i++) {
-            printf("%d:", i);
+            printf("Profile%07d:", i);
             for(int j=0; j<nfuncs+1; j++) {
-                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024./1024.);
+                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024.);
             }
             putchar('\n');
         }
