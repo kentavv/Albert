@@ -242,6 +242,10 @@ static int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank);
 int SparseReduceMatrix2(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
+    if (SM.empty() || nCols == 0 || (SM.size() == 1 && SM[0].empty())) {
+        return OK;
+    }
+
     SparseMatrix SMa = SM;
 
     SparseMatrix2 SM2;
@@ -558,7 +562,7 @@ void SparseKnockOut(SparseMatrix2 &SM, int row, int col, int nRows) {
     const auto ss = SM[col];
 
 //    printf("sr.size:%d\n", sr.size());
-#pragma omp parallel for shared(sr, nRows, row, ss, SM) schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(sr, nRows, row, SM, ss) schedule(dynamic, 10) default(none)
     for (int j0 = 0; j0 < (int) sr.size(); j0++) {
         Scalar e = sr[j0].getElement();
         int j = sr[j0].getColumn();
