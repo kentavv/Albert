@@ -7,7 +7,7 @@
 #include <sys/time.h>
 
 #ifdef __linux__
-//#include <proc/readproc.h>
+#include <proc/readproc.h>
 #include <malloc.h>
 #include <string.h>
 #endif
@@ -21,17 +21,21 @@ int memory_usage0;
 double t0;
 vector<pair<double, int> > memory_usage;
 
-int current_memory_usage() {
+size_t current_memory_usage() {
 #ifdef __linux__
 #if 0
+    // Probably the most conservative, but also the slowest to respond when
+    // new memory is allocated in increasingly large chunks.
     proc_t usage;
     look_up_our_self(&usage);
     return usage.vsize;
 #elif 0
+    // 32-bit only and only reports main arena.
     struct mallinfo m = mallinfo();
     //return m.arena;
     return m.uordblks;
 #elif 0
+    // May work, similar response as readproc method, but all arenas accessible.
     char *p;
     size_t n;
     FILE *f = open_memstream(&p, &n);
@@ -40,6 +44,7 @@ int current_memory_usage() {
     puts(p);
     return 0;
 #elif 1
+    // This method may be only good to 32-bit, but includes all arenas.
     char *p;
     size_t n;
     FILE *f = stderr;
@@ -86,5 +91,6 @@ void memory_usage_init(int n) {
 }
 
 void memory_usage_update(int i) {
+    printf("memory: %ld\n", current_memory_usage());
     memory_usage[i] = make_pair(current_time() - t0, current_memory_usage() - memory_usage0);
 }
