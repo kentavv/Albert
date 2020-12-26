@@ -26,10 +26,18 @@ int current_memory_usage() {
     proc_t usage;
     look_up_our_self(&usage);
     return usage.vsize;
-#else
+#elif 1
     struct mallinfo m = mallinfo();
     //return m.arena;
     return m.uordblks;
+#else
+    char *p;
+    size_t n;
+    FILE *f = open_memstream(&p, &n);
+    malloc_info(0, f);
+    fclose(f);
+    puts(p);
+    return 0;
 #endif
 #else
     return 0;

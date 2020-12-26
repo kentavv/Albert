@@ -24,7 +24,8 @@ LDFLAGS=-fopenmp
 #LDFLAGS=-fopenmp -fprofile-use -fprofile-correction
 #LDFLAGS=-g -O3 -flto
 #LIBS=-lcurses -ltermcap -lm
-LIBS=-lreadline -lprocps
+LIBS=-lreadline
+#LIBS=-lreadline -lprocps
 
 C_FILES=$(wildcard *.c)
 CPP_FILES=$(wildcard *.cpp)
