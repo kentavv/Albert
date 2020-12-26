@@ -74,6 +74,8 @@ add_executable(albert
         SparseReduceMatrix.h
         SparseReduceMatrix2.cpp
         SparseReduceMatrix2.h
+        SparseReduceMatrix3.cpp
+        SparseReduceMatrix3.h
         Strings.cpp
         Strings.h
         Type_table.cpp

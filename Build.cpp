@@ -44,6 +44,7 @@ using std::vector;
 #include "Id_routines.h"
 #include "SparseReduceMatrix.h"
 #include "SparseReduceMatrix2.h"
+#include "SparseReduceMatrix3.h"
 #include "Debug.h"
 
 static int InitializeStructures(Type Target_type);
@@ -359,21 +360,40 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     int rank = 0;
     printf("Matrix:(%d X %d)\n", (int) SM.size(), cols);
 
-    SparseMatrix SM1 = SM;
-    SparseMatrix SM2 = SM;
-    int status1 = SparseReduceMatrix(SM1, cols, &rank);
+    SparseMatrix saved_SM = SM;
+    int status = SparseReduceMatrix(SM, cols, &rank);
     if(cols == 12 || 1) {
-        printf("Reducing in column mode\n");
-        int status2 = SparseReduceMatrix2(SM2, cols, &rank);
-        if(status1 != status2) {
-            abort();
-        }
-        if(SM1 != SM2) {
-            abort();
-        }
+		{
+			int rank2 = 0;
+			SparseMatrix SM2 = saved_SM;
+	        printf("Reducing in column mode\n");
+	        int status2 = SparseReduceMatrix2(SM2, cols, &rank2);
+	        if(status != status2) {
+	            abort();
+	        }
+	        if(rank != rank2) {
+	            abort();
+	        }
+	        if(SM != SM2) {
+	            abort();
+	        }
+		}
+		{
+			int rank2 = 0;
+			SparseMatrix SM2 = saved_SM;
+	        printf("Reducing in lazy mode\n");
+	        int status2 = SparseReduceMatrix3(SM2, cols, &rank2);
+	        if(status != status2) {
+	            abort();
+	        }
+	        if(rank != rank2) {
+	            abort();
+	        }
+	        if(SM != SM2) {
+	            abort();
+	        }
+		}
     }
-    SM = SM1;
-    int status = status1;
 
     tt = 0;
     for (int i = 0; i < (int) SM.size(); i++) {
