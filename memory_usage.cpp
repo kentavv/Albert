@@ -7,8 +7,9 @@
 #include <sys/time.h>
 
 #ifdef __linux__
-#include <proc/readproc.h>
+//#include <proc/readproc.h>
 #include <malloc.h>
+#include <string.h>
 #endif
 
 using std::vector;
@@ -26,11 +27,11 @@ int current_memory_usage() {
     proc_t usage;
     look_up_our_self(&usage);
     return usage.vsize;
-#elif 1
+#elif 0
     struct mallinfo m = mallinfo();
     //return m.arena;
     return m.uordblks;
-#else
+#elif 0
     char *p;
     size_t n;
     FILE *f = open_memstream(&p, &n);
@@ -38,6 +39,30 @@ int current_memory_usage() {
     fclose(f);
     puts(p);
     return 0;
+#elif 1
+    char *p;
+    size_t n;
+    FILE *f = stderr;
+    stderr = open_memstream(&p, &n);
+    malloc_stats();
+    fclose(stderr);
+    stderr = f;
+
+    bool ready = false;
+    long system = -1, in_use = -1;
+    for (char *pch = strtok (p, "\n"); pch != nullptr; pch = strtok (nullptr, "\n")) {
+        if (!ready) {
+            ready = !ready && strstr(pch, "Total ") != nullptr;
+        } else if (ready) {
+           if(strstr(pch, "system bytes") != nullptr) {
+               sscanf(pch, "system bytes     = %ld", &system);
+           } else if(strstr(pch, "in use bytes") != nullptr) {
+               sscanf(pch, "in use bytes     = %ld", &in_use);
+           }
+           if(system != -1 && in_use != -1) break;
+        }
+    }
+    return in_use;
 #endif
 #else
     return 0;
@@ -51,6 +76,9 @@ double current_time() {
 }
 
 void memory_usage_init(int n) {
+    // Trim now to reduce chance that automatic trimming of earlier allocations will occur, and 
+    // then reported memory becoming negative.
+    malloc_trim(0);
     memory_usage.resize(n);
     fill(memory_usage.begin(), memory_usage.end(), make_pair(0, 0));
     t0 = current_time();
