@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 project(albert)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -10,6 +10,8 @@ endif()
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
 
 add_executable(albert
         Alg_elements.cpp
@@ -67,10 +69,19 @@ add_executable(albert
         Po_semantics.h
         Po_syn_stack.cpp
         Po_syn_stack.h
+        profile.h
         Scalar_arithmetic.cpp
         Scalar_arithmetic.h
         SparseReduceMatrix.cpp
         SparseReduceMatrix.h
+        SparseReduceMatrix2.cpp
+        SparseReduceMatrix2.h
+        SparseReduceMatrix3.cpp
+        SparseReduceMatrix3.h
+        SparseReduceMatrix4.cpp
+        SparseReduceMatrix4.h
+        SparseReduceMatrix7.cpp
+        SparseReduceMatrix7.h
         Strings.cpp
         Strings.h
         Type_table.cpp
@@ -78,7 +89,11 @@ add_executable(albert
         Ty_routines.cpp
         Ty_routines.h
         Ty_routines_pri.h
-        )
+        matrix_reduce.cpp
+        matrix_reduce.h
+        matrix_reduce_float.cpp
+        matrix_reduce_float.h
+        memory_usage.h memory_usage.cpp)
 
 find_package(OpenMP REQUIRED)
 #find_package(readline REQUIRED)

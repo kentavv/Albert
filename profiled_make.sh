@@ -8,8 +8,8 @@ make
 /usr/bin/time ./albert < tests/profile.in
 rm basis.txt mult.txt mult.bin
 
-CFLAGS="-g -O3 -Wall -fopenmp -fprofile-correction"
-LDFLAGS="-fopenmp -fprofile-correction"
+CFLAGS="-g -O3 -Wall -fopenmp -fprofile-correction -mavx"
+LDFLAGS="-fopenmp -fprofile-correction -mavx"
 
 rm -f *.gcda
 make clean
