@@ -53,7 +53,7 @@ using std::pair;
 #include "Debug.h"
 #include "memory_usage.h"
 
-#define TEST_SOLVERS 0
+#define TEST_SOLVERS 1
 
 static int InitializeStructures(Type Target_type);
 
@@ -410,9 +410,9 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             profiles[i+1] = memory_usage;
         }
         for(int i=0; i<profiles[0].size(); i++) {
-            printf("Profile%07d:", i);
+            printf("Profile %07d:", i);
             for(int j=0; j<nfuncs+1; j++) {
-                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024.);
+                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024./1024.);
             }
             putchar('\n');
         }
