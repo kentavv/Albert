@@ -366,11 +366,11 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     for (int i = 0; i < nCols; i++) {
         memory_usage_update(i);
 
-        putchar('\n');
-        Profile p("Iteration");
+//        putchar('\n');
+//        Profile p("Iteration");
         int j;
         {
-            Profile p("find next");
+//            Profile p("find next");
             for (j = nextstairrow; j < last_row; j++) {
                 if (Get_Matrix_Element(SM, j, i) != S_zero()) {
                     break;
@@ -413,7 +413,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 char s[128];
                 sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
                 //Profile p0("c");
-                Profile p(s);
+//                Profile p(s);
 
                 SparseKnockOut(SM, nextstairrow, i, last_row);
             }
@@ -448,7 +448,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 //Profile p1("3");
 //            printf("%d %d\n", SM.size(), last_row);
                 if (i % sort_freq == 0) {
-                    Profile p1("sort");
+//                    Profile p1("sort");
                     if (do_sort) {
                         //       Profile("sort");
 //                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);

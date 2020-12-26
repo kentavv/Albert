@@ -53,6 +53,8 @@ using std::pair;
 #include "Debug.h"
 #include "memory_usage.h"
 
+#define TEST_SOLVERS 0
+
 static int InitializeStructures(Type Target_type);
 
 static long ElapsedTime();
@@ -366,8 +368,13 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     int rank = 0;
     printf("Matrix:(%d X %d)\n", (int) SM.size(), cols);
 
+#if TEST_SOLVERS
     SparseMatrix saved_SM = SM;
+#endif
+
     int status = SparseReduceMatrix(SM, cols, &rank);
+
+#if TEST_SOLVERS
     if (cols == 12 || 1) {
         int nfuncs = 6;
         int (*funcs[])(SparseMatrix &SM, int nCols, int *Rank) = {SparseReduceMatrix2,
@@ -410,6 +417,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             putchar('\n');
         }
     }
+#endif
 
     tt = 0;
     for (int i = 0; i < (int) SM.size(); i++) {
