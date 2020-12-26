@@ -4,6 +4,7 @@
 #include "CreateMatrix.h"
 
 int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank);
+
 Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j);
 
 #endif

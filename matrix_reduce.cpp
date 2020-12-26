@@ -243,7 +243,7 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
     replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
 
 #pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
-    for (int j = r+1; j < last_row; j++) {
+    for (int j = r + 1; j < last_row; j++) {
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
         }
@@ -345,13 +345,13 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
     printf("\nReplaying lazy calculations\n");
     {
         Profile p("Replaying lazy calculations");
-        for(auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
+        for (auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
             int r = ii->first.first;
             int c = ii->first.second;
             const auto &row = ii->second;
 
 #pragma omp parallel for shared(rows, r, c, row) schedule(dynamic, 10) default(none)
-            for(int j=0; j<r; j++) {
+            for (int j = 0; j < r; j++) {
                 add_row(S_minus(rows[j].element(c)), row, rows[j]);
             }
 //            s1.update(SM, row, col, nCols, 60, true);

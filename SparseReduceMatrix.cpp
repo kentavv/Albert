@@ -266,10 +266,10 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
 
         auto s_img = new unsigned char[iih * iiw]();
 
-        for (int i=0; i<ih; i++) {
-            for (int j=0; j<iw; j++) {
-                for(int ii=0; ii<s; ii++) {
-                    for(int jj=0; jj<s; jj++) {
+        for (int i = 0; i < ih; i++) {
+            for (int j = 0; j < iw; j++) {
+                for (int ii = 0; ii < s; ii++) {
+                    for (int jj = 0; jj < s; jj++) {
                         s_img[((i * s + hoff + ii) * iiw) + woff + j * s + jj] = img[i * iw + j];
                     }
                 }
@@ -295,7 +295,7 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
     delete[] img;
 }
 
-static bool SM_sort (const SparseRow &r1, const SparseRow &r2) {
+static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
     {
         if (r1.empty()) return false;
         if (r2.empty()) return true;
@@ -343,7 +343,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
         return OK;
     }
 
-    if(do_sort) sort(SM.begin(), SM.end(), SM_sort);
+    if (do_sort) sort(SM.begin(), SM.end(), SM_sort);
 //random_shuffle(SM.begin(), SM.end());
 
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
@@ -366,11 +366,11 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
         int j;
         {
             Profile p("find next");
-        for (j = nextstairrow; j < last_row; j++) {
-            if (Get_Matrix_Element(SM, j, i) != S_zero()) {
-                break;
+            for (j = nextstairrow; j < last_row; j++) {
+                if (Get_Matrix_Element(SM, j, i) != S_zero()) {
+                    break;
+                }
             }
-        }
         }
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
@@ -404,15 +404,15 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 #endif
-{
+            {
                 char s[128];
                 sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
-            //Profile p0("c");
+                //Profile p0("c");
                 Profile p(s);
 
-            SparseKnockOut(SM, nextstairrow, i, last_row);
-			}
-            for(int iii = last_row; iii > 0; iii--) {
+                SparseKnockOut(SM, nextstairrow, i, last_row);
+            }
+            for (int iii = last_row; iii > 0; iii--) {
                 if (!SM[iii - 1].empty()) {
                     last_row = iii;
                     break;
@@ -426,9 +426,9 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 printf(">> %d", nextstairrow);
                 long aa = 0;
                 long bb = 0;
-                for(int ii=nextstairrow; ii<SM.size(); ii++) {
+                for (int ii = nextstairrow; ii < SM.size(); ii++) {
 //                    printf("(%.2f %.2f) ", SM[i].size() / float(nCols - nextstairrow) * 100, SM[ii].size() * 4 / float(nCols - nextstairrow + 4));
-                    if(!SM[ii].empty()) {
+                    if (!SM[ii].empty()) {
                         int a = SM[ii].size() * 4;
                         int b = (nCols - SM[ii].front().getColumn() + 1) * 1 + 4;
                         printf(" %.2f", a / float(b));
@@ -474,7 +474,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
 
         {
 //            Profile p("update");
-        s1.update(SM, nextstairrow, i, nCols, 60, true);
+            s1.update(SM, nextstairrow, i, nCols, 60, true);
         }
     }
     *Rank = nextstairrow;

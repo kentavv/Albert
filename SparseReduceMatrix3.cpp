@@ -443,8 +443,8 @@ void SparseAddRow3(Scalar Factor, const SparseRow &r1, SparseRow &r2) {
 //    tmp.swap(r2);
 
 //    if (!r2.empty()) {
-        // SparseRow(tmp.begin(), tmp.end()).swap(r2); // shrink capacity while assigning
-        tmp.swap(r2); // does not shrink capacity while assigning, the waste be less than the effort of allocation
+    // SparseRow(tmp.begin(), tmp.end()).swap(r2); // shrink capacity while assigning
+    tmp.swap(r2); // does not shrink capacity while assigning, the waste be less than the effort of allocation
 //    } else {
 //        SparseRow().swap(r2);
 //    }
@@ -487,7 +487,7 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col) {
     for (int j = row + 1; j < (int) SM.size(); j++) {
         Scalar e = Get_Matrix_Element3(SM, j, col);
         SparseAddRow3(S_minus(e), SM[row], SM[j]);
-        if(SM[j].empty() && SM[j].capacity()) {
+        if (SM[j].empty() && SM[j].capacity()) {
             SparseRow().swap(SM[j]);
         }
     }

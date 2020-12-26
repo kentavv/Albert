@@ -368,8 +368,8 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
 #else
                     auto jj1 = std::lower_bound(ii->begin(), ii->end(), Node2(0, j));
                     auto jj2 = std::lower_bound(ii->begin(), ii->end(), Node2(0, nextstairrow));
-                    if(jj1 != ii->end() && jj1->getRow() != j) jj1 = ii->end();
-                    if(jj2 != ii->end() && jj2->getRow() != nextstairrow) jj2 = ii->end();
+                    if (jj1 != ii->end() && jj1->getRow() != j) jj1 = ii->end();
+                    if (jj2 != ii->end() && jj2->getRow() != nextstairrow) jj2 = ii->end();
 #endif
                     if (jj1 != ii->end() && jj2 != ii->end()) {
                         auto t = jj1->getElement();

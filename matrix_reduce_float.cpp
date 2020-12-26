@@ -529,7 +529,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
             }
 #endif
 
-	    printf("%d/%d %d/%d/%d\n", i, n_cols, nextstairrow, last_row, rows.size());
+            printf("%d/%d %d/%d/%d\n", i, n_cols, nextstairrow, last_row, rows.size());
             if (do_sort) {
                 if ((++ns) % sort_freq == 0) {
                     sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);

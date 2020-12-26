@@ -47,32 +47,35 @@ using std::lower_bound;
 #include "Scalar_arithmetic.h"
 #include "profile.h"
 
-static bool SM_sort (const SparseRow &r1, const SparseRow &r2);
+static bool SM_sort(const SparseRow &r1, const SparseRow &r2);
 
 class SparseMatrixCache {
 public:
     SparseMatrixCache() = delete;
+
     SparseMatrixCache(SparseMatrix &SM) : SM_(SM) {
         idx_.resize(SM_.size());
         std::iota(idx_.begin(), idx_.end(), 0);
     }
-    SparseMatrixCache(const SparseMatrixCache&) = delete;
-    SparseMatrixCache &operator = (const SparseMatrixCache &) = delete;
+
+    SparseMatrixCache(const SparseMatrixCache &) = delete;
+
+    SparseMatrixCache &operator=(const SparseMatrixCache &) = delete;
 
     SparseMatrix &SM_;
     vector<int> idx_;
 
     void sort() {
-        stable_sort(idx_.begin(), idx_.end(), [this](size_t i1, size_t i2) {return SM_sort(SM_[i1], SM_[i2]);});
+        stable_sort(idx_.begin(), idx_.end(), [this](size_t i1, size_t i2) { return SM_sort(SM_[i1], SM_[i2]); });
     }
 
-    SparseRow& operator[](int i) {
+    SparseRow &operator[](int i) {
         return SM_[idx_[i]];
     }
 
-    const SparseRow& operator[](int i) const {
-	    //printf("%d %d\n", i, idx_.size());
-	    //printf("%d %d %d\n", i, idx_.size(), idx_[i]);
+    const SparseRow &operator[](int i) const {
+        //printf("%d %d\n", i, idx_.size());
+        //printf("%d %d %d\n", i, idx_.size(), idx_[i]);
         return SM_[idx_[i]];
     }
 
@@ -198,7 +201,7 @@ struct stats {
         fflush(nullptr);
     }
 
-  void update(const SparseMatrixCache &SM, int nextstairrow_, int last_col_, int nCols_, int timeout=-1,
+    void update(const SparseMatrixCache &SM, int nextstairrow_, int last_col_, int nCols_, int timeout = -1,
                 bool do_print = false) {
         time_t t = time(nullptr);
         if (timeout != -1 && cur_update != 0 && t - cur_update < timeout) {
@@ -310,10 +313,10 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
 
         auto s_img = new unsigned char[iih * iiw]();
 
-        for (int i=0; i<ih; i++) {
-            for (int j=0; j<iw; j++) {
-                for(int ii=0; ii<s; ii++) {
-                    for(int jj=0; jj<s; jj++) {
+        for (int i = 0; i < ih; i++) {
+            for (int j = 0; j < iw; j++) {
+                for (int ii = 0; ii < s; ii++) {
+                    for (int jj = 0; jj < s; jj++) {
                         s_img[((i * s + hoff + ii) * iiw) + woff + j * s + jj] = img[i * iw + j];
                     }
                 }
@@ -339,7 +342,7 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
     delete[] img;
 }
 
-static bool SM_sort (const SparseRow &r1, const SparseRow &r2) {
+static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
     {
         if (r1.empty()) return false;
         if (r2.empty()) return true;
@@ -389,7 +392,7 @@ int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
 
     SparseMatrixCache SMC(SM);
 
-    if(do_sort) SMC.sort();
+    if (do_sort) SMC.sort();
 
     //printf("s:%d c:%d ", (int)SM.size(), (int)SM.capacity());
     /* Search for the rightmost nonzero element */
@@ -412,11 +415,11 @@ int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
         int j;
         {
             Profile p("find next");
-        for (j = nextstairrow; j < last_row; j++) {
-            if (Get_Matrix_Element(SMC, j, i) != S_zero()) {
-                break;
+            for (j = nextstairrow; j < last_row; j++) {
+                if (Get_Matrix_Element(SMC, j, i) != S_zero()) {
+                    break;
+                }
             }
-        }
         }
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
@@ -450,15 +453,15 @@ int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 #endif
-{
+            {
                 char s[128];
                 sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SMC.size());
-            //Profile p0("c");
+                //Profile p0("c");
                 Profile p(s);
 
-            SparseKnockOut(SMC, nextstairrow, i, last_row);
-			}
-            for(int iii = last_row; iii > 0; iii--) {
+                SparseKnockOut(SMC, nextstairrow, i, last_row);
+            }
+            for (int iii = last_row; iii > 0; iii--) {
                 if (!SMC[iii - 1].empty()) {
                     last_row = iii;
                     break;
@@ -472,9 +475,9 @@ int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
                 printf(">> %d", nextstairrow);
                 long aa = 0;
                 long bb = 0;
-                for(int ii=nextstairrow; ii<SMC.size(); ii++) {
+                for (int ii = nextstairrow; ii < SMC.size(); ii++) {
 //                    printf("(%.2f %.2f) ", SMC[i].size() / float(nCols - nextstairrow) * 100, SM[ii].size() * 4 / float(nCols - nextstairrow + 4));
-                    if(!SM[ii].empty()) {
+                    if (!SM[ii].empty()) {
                         int a = SM[ii].size() * 4;
                         int b = (nCols - SMC[ii].front().getColumn() + 1) * 1 + 4;
                         printf(" %.2f", a / float(b));
@@ -492,7 +495,7 @@ int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
                     Profile p1("sort");
                     if (do_sort) {
                         //       Profile("sort");
-SMC.sort();
+                        SMC.sort();
 //                        sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
                     }
                 }
@@ -520,7 +523,7 @@ SMC.sort();
 
         {
 //            Profile p("update");
-        s1.update(SMC, nextstairrow, i, nCols, 60, true);
+            s1.update(SMC, nextstairrow, i, nCols, 60, true);
         }
     }
     *Rank = nextstairrow;
@@ -779,11 +782,10 @@ Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j) {
 //    return S_zero();
 //}
 
-Scalar Get_Matrix_Element(const SparseMatrixCache &SMC, int i, int j)
-{
+Scalar Get_Matrix_Element(const SparseMatrixCache &SMC, int i, int j) {
     /* either return the element at location i,j or return a zero */
-    for(auto ii = SMC[i].cbegin(); ii != SMC[i].cend() && ii->getColumn() <= j; ii++) {
-      if(ii->getColumn() == j) return ii->getElement();
+    for (auto ii = SMC[i].cbegin(); ii != SMC[i].cend() && ii->getColumn() <= j; ii++) {
+        if (ii->getColumn() == j) return ii->getElement();
     }
     return S_zero();
 }

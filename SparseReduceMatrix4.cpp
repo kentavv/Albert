@@ -122,7 +122,7 @@ public:
     }
 
     void update_cache() {
-        if(!d.empty()) {
+        if (!d.empty()) {
             d_fc = 99999999;
             d_nz = 0;
             auto i = d.cbegin();
@@ -137,7 +137,7 @@ public:
             }
             for (; i != d.cend(); i++) {
                 if (*i != S_zero()) {
-                    d_nz ++;
+                    d_nz++;
                 }
             }
         }
@@ -223,7 +223,7 @@ public:
 };
 
 inline void swap(Row &lhs, Row &rhs) {
-    if(&lhs != &rhs) {
+    if (&lhs != &rhs) {
         lhs.s.swap(rhs.s);
         lhs.d.swap(rhs.d);
         std::swap(lhs.d_start_col, rhs.d_start_col);
