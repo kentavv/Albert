@@ -203,7 +203,7 @@ int SparseFillTheMatrix(const Equations &equations, const vector<Unique_basis_pa
     const int se = SM.size();
     SM.resize(se + equations.size());
 
-#pragma omp parallel for shared(equations, ColtoBP, se, SM), schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(equations, ColtoBP, SM, se), schedule(dynamic, 10) default(none)
     for (int eq_number = 0; eq_number < (int) equations.size(); eq_number++) {
         const Equation &eqn = equations[eq_number];
         SparseRow t_row;
