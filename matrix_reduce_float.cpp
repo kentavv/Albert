@@ -9,6 +9,7 @@
 #include <string.h>
 #include <immintrin.h>
 #include "profile.h"
+#include "memory_usage.h"
 
 using std::vector;
 using std::sort;
@@ -473,6 +474,8 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
 
     int last_row = rows.size();
     for (int i = 0; i < n_cols; i++) {
+        memory_usage_update(i);
+
         int j;
         for (j = nextstairrow; j < last_row; j++) {
             if (rows[j].element(i) != 0) {
@@ -571,6 +574,8 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
 #include "SparseReduceMatrix.h"
 
 int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
+    memory_usage_init(nCols);
+
     Profile p1("SparseReduceMatrix6");
 
 #if DEBUG_MATRIX

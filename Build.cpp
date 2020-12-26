@@ -29,6 +29,7 @@
 
 using std::list;
 using std::vector;
+using std::pair;
 
 #include <stdio.h>
 #include <time.h>
@@ -50,16 +51,17 @@ using std::vector;
 #include "matrix_reduce.h"
 #include "matrix_reduce_float.h"
 #include "Debug.h"
+#include "memory_usage.h"
 
 static int InitializeStructures(Type Target_type);
 
-static long ElapsedTime(void);
+static long ElapsedTime();
 
 static void PrintProgress(int i, int n);
 
 static int ProcessDegree(int i, const list<id_queue_node> &First_id_node);
 
-static void InstallDegree1(void);
+static void InstallDegree1();
 
 static int ProcessType(Name n, const list<id_queue_node> &First_id_node, SparseMatrix &SM);
 
@@ -381,6 +383,9 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                                     "truncated-dense-avx-float",
                                     "precompute-division-cache"};
 
+        vector<pair<double, size_t> > profiles[7];
+        profiles[0] = memory_usage;
+
         for (int i = 0; i < nfuncs; i++) {
             int rank2 = 0;
             SparseMatrix SM2 = saved_SM;
@@ -395,6 +400,14 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             if (SM != SM2) {
                 abort();
             }
+            profiles[i+1] = memory_usage;
+        }
+        for(int i=0; i<profiles[0].size(); i++) {
+            printf("%d:", i);
+            for(int j=0; j<nfuncs+1; j++) {
+                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024./1024.);
+            }
+            putchar('\n');
         }
     }
 

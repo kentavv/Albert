@@ -44,6 +44,8 @@ using std::max;
 #include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
+#include "profile.h"
+#include "memory_usage.h"
 
 struct Node2 {
     Node2(int e_ = 0, int c_ = 0) : e(e_), c(c_) {};
@@ -238,6 +240,8 @@ struct stats {
 static int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank);
 
 int SparseReduceMatrix2(SparseMatrix &SM, int nCols, int *Rank) {
+    memory_usage_init(nCols);
+
     SparseMatrix SMa = SM;
 
     SparseMatrix2 SM2;
@@ -325,6 +329,8 @@ int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank) {
 
     int nextstairrow = 0;
     for (int i = 0; i < nCols; i++) {
+        memory_usage_update(i);
+
         int j;
         for (j = nextstairrow; j < nRows; j++) {
             if (Get_Matrix_Element2(SM, j, i) != S_zero()) {

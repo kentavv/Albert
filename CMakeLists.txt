@@ -93,7 +93,7 @@ add_executable(albert
         matrix_reduce.h
         matrix_reduce_float.cpp
         matrix_reduce_float.h
-        )
+        memory_usage.h memory_usage.cpp)
 
 find_package(OpenMP REQUIRED)
 #find_package(readline REQUIRED)

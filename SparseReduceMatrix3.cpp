@@ -44,6 +44,8 @@ using std::lower_bound;
 #include "SparseReduceMatrix3.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
+#include "profile.h"
+#include "memory_usage.h"
 
 typedef std::vector<uint8_t> DenseRow;
 
@@ -204,6 +206,8 @@ struct stats {
 vector<pair<pair<int, int>, SparseRow> > replay;
 
 int SparseReduceMatrix3(SparseMatrix &SM, int nCols, int *Rank) {
+    memory_usage_init(nCols);
+
     if (SM.empty() || nCols == 0) {
         return OK;
     }
@@ -222,6 +226,8 @@ int SparseReduceMatrix3(SparseMatrix &SM, int nCols, int *Rank) {
 
     int nextstairrow = 0;
     for (int i = 0; i < nCols; i++) {
+        memory_usage_update(i);
+
         int j;
         for (j = nextstairrow; j < (int) SM.size(); j++) {
             if (Get_Matrix_Element3(SM, j, i) != S_zero()) {

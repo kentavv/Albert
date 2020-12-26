@@ -45,6 +45,7 @@ using std::lower_bound;
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
 #include "profile.h"
+#include "memory_usage.h"
 
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
@@ -339,6 +340,8 @@ static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
 
 
 int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
+    memory_usage_init(nCols);
+
     if (SM.empty() || nCols == 0) {
         return OK;
     }
@@ -361,6 +364,8 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     int nextstairrow = 0;
     int last_row = SM.size();
     for (int i = 0; i < nCols; i++) {
+        memory_usage_update(i);
+
         putchar('\n');
         Profile p("Iteration");
         int j;

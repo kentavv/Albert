@@ -45,6 +45,8 @@ using std::lower_bound;
 #include "SparseReduceMatrix4.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
+#include "profile.h"
+#include "memory_usage.h"
 
 typedef std::vector<Scalar> DenseRow;
 
@@ -590,6 +592,8 @@ void print_matrix(AutoMatrix &SM, int nCols, const char *header) {
 }
 
 int SparseReduceMatrix4(SparseMatrix &SM_, int nCols, int *Rank) {
+    memory_usage_init(nCols);
+
     if (SM_.empty() || nCols == 0) {
         return OK;
     }
@@ -617,6 +621,8 @@ int SparseReduceMatrix4(SparseMatrix &SM_, int nCols, int *Rank) {
     int nextstairrow = 0;
     int last_row = SM.size();
     for (int i = 0; i < nCols; i++) {
+        memory_usage_update(i);
+
         int j;
         for (j = nextstairrow; j < (int) SM.size(); j++) {
             if (Get_Matrix_Element(SM, j, i) != S_zero()) {
