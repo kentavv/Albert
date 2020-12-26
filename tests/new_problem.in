@@ -1,0 +1,12 @@
+i (a,b,b)
+i [[a,b],c]
+g a b c d e f g h
+b
+d
+p (a,b,[c,d])(e,f,[g,h])
+c s
+mult.bin
+s m
+mult.txt
+s b
+basis.txt
