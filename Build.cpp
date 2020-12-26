@@ -367,86 +367,25 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     SparseMatrix saved_SM = SM;
     int status = SparseReduceMatrix(SM, cols, &rank);
     if (cols == 12 || 1) {
-        {
+        int nfuncs = 6;
+        int (*funcs[])(SparseMatrix &SM, int nCols, int *Rank) = {SparseReduceMatrix2,
+                                                                  SparseReduceMatrix3,
+                                                                  SparseReduceMatrix4,
+                                                                  SparseReduceMatrix5,
+                                                                  SparseReduceMatrix6,
+                                                                  SparseReduceMatrix7};
+        const char *func_names[] = {"column-major",
+                                    "lazy-evaluation",
+                                    "auto-sparse-dense",
+                                    "truncated-dense",
+                                    "truncated-dense-avx-float",
+                                    "precompute-division-cache"};
+
+        for (int i = 0; i < nfuncs; i++) {
             int rank2 = 0;
             SparseMatrix SM2 = saved_SM;
-            printf("Reducing in column mode\n");
-            int status2 = SparseReduceMatrix2(SM2, cols, &rank2);
-            if (status != status2) {
-                abort();
-            }
-            if (rank != rank2) {
-                abort();
-            }
-            if (SM != SM2) {
-                abort();
-            }
-        }
-        {
-            int rank2 = 0;
-            SparseMatrix SM2 = saved_SM;
-            printf("Reducing in lazy mode\n");
-            int status2 = SparseReduceMatrix3(SM2, cols, &rank2);
-            if (status != status2) {
-                abort();
-            }
-            if (rank != rank2) {
-                abort();
-            }
-            if (SM != SM2) {
-                abort();
-            }
-        }
-        {
-            int rank2 = 0;
-            SparseMatrix SM2 = saved_SM;
-            printf("Reducing in auto-sparse-dense mode\n");
-            int status2 = SparseReduceMatrix4(SM2, cols, &rank2);
-            if (status != status2) {
-                abort();
-            }
-            if (rank != rank2) {
-                abort();
-            }
-            if (SM != SM2) {
-                abort();
-            }
-        }
-        {
-            int rank2 = 0;
-            SparseMatrix SM2 = saved_SM;
-            printf("Reducing in truncated-dense mode\n");
-            int status2 = SparseReduceMatrix5(SM2, cols, &rank2);
-            if (status != status2) {
-                abort();
-            }
-            if (rank != rank2) {
-                abort();
-            }
-            if (SM != SM2) {
-                abort();
-            }
-        }
-        {
-            int rank2 = 0;
-            SparseMatrix SM2 = saved_SM;
-            printf("Reducing in truncated-dense-avx-float mode\n");
-            int status2 = SparseReduceMatrix6(SM2, cols, &rank2);
-            if (status != status2) {
-                abort();
-            }
-            if (rank != rank2) {
-                abort();
-            }
-            if (SM != SM2) {
-                abort();
-            }
-        }
-        {
-            int rank2 = 0;
-            SparseMatrix SM2 = saved_SM;
-            printf("Reducing in precompute-division-cache mode\n");
-            int status2 = SparseReduceMatrix7(SM2, cols, &rank2);
+            printf("Reducing in %s mode\n", func_names[i]);
+            int status2 = funcs[i](SM2, cols, &rank2);
             if (status != status2) {
                 abort();
             }
