@@ -44,6 +44,7 @@ using std::lower_bound;
 #include "SparseReduceMatrix.h"
 #include "Build_defs.h"
 #include "Scalar_arithmetic.h"
+#include "profile.h"
 
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
@@ -57,6 +58,9 @@ static void Print_Rows(int Row1, int Row2, int nCols);
 static void Print_SLList(Node *SLHead_Ptr);
 static void Print_Node(NODE_PTR Prt_Node);
 #endif
+
+static bool do_sort = true;
+static int sort_freq = 10;
 
 struct stats {
     //size_t n_zero_elements;
@@ -292,33 +296,52 @@ static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCol
 }
 
 static bool SM_sort (const SparseRow &r1, const SparseRow &r2) {
-    if (r1.empty() && r2.empty()) return false;
-    if (!r1.empty() && r2.empty()) return true;
-    if (r1.empty() && !r2.empty()) return false;
+    {
+        if (r1.empty()) return false;
+        if (r2.empty()) return true;
+        //auto a = r1.empty();
+        //auto b = r2.empty();
+        //if (!a && b) return true;
+        //if (a && b) return false;
+        //if (a && !b) return false;
+    }
 
-    if (r1.front().getColumn() < r2.front().getColumn()) return true;
-    if (r1.front().getColumn() > r2.front().getColumn()) return false;
+    auto r1i = r1.front();
+    auto r2i = r2.front();
+    {
+        auto a = r1i.getColumn();
+        auto b = r2i.getColumn();
+        if (a < b) return true;
+        if (a > b) return false;
+    }
+    {
+        auto a = r1.size();
+        auto b = r2.size();
 #if 1
-    // Generally results in greater sparsity
-    if (r1.size() < r2.size()) return true;
-    if (r1.size() > r2.size()) return false;
+        // Generally results in greater sparsity
+        if (a < b) return true;
+        if (a > b) return false;
 #else
-    // Generally results in greater density, i.e. more non-zero intermediate entries
-    if (r1.size() > r2.size()) return true;
-    if (r1.size() < r2.size()) return false;
+        // Generally results in greater density, i.e. more non-zero intermediate entries
+        if (a > b) return true;
+        if (a < b) return false;
 #endif
-    if (r1.front().getElement() < r2.front().getElement()) return true;
-    if (r1.front().getElement() > r2.front().getElement()) return false;
+    }
+    {
+        auto a = r1i.getElement();
+        auto b = r2i.getElement();
+        if (a < b) return true;
+        //if (a > b) return false;
+    }
 
     return false;
 }
+
 
 int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     if (SM.empty() || nCols == 0) {
         return OK;
     }
-
-    bool do_sort = true;
 
     if(do_sort) sort(SM.begin(), SM.end(), SM_sort);
 //random_shuffle(SM.begin(), SM.end());
@@ -338,11 +361,16 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     int nextstairrow = 0;
     int last_row = SM.size();
     for (int i = 0; i < nCols; i++) {
+        putchar('\n');
+        Profile p("Iteration");
         int j;
-        for (j = nextstairrow; j < (int) SM.size(); j++) {
+        {
+            Profile p("find next");
+        for (j = nextstairrow; j < last_row; j++) {
             if (Get_Matrix_Element(SM, j, i) != S_zero()) {
                 break;
             }
+        }
         }
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
@@ -362,7 +390,7 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
             }
         }
 #endif
-        if (j < (int) SM.size()) {
+        if (j < last_row) {
             SM[nextstairrow].swap(SM[j]);
 #if DEBUG_MATRIX
             {
@@ -376,7 +404,14 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 #endif
+{
+                char s[128];
+                sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SM.size());
+            //Profile p0("c");
+                Profile p(s);
+
             SparseKnockOut(SM, nextstairrow, i, last_row);
+			}
             for(int iii = last_row; iii > 0; iii--) {
                 if (!SM[iii - 1].empty()) {
                     last_row = iii;
@@ -404,6 +439,19 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 printf("\n  %.2f\n", aa / float(bb));
             }
 
+            {
+                //Profile p1("3");
+//            printf("%d %d\n", SM.size(), last_row);
+                if (i % sort_freq == 0) {
+                    Profile p1("sort");
+                    if (do_sort) {
+                        //       Profile("sort");
+//                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
+                        sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+                    }
+                }
+            }
+
 #if DEBUG_MATRIX
             {
                 printf("After reduce\n");
@@ -424,7 +472,10 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
             save_mat_image(0, 1, i, SM, nCols);
         }
 
+        {
+//            Profile p("update");
         s1.update(SM, nextstairrow, i, nCols, 60, true);
+        }
     }
     *Rank = nextstairrow;
     s1.update(SM, nextstairrow, nCols, nCols, -1, true);
@@ -450,7 +501,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
 
     return OK;
 }
-
 
 void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor) {
     /* Step thru row ... multiplying each element by the factor */
@@ -549,7 +599,7 @@ void SparseKnockOut(SparseMatrix &SM, int row, int col, int last_row) {
 
     /* try to knockout elements in column in the rows above */
 
-#pragma omp parallel for shared(SM, row, col, last_row) schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(SM, row, col, last_row) schedule(static, 50) default(none)
 //    for (int j = 0; j < (int) SM.size(); j++) {
     for (int j = 0; j < last_row; j++) {
         if (j != row) {
@@ -689,7 +739,7 @@ void Print_SLList(Node *SLHead_Ptr) {
     Prt_Ptr = SLHead_Ptr;
 
     printf("\nColumn :");
-    while (Prt_Ptr != NULL) {
+    while (Prt_Ptr != nullptr) {
         printf(" %3d", Prt_Ptr->column);
         Prt_Ptr = Prt_Ptr->Next_Node;
     }
@@ -698,7 +748,7 @@ void Print_SLList(Node *SLHead_Ptr) {
 
     printf("\n");
     printf("Element:");
-    while (Prt_Ptr != NULL) {
+    while (Prt_Ptr != nullptr) {
         printf(" %3d", Prt_Ptr->element);
         Prt_Ptr = Prt_Ptr->Next_Node;
     }
@@ -707,7 +757,7 @@ void Print_SLList(Node *SLHead_Ptr) {
 }
 
 void Print_Node(NODE_PTR Prt_Node) {
-    if (Prt_Node == NULL) {
+    if (Prt_Node == nullptr) {
         printf("NULL\n");
         return;
     }

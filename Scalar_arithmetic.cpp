@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "Scalar_arithmetic.h"
 #include "Build_defs.h"
@@ -29,15 +30,20 @@
 
 Scalar Prime;
 Scalar Inverse_table[PRIME_BOUND];
+uint16_t _d_;
+uint32_t _c_;
 
-void S_init(void)
+void S_init()
 {
     Prime = GetField();    /* Initialize the global variable Prime. */
+
+    _d_ = Prime;
+    _c_ = (~(0U)) / _d_ + 1;
 
 /* Initialize the global table of inverses. */
     for (Scalar i=1; i<Prime; i++) {
         for (Scalar j=1; j<Prime; j++) {
-            if ((i * j) % Prime == 1) {
+            if (_modp(i * j) == 1) {
                 Inverse_table[i] = j;
                 break;
             }
