@@ -11,6 +11,8 @@ endif()
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
+
 add_executable(albert
         Alg_elements.cpp
         Alg_elements.h
@@ -85,6 +87,10 @@ add_executable(albert
         Ty_routines.cpp
         Ty_routines.h
         Ty_routines_pri.h
+        matrix_reduce.cpp
+        matrix_reduce.h
+        matrix_reduce_float.cpp
+        matrix_reduce_float.h
         )
 
 find_package(OpenMP REQUIRED)
