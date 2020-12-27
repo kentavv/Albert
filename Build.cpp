@@ -399,6 +399,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                           false};
 
         vector<pair<double, int> > profiles[nfuncs];
+        int first_func = -1;
 
         for (int i = 0; i < nfuncs; i++) {
             if (!include[i]) continue;
@@ -409,10 +410,11 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             SparseMatrix SM_ = saved_SM;
             int status_ = funcs[i](SM_, cols, &rank_);
 
-            if (i == 0) {
+            if (first_func == -1) {
                 rank = rank_;
                 status = status_;
                 SM = SM_;
+		first_func = i;
             } else {
                 if (status != status_) {
                     abort();
@@ -426,13 +428,15 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             }
             profiles[i] = memory_usage;
         }
-        for(int i=0; i<profiles[0].size(); i++) {
-            printf("Profile %07d:", i);
-            for(int j=0; j<nfuncs; j++) {
-                if (!include[j]) continue;
-                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024./1024.);
+	if (first_func >= 0) {
+            for(int i=0; i<profiles[first_func].size(); i++) {
+                printf("Profile %07d:", i);
+                for(int j=0; j<nfuncs; j++) {
+                    if (!include[j]) continue;
+                    printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024./1024.);
+                }
+                putchar('\n');
             }
-            putchar('\n');
         }
     }
 #endif
