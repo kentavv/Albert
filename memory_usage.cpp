@@ -3,12 +3,13 @@
 // kent.vandervelden@gmail.com
 //
 
+#include <stdio.h>
 #include <vector>
 #include <sys/time.h>
+#include <malloc.h>
 
 #ifdef __linux__
 #include <proc/readproc.h>
-#include <malloc.h>
 #include <string.h>
 #endif
 
@@ -91,6 +92,6 @@ void memory_usage_init(int n) {
 }
 
 void memory_usage_update(int i) {
-    printf("memory: %ld\n", current_memory_usage());
+//    printf("memory: %ld\n", current_memory_usage());
     memory_usage[i] = make_pair(current_time() - t0, current_memory_usage() - memory_usage0);
 }
