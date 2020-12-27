@@ -95,12 +95,38 @@ public:
     }
 
     inline TruncatedDenseRow copy() const {
-        TruncatedDenseRow dst(*this);
-        if (dst.sz > 0) {
+        TruncatedDenseRow dst;
+        if (sz > 0) {
+            dst.start_col = start_col + fc;
+            dst.fc = 0;
+            dst.nz = nz;
+            dst.sz = sz - fc;
             dst.d = new uint8_t[dst.sz];
-            memcpy(dst.d, d, dst.sz);
+            memcpy(dst.d, d + fc, dst.sz);
+
+            if (fc > 0) {
+                printf("%d/%d saved\n", fc, sz - fc);
+            }
         }
         return dst;
+    }
+
+    inline void shrink() {
+        if (sz > 0 && fc > 0) {
+            auto d_ = d;
+            int sz_ = sz;
+
+            sz = sz - fc;
+            d = new uint8_t[sz];
+            memcpy(d, d_ + fc, sz);
+            start_col += fc;
+            fc = 0;
+//            nz = nz;
+
+            delete[] d_;
+
+            printf("%d/%d saved (shrunk)\n", sz_ - sz, sz_);
+        }
     }
 };
 
@@ -225,6 +251,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
     for (auto p = r2.d + r2.fc; r2.fc < r2.sz - 1 && *p == 0; r2.fc++, p++) {
     }
+
+//    if (r2.sz > r2.nz * 2) // convert to sparserow?
+    if (r2.fc > r2.sz / 2) r2.shrink();
+
 //    r2.nz = 0;
 //    for (int i = 0; i < r2.sz; i++) {
 //        if (r2.d[i]) r2.nz++;
