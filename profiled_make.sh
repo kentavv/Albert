@@ -21,6 +21,7 @@
 # https://gcc.gnu.org/wiki/AutoFDO
 # https://gcc.gnu.org/wiki/AutoFDO/Tutorial
 # https://research.google/pubs/pub36576/
+# https://github.com/google/autofdo
 
 set -e
 
