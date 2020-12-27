@@ -19,8 +19,13 @@ using std::min;
 
 #include "matrix_reduce.h"
 
+static bool do_sort = true;
+static int sort_freq = 10;
+
 typedef unsigned char uint8_t;
-static const uint8_t prime = 251;
+static uint8_t prime = 251;
+static uint16_t _d_;
+static uint32_t _c_;
 
 #define DEBUG_MATRIX 0
 
@@ -28,8 +33,12 @@ static const uint8_t prime = 251;
 //
 //};
 
-inline uint8_t mod(int x) {
-    return x == 0 ? 0 : x % prime;
+inline uint8_t modp(int x) {
+    if (x == 0) return 0;
+    // return x % prime;
+    uint32_t t = _c_ * x;
+    return ((__uint64_t) t * _d_) >> 32;
+    // return x % 251;
 }
 
 class TruncatedDenseRow {
@@ -79,10 +88,8 @@ public:
 
     inline void multiply(uint8_t s) {
         for (int i = fc; i < sz; i++) {
-//        for (int i = 0; i < sz; i++) {
             if (d[i]) {
-                //d[i] = (d[i] * s) % prime;
-                d[i] = mod(d[i] * s);
+                d[i] = modp(d[i] * s);
             }
         }
     }
@@ -110,9 +117,8 @@ public:
 };
 
 static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
-    if (r1.empty() && r2.empty()) return false;
-    if (!r1.empty() && r2.empty()) return true;
-    if (r1.empty() && !r2.empty()) return false;
+    if (r1.empty()) return false;
+    if (r2.empty()) return true;
 
     if (r1.fc < r2.fc) return true;
     if (r1.fc > r2.fc) return false;
@@ -126,7 +132,7 @@ static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
     if (r1.nz < r2.nz) return false;
 #endif
     if (r1.first_element() < r2.first_element()) return true;
-    if (r1.first_element() > r2.first_element()) return false;
+//    if (r1.first_element() > r2.first_element()) return false;
 
     return false;
 }
@@ -138,17 +144,17 @@ inline uint8_t S_inv(uint8_t x) {
 }
 
 inline uint8_t S_minus(uint8_t x) {
-    return (prime - x) % prime;
+    return modp(prime - x);
 }
 
 inline uint8_t S_mul(uint8_t x, uint8_t y) {
-    return (x && y) ? (x * y) % 251 : 0;
-//    return (!x || !y) ? 0 : (x * y) % 251;
-//    return (x * y) % prime;
+    return (x && y) ? modp(x * y) : 0;
+//    return (!x || !y) ? 0 : modp(x * y);
+//    return modp(x * y);
 }
 
 inline uint8_t S_add(uint8_t x, uint8_t y) {
-    return (x + y) % prime;
+    return modp(x + y);
 }
 
 static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
@@ -208,16 +214,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
-//        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
-#if 0
-        if (r2.d[r2i] == 0) { r2.d[r2i] = (s * r1.d[r1i]) % prime; }
+//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
+        if (r2.d[r2i] == 0) { r2.d[r2i] = modp(s * r1.d[r1i]); }
         else if (r1.d[r1i] == 0) {}
-        else { r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime; }
-#else
-        if (r2.d[r2i] == 0) { r2.d[r2i] = mod(s * r1.d[r1i]); }
-        else if (r1.d[r1i] == 0) {}
-        else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
-#endif
+        else { r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]); }
         if (r2.d[r2i]) r2.nz++;
     }
 
@@ -253,11 +253,14 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
 
 void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
     {
-//        void S_init(void)
+//        void S_init()
 //        {
 //            Prime = GetField();    /* Initialize the global variable Prime. */
 //
 ///* Initialize the global table of inverses. */
+        _d_ = prime;
+        _c_ = (~(0U)) / _d_ + 1;
+
         for (uint8_t i = 1; i < prime; i++) {
             for (uint8_t j = 1; j < prime; j++) {
                 if (S_mul(i, j) == 1) {
@@ -271,8 +274,6 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 
     replay.clear();
     replay.reserve(rows.size());
-
-    bool do_sort = true;
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
@@ -339,7 +340,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
             }
 #endif
 
-            if (do_sort) sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+            if (do_sort && i % sort_freq == 0) sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
 
             nextstairrow++;
         }
