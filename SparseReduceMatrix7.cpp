@@ -68,7 +68,7 @@ public:
 
     void sort() {
         // stable_sort(idx_.begin(), idx_.end(), [this](size_t i1, size_t i2) { return SM_sort(SM_[i1], SM_[i2]); });
-        sort(idx_.begin(), idx_.end(), [this](size_t i1, size_t i2) { return SM_sort(SM_[i1], SM_[i2]); });
+        std::sort(idx_.begin(), idx_.end(), [this](size_t i1, size_t i2) { return SM_sort(SM_[i1], SM_[i2]); });
     }
 
     SparseRow &operator[](int i) {
