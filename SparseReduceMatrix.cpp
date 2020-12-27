@@ -60,6 +60,7 @@ static void Print_SLList(Node *SLHead_Ptr);
 static void Print_Node(NODE_PTR Prt_Node);
 #endif
 
+#define DEBUG_MATRIX 0
 static bool do_sort = true;
 static int sort_freq = 10;
 
@@ -380,8 +381,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
         /* When found interchange and then try to knockout any nonzero
            elements in the same column */
 
-#define DEBUG_MATRIX 0
-
 #if DEBUG_MATRIX
         printf("\nCol:%d/%d j:%d nextstairrow:%d nRows:%d reducing?:%d\n", i, nCols, j, nextstairrow, SM.size(), j < (int) SM.size());
         {
@@ -424,8 +423,13 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                 }
             }
 //            printf("%d %d\n", SM.size(), last_row);
-//            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
-            if (do_sort) sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+
+            if (do_sort) {
+                if (i % sort_freq == 0) {
+//                    Profile p1("sort");
+                    sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
+                }
+            }
 
             if (__record) {
                 printf(">> %d", nextstairrow);
@@ -442,19 +446,6 @@ int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
                     }
                 }
                 printf("\n  %.2f\n", aa / float(bb));
-            }
-
-            {
-                //Profile p1("3");
-//            printf("%d %d\n", SM.size(), last_row);
-                if (i % sort_freq == 0) {
-//                    Profile p1("sort");
-                    if (do_sort) {
-                        //       Profile("sort");
-//                sort(SM.begin() + nextstairrow + 1, SM.end(), SM_sort);
-                        sort(SM.begin() + nextstairrow + 1, SM.begin() + last_row, SM_sort);
-                    }
-                }
             }
 
 #if DEBUG_MATRIX
