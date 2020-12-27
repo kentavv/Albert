@@ -21,6 +21,7 @@ using std::min;
 
 static bool do_sort = true;
 static int sort_freq = 10;
+static bool use_replay = false;
 
 typedef unsigned char uint8_t;
 static uint8_t prime = 251;
@@ -104,9 +105,9 @@ public:
             dst.d = new uint8_t[dst.sz];
             memcpy(dst.d, d + fc, dst.sz);
 
-            if (fc > 0) {
-                printf("%d/%d saved\n", fc, sz - fc);
-            }
+//            if (fc > 0) {
+//                printf("%d/%d saved\n", fc, sz - fc);
+//            }
         }
         return dst;
     }
@@ -125,7 +126,7 @@ public:
 
             delete[] d_;
 
-            printf("%d/%d saved (shrunk)\n", sz_ - sz, sz_);
+//            printf("%d/%d saved (shrunk)\n", sz_ - sz, sz_);
         }
     }
 };
@@ -271,10 +272,14 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
         rows[r].multiply(S_inv(x));
     }
 
-    replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
+    int s = 0;
+    if(use_replay) {
+        replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
+	s = r + 1;
+    }
 
-#pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
-    for (int j = r + 1; j < last_row; j++) {
+#pragma omp parallel for shared(rows, s, r, c, last_row) schedule(dynamic, 10) default(none)
+    for (int j = s; j < last_row; j++) {
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
         }
@@ -302,8 +307,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 //        }
     }
 
-    replay.clear();
-    replay.reserve(rows.size());
+    if(use_replay) replay.reserve(rows.size());
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
@@ -376,20 +380,24 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
         }
     }
 
-    printf("\nReplaying lazy calculations\n");
-    {
-        Profile p("Replaying lazy calculations");
-        for (auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
-            int r = ii->first.first;
-            int c = ii->first.second;
-            const auto &row = ii->second;
+    if (!replay.empty()) {
+        printf("\nReplaying lazy calculations\n");
+        {
+            Profile p("Replaying lazy calculations");
+            for (auto ii = replay.begin(); ii != replay.end(); ii++) {
+                int r = ii->first.first;
+                int c = ii->first.second;
+                auto &row = ii->second;
 
 #pragma omp parallel for shared(rows, r, c, row) schedule(dynamic, 10) default(none)
-            for (int j = 0; j < r; j++) {
-                add_row(S_minus(rows[j].element(c)), row, rows[j]);
+                for (int j = 0; j < r; j++) {
+                    add_row(S_minus(rows[j].element(c)), row, rows[j]);
+                }
+//                s1.update(SM, row, col, nCols, 60, true);
+                row.clear();
             }
-//            s1.update(SM, row, col, nCols, 60, true);
         }
+	replay.clear();
     }
 
 #if 0
