@@ -15,8 +15,8 @@ CFLAGS=-g -O3 -Wall -fopenmp -Weffc++ -Wextra -mavx
 #CFLAGS=-g -O3 -Wall -fopenmp -fprofile-use -fprofile-correction
 #CFLAGS=-g -O3 -flto -Wall
 
-CXXFLAGS=$(CFLAGS)
-#CXXFLAGS=$(CFLAGS) -std=c++11
+#CXXFLAGS=$(CFLAGS)
+CXXFLAGS=$(CFLAGS) -std=c++11
 
 LDFLAGS=-fopenmp
 #LDFLAGS=-fopenmp --coverage
