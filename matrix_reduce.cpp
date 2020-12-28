@@ -139,7 +139,7 @@ static void swap(TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
     swap(r1.d, r2.d);
 }
 
-struct stats {
+struct stats_ {
     //size_t n_zero_elements;
     size_t n_elements;
     size_t capacity;
@@ -153,7 +153,7 @@ struct stats {
     time_t prev_update;
     time_t cur_update;
 
-    stats() : // n_zero_elements(0),
+    stats_() : // n_zero_elements(0),
             n_elements(0),
             capacity(0),
             n_zero_rows(0),
@@ -465,7 +465,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
-    stats s1;
+    stats_ s1;
     s1.update(rows, 0, 0, n_cols, -1, true);
 
     int nextstairrow = 0;
