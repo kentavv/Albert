@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <immintrin.h>
+
 #include "profile.h"
 #include "memory_usage.h"
 
@@ -373,6 +375,61 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //            // r2 = r2 + s * r1
 //            // r2 could update, can't skip zeros of r2, while skipping non-zeros of r1
 //        }
+    }
+
+    {
+        const __m256 _k = _mm256_set1_ps(1.0f / prime);
+        //__m256i _p = _mm256_set1_epi32(prime);
+        const __m256 _p = _mm256_set1_ps(prime);
+        const __m256 _s = _mm256_set1_ps(s);
+        const __m256 _z = _mm256_set1_ps(0);
+
+        for (; r1i < r1.sz - 7; r1i += 8, r2i += 8) {
+            // float x = r2.d[r2i] + s * r1.d[r1i];
+
+//            __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
+            __m256 _r2;
+            {
+                __m128i v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i));
+                __m256i v32 = _mm256_cvtepu8_epi32(v);
+                _r2 = _mm256_cvtepi32_ps(v32);
+            }
+//            __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
+            __m256 _r1;
+            {
+                __m128i v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i));
+                __m256i v32 = _mm256_cvtepu8_epi32(v);
+                _r1 = _mm256_cvtepi32_ps(v32);
+            }
+
+            __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
+
+            // r2.d[r2i] = x - int(x / prime) * prime;
+            __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+            _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
+
+//            _mm256_storeu_ps(r2.d + r2i, _x2);
+//            {
+            __m256i a = _mm256_cvtps_epi32(_x2);
+            __m256i ab = _mm256_packs_epi32(a, a);
+            __m256i abcd = _mm256_packus_epi16(ab, ab);
+            __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
+//                __m256i  v = _mm256_packus_epi16 (v);
+            __m128i r = _mm256_castsi256_si128(lanefix);
+            _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
+//            }
+            {
+//                __m256i a = _mm256_cvtps_epi32(_x2);
+//                _mm256_shuffle_epi8
+            }
+
+//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
+
+            __m256 _c = _mm256_cmp_ps(_z, _x2, _CMP_NEQ_UQ);
+            unsigned mask = _mm256_movemask_ps(_c);
+            int n = _mm_popcnt_u32(mask);
+            r2.nz += n;
+        }
     }
 
     for (; r1i < r1.sz; r1i++, r2i++) {
