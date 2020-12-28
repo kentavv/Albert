@@ -440,6 +440,8 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
 #endif
 }
 
+#include "driver.h" // for GetField()
+
 void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
     {
 //        void S_init()
@@ -447,6 +449,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 //            Prime = GetField();    /* Initialize the global variable Prime. */
 //
 ///* Initialize the global table of inverses. */
+        prime = GetField();
         _d_ = prime;
         _c_ = (~(0U)) / _d_ + 1;
 
