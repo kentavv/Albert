@@ -62,7 +62,7 @@ static void Print_Node(NODE_PTR Prt_Node);
 
 #define DEBUG_MATRIX 0
 static bool do_sort = true;
-static int sort_freq = 10;
+static int sort_freq = 1;
 
 struct stats {
     //size_t n_zero_elements;
