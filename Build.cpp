@@ -390,7 +390,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                                     "truncated-dense",
                                     "truncated-dense-avx-float",
                                     "precompute-division-cache"};
-        bool include[] = {true,
+        bool include[] = {false,
                           false,
                           false,
                           false,
@@ -414,7 +414,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                 rank = rank_;
                 status = status_;
                 SM = SM_;
-		first_func = i;
+                first_func = i;
             } else {
                 if (status != status_) {
                     abort();
@@ -428,16 +428,18 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
             }
             profiles[i] = memory_usage;
         }
-	if (first_func >= 0) {
-            for(int i=0; i<profiles[first_func].size(); i++) {
+#if 0
+        if (first_func >= 0) {
+            for (int i = 0; i < profiles[first_func].size(); i++) {
                 printf("Profile %07d:", i);
-                for(int j=0; j<nfuncs; j++) {
+                for (int j = 0; j < nfuncs; j++) {
                     if (!include[j]) continue;
-                    printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024./1024.);
+                    printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second / 1024. / 1024.);
                 }
                 putchar('\n');
             }
         }
+#endif
     }
 #endif
 
