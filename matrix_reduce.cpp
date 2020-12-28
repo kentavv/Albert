@@ -19,8 +19,14 @@ using std::min;
 
 #include "matrix_reduce.h"
 
+static bool do_sort = true;
+static int sort_freq = 1;
+static bool use_replay = false;
+
 typedef unsigned char uint8_t;
-static const uint8_t prime = 251;
+static uint8_t prime = 251;
+static uint16_t _d_;
+static uint32_t _c_;
 
 #define DEBUG_MATRIX 0
 
@@ -28,8 +34,12 @@ static const uint8_t prime = 251;
 //
 //};
 
-inline uint8_t mod(int x) {
-    return x == 0 ? 0 : x % prime;
+inline uint8_t modp(int x) {
+    if (x == 0) return 0;
+    // return x % prime;
+    uint32_t t = _c_ * x;
+    return ((__uint64_t) t * _d_) >> 32;
+    // return x % 251;
 }
 
 class TruncatedDenseRow {
@@ -79,21 +89,45 @@ public:
 
     inline void multiply(uint8_t s) {
         for (int i = fc; i < sz; i++) {
-//        for (int i = 0; i < sz; i++) {
             if (d[i]) {
-                //d[i] = (d[i] * s) % prime;
-                d[i] = mod(d[i] * s);
+                d[i] = modp(d[i] * s);
             }
         }
     }
 
     inline TruncatedDenseRow copy() const {
-        TruncatedDenseRow dst(*this);
-        if (dst.sz > 0) {
+        TruncatedDenseRow dst;
+        if (sz > 0) {
+            dst.start_col = start_col + fc;
+            dst.fc = 0;
+            dst.nz = nz;
+            dst.sz = sz - fc;
             dst.d = new uint8_t[dst.sz];
-            memcpy(dst.d, d, dst.sz);
+            memcpy(dst.d, d + fc, dst.sz);
+
+//            if (fc > 0) {
+//                printf("%d/%d saved\n", fc, sz - fc);
+//            }
         }
         return dst;
+    }
+
+    inline void shrink() {
+        if (sz > 0 && fc > 0) {
+            auto d_ = d;
+            int sz_ = sz;
+
+            sz = sz - fc;
+            d = new uint8_t[sz];
+            memcpy(d, d_ + fc, sz);
+            start_col += fc;
+            fc = 0;
+//            nz = nz;
+
+            delete[] d_;
+
+//            printf("%d/%d saved (shrunk)\n", sz_ - sz, sz_);
+        }
     }
 };
 
@@ -105,14 +139,149 @@ static void swap(TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
     swap(r1.d, r2.d);
 }
 
+struct stats {
+    //size_t n_zero_elements;
+    size_t n_elements;
+    size_t capacity;
+    size_t n_zero_rows;
+    size_t n_rows;
+    size_t n_cols;
+    int last_nextstairrow;
+    int prev_col;
+    int cur_col;
+    time_t first_update;
+    time_t prev_update;
+    time_t cur_update;
+
+    stats() : // n_zero_elements(0),
+            n_elements(0),
+            capacity(0),
+            n_zero_rows(0),
+            n_rows(0),
+            n_cols(0),
+            last_nextstairrow(0),
+            prev_col(0),
+            cur_col(0),
+            first_update(0),
+            prev_update(0),
+            cur_update(0) {}
+
+    void clear() {
+        //n_zero_elements = 0;
+        n_elements = 0;
+        capacity = 0;
+        n_zero_rows = 0;
+        n_rows = 0;
+        n_cols = 0;
+        last_nextstairrow = 0;
+        // These are not reset between updates because they are used
+        // to calculate rates.
+        //prev_col = 0;
+        //cur_col = 0;
+        //first_update = 0;
+        //prev_update = 0;
+        //cur_update = 0;
+    }
+
+    static void tp(float t) {
+        if (t > 3600) {
+            printf("%.02fh", t / 3600.);
+        } else if (t > 60) {
+            printf("%.02fm", t / 60.);
+        } else {
+            printf("%.02fs", t);
+        }
+    }
+
+    void print() const {
+        printf("\r\t\tne:%lu (%.1fMB)", n_elements, n_elements * sizeof(uint8_t) / 1024. / 1024.);
+#if 0
+        if(n_zero_elements > 0) {
+          printf(" ze:%lu", n_zero_elements);
+        }
+#endif
+        if (n_elements != capacity) {
+            printf(" ce:%lu (%.1fMB)", capacity, capacity * sizeof(uint8_t) / 1024. / 1024.);
+        }
+        printf("  zr:%lu  lr:%d/%lu  lc:%d/%lu",
+               n_zero_rows,
+               last_nextstairrow, n_rows,
+               cur_col, n_cols);
+        {
+            time_t dt = cur_update - first_update;
+            if (dt > 0) {
+                printf("  tt:");
+                tp(dt);
+            }
+        }
+        if (cur_col > 100) {
+            int dt = cur_update - prev_update;
+            if (dt != 0) {
+                float cps = (cur_col - prev_col + 1) / float(dt);
+                printf("  cps:%.02f", cps);
+
+                float eta = (n_cols - cur_col) / cps;
+                if (eta > 1) {
+                    printf("  etr:");
+                    tp(eta);
+                }
+            }
+        }
+        printf("                    ");
+        fflush(nullptr);
+    }
+
+    void update(const vector<TruncatedDenseRow> &SM, int nextstairrow_, int last_col_, int nCols_, int timeout = -1,
+                bool do_print = false) {
+        time_t t = time(nullptr);
+        if (timeout != -1 && cur_update != 0 && t - cur_update < timeout) {
+            return;
+        }
+
+        clear();
+        if (first_update == 0) {
+            first_update = t;
+        }
+        prev_update = cur_update;
+        cur_update = t;
+
+        n_rows = SM.size();
+        n_cols = nCols_;
+        last_nextstairrow = nextstairrow_;
+        prev_col = cur_col;
+        cur_col = last_col_;
+
+        for (int ii = 0; ii < (int) SM.size(); ii++) {
+            capacity += SM[ii].sz;
+            n_elements += SM[ii].nz;
+
+            if (SM[ii].empty()) {
+                n_zero_rows++;
+            }
+
+#if 0
+            // There should be no zero elements
+            for(int jj=0; jj<(int)SM[ii].size(); jj++) {
+              if(SM[ii][jj].getElement() == S_zero()) {
+                n_zero_elements++;
+              }
+            }
+#endif
+        }
+
+        if (do_print) {
+            print();
+        }
+    }
+};
+
 class ReduceMatrix {
 public:
 };
 
 static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
-    if (r1.empty() && r2.empty()) return false;
-    if (!r1.empty() && r2.empty()) return true;
-    if (r1.empty() && !r2.empty()) return false;
+    if (r1.empty()) return false;
+    if (r2.empty()) return true;
 
     if (r1.fc < r2.fc) return true;
     if (r1.fc > r2.fc) return false;
@@ -126,7 +295,7 @@ static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
     if (r1.nz < r2.nz) return false;
 #endif
     if (r1.first_element() < r2.first_element()) return true;
-    if (r1.first_element() > r2.first_element()) return false;
+//    if (r1.first_element() > r2.first_element()) return false;
 
     return false;
 }
@@ -138,17 +307,17 @@ inline uint8_t S_inv(uint8_t x) {
 }
 
 inline uint8_t S_minus(uint8_t x) {
-    return (prime - x) % prime;
+    return modp(prime - x);
 }
 
 inline uint8_t S_mul(uint8_t x, uint8_t y) {
-    return (x && y) ? (x * y) % 251 : 0;
-//    return (!x || !y) ? 0 : (x * y) % 251;
-//    return (x * y) % prime;
+    return (x && y) ? modp(x * y) : 0;
+//    return (!x || !y) ? 0 : modp(x * y);
+//    return modp(x * y);
 }
 
 inline uint8_t S_add(uint8_t x, uint8_t y) {
-    return (x + y) % prime;
+    return modp(x + y);
 }
 
 static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
@@ -208,16 +377,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
-//        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
-#if 0
-        if (r2.d[r2i] == 0) { r2.d[r2i] = (s * r1.d[r1i]) % prime; }
+//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
+        if (r2.d[r2i] == 0) { r2.d[r2i] = modp(s * r1.d[r1i]); }
         else if (r1.d[r1i] == 0) {}
-        else { r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime; }
-#else
-        if (r2.d[r2i] == 0) { r2.d[r2i] = mod(s * r1.d[r1i]); }
-        else if (r1.d[r1i] == 0) {}
-        else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
-#endif
+        else { r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]); }
         if (r2.d[r2i]) r2.nz++;
     }
 
@@ -225,6 +388,10 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
     for (auto p = r2.d + r2.fc; r2.fc < r2.sz - 1 && *p == 0; r2.fc++, p++) {
     }
+
+//    if (r2.sz > r2.nz * 2) // convert to sparserow?
+    if (r2.fc > r2.sz / 2) r2.shrink();
+
 //    r2.nz = 0;
 //    for (int i = 0; i < r2.sz; i++) {
 //        if (r2.d[i]) r2.nz++;
@@ -241,23 +408,48 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
         rows[r].multiply(S_inv(x));
     }
 
-    replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
+    int s = 0;
+    if (use_replay) {
+        replay.push_back(make_pair(make_pair(r, c), rows[r].copy()));
+        s = r + 1;
+    }
 
-#pragma omp parallel for shared(rows, r, c, last_row) schedule(dynamic, 10) default(none)
-    for (int j = r + 1; j < last_row; j++) {
+#pragma omp parallel for shared(rows, s, r, c, last_row) schedule(dynamic, 10) default(none)
+    for (int j = s; j < last_row; j++) {
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
         }
     }
+
+#if 0
+    {
+        int a = 0;
+        int b = 0;
+        for (int j = s; j < last_row; j++) {
+            auto &row = rows[j];
+    //        printf("%d %d: %d / %d vs %d\n", c, j, row.nz, row.sz, row.nz * 4);
+            row.shrink();
+            a += row.sz;
+            b += row.nz;
+        }
+        printf("%d: %d / %d = %.2f   %d / (4 x %d) = %.2f\n",
+               c, a, b,
+               float(a) / float(b), a, 4 * b,
+               float(a) / (4 * float(b)));
+    }
+#endif
 }
 
 void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
     {
-//        void S_init(void)
+//        void S_init()
 //        {
 //            Prime = GetField();    /* Initialize the global variable Prime. */
 //
 ///* Initialize the global table of inverses. */
+        _d_ = prime;
+        _c_ = (~(0U)) / _d_ + 1;
+
         for (uint8_t i = 1; i < prime; i++) {
             for (uint8_t j = 1; j < prime; j++) {
                 if (S_mul(i, j) == 1) {
@@ -269,17 +461,19 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 //        }
     }
 
-    replay.clear();
-    replay.reserve(rows.size());
-
-    bool do_sort = true;
+    if (use_replay) replay.reserve(rows.size());
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
+
+    stats s1;
+    s1.update(rows, 0, 0, n_cols, -1, true);
 
     int nextstairrow = 0;
 
     int last_row = rows.size();
     for (int i = 0; i < n_cols; i++) {
+//        Profile p2("total");
+
         memory_usage_update(i);
 
         int j;
@@ -338,28 +532,45 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
                 }
             }
 #endif
-
-            if (do_sort) sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+            {
+//                Profile p2("sort1");
+                if (do_sort && i % sort_freq == 0) {
+//                    Profile p("sort2");
+                    sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+                }
+            }
 
             nextstairrow++;
         }
-    }
 
-    printf("\nReplaying lazy calculations\n");
-    {
-        Profile p("Replaying lazy calculations");
-        for (auto ii = replay.cbegin(); ii != replay.cend(); ii++) {
-            int r = ii->first.first;
-            int c = ii->first.second;
-            const auto &row = ii->second;
-
-#pragma omp parallel for shared(rows, r, c, row) schedule(dynamic, 10) default(none)
-            for (int j = 0; j < r; j++) {
-                add_row(S_minus(rows[j].element(c)), row, rows[j]);
-            }
-//            s1.update(SM, row, col, nCols, 60, true);
+        {
+//            Profile p("update");
+            s1.update(rows, nextstairrow, i, n_cols, 60, true);
         }
     }
+
+    if (!replay.empty()) {
+        printf("\nReplaying lazy calculations\n");
+        {
+            Profile p("Replaying lazy calculations");
+            for (auto ii = replay.begin(); ii != replay.end(); ii++) {
+                int r = ii->first.first;
+                int c = ii->first.second;
+                auto &row = ii->second;
+
+#pragma omp parallel for shared(rows, r, c, row) schedule(dynamic, 10) default(none)
+                for (int j = 0; j < r; j++) {
+                    add_row(S_minus(rows[j].element(c)), row, rows[j]);
+                }
+//                s1.update(SM, row, col, nCols, 60, true);
+                row.clear();
+            }
+        }
+        replay.clear();
+    }
+
+    s1.update(rows, nextstairrow, n_cols, n_cols, -1, true);
+    putchar('\n');
 
 #if 0
     for(int i=0; i<rows.size(); i++) {
@@ -375,7 +586,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
-    Profile p1("SparseReduceMatrix5");
+//    Profile p1("SparseReduceMatrix5");
 
 #if DEBUG_MATRIX
     {
@@ -392,7 +603,7 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
 
     vector<TruncatedDenseRow> rows(SM.size());
     {
-        Profile p1("SM->TRD");
+//        Profile p1("SM->TRD");
 
         auto src = SM.begin();
         auto dst = rows.begin();
@@ -415,14 +626,14 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
     SM.clear();
 
     {
-        Profile p2("reduce");
+//        Profile p2("reduce");
         matrix_reduce(rows, nCols);
     }
 
     *Rank = 0;
     SM.resize(rows.size());
     {
-        Profile p3("TRD->SM");
+//        Profile p3("TRD->SM");
 
         auto src = rows.begin();
         auto dst = SM.begin();

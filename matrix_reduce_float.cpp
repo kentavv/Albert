@@ -33,7 +33,7 @@ static int sort_freq = 1;
 //
 //};
 
-inline float mod(float x) {
+inline float modp(float x) {
 //    return x == 0 ? 0 : x % prime;
     return x == 0 ? 0 : x - int(float(x) / float(prime)) * prime;
 
@@ -97,7 +97,7 @@ public:
 //        for (int i = 0; i < sz; i++) {
             if (d[i] != 0) {
                 //d[i] = (d[i] * s) % prime;
-                d[i] = mod(d[i] * s);
+                d[i] = modp(d[i] * s);
             }
         }
     }
@@ -178,16 +178,16 @@ inline float S_inv(float x) {
 }
 
 inline float S_minus(float x) {
-    return mod(prime - x);
+    return modp(prime - x);
 }
 
 inline float S_mul(float x, float y) {
-    return (x != 0 && y != 0) ? mod(x * y) : 0;
+    return (x != 0 && y != 0) ? modp(x * y) : 0;
 //    return (x * y) % prime;
 }
 
 inline float S_add(float x, float y) {
-    return mod(x + y);
+    return modp(x + y);
 }
 
 static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r2) {
@@ -292,16 +292,16 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
 
-        if (r2.d[r2i] == 0) { r2.d[r2i] = mod(s * r1.d[r1i]); }
+        if (r2.d[r2i] == 0) { r2.d[r2i] = modp(s * r1.d[r1i]); }
         else if (r1.d[r1i] == 0) {}
-        else { r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]); }
+        else { r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]); }
         if (r2.d[r2i] != 0) r2.nz++;
     }
 #endif
 #if 0
     int a = r2i;
     for (; r1i < r1.sz; r1i++, r2i++) {
-        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
     }
     for (; a < r2.sz; a++) {
         if (r2.d[a] != 0) r2.nz++;
@@ -323,7 +323,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 #if 0
     int nn = (r1.sz - r1i) % 8;
     for (int i=0; i<nn; i++, r1i++, r2i++) {
-//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
         r2.d[r2i] = x - int(x / prime) * prime;
     }
@@ -332,7 +332,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     int nn = 8 - r1i % 8;
     if (nn < 8) {
     for (int i=0; i<nn; i++, r1i++, r2i++) {
-//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
         r2.d[r2i] = x - int(x / prime) * prime;
     }
@@ -350,7 +350,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     //printf("nn: %d\n", nn);
 
     for (; 0 < nn && r1i < r1.sz; nn--, r1i++, r2i++) {
-        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         // float x = r2.d[r2i] + s * r1.d[r1i];
         //r2.d[r2i] = x - int(x / prime) * prime;
         if (r2.d[r2i] != 0) r2.nz++;
@@ -383,7 +383,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
         _mm256_store_ps(r2.d + r2i, _x2);
 #endif
 
-//        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
 
         __m256 _c = _mm256_cmp_ps(_z, _x2, _CMP_NEQ_UQ);
         unsigned mask = _mm256_movemask_ps(_c);
@@ -396,7 +396,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     //printf("ar2: %d %d\n", r1i, r2i);
 #if 1
     for (; r1i < r1.sz; r1i++, r2i++) {
-        r2.d[r2i] = mod(r2.d[r2i] + s * r1.d[r1i]);
+        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
 //        float x = r2.d[r2i] + s * r1.d[r1i];
 //        r2.d[r2i] = x - int(x / prime) * prime;
         if (r2.d[r2i] != 0) r2.nz++;

@@ -53,7 +53,7 @@ using std::pair;
 #include "Debug.h"
 #include "memory_usage.h"
 
-#define TEST_SOLVERS 0
+#define TEST_SOLVERS 1
 
 static int InitializeStructures(Type Target_type);
 
@@ -366,56 +366,80 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     int p_tt = tt;
 
     int rank = 0;
+    int status = 0;
     printf("Matrix:(%d X %d)\n", (int) SM.size(), cols);
 
-#if TEST_SOLVERS
+#if !TEST_SOLVERS
+    status = SparseReduceMatrix(SM, cols, &rank);
+#else
     SparseMatrix saved_SM = SM;
-#endif
 
-    int status = SparseReduceMatrix(SM, cols, &rank);
-
-#if TEST_SOLVERS
     if (cols == 12 || 1) {
-        int nfuncs = 6;
-        int (*funcs[])(SparseMatrix &SM, int nCols, int *Rank) = {SparseReduceMatrix2,
+        const int nfuncs = 7;
+        int (*funcs[])(SparseMatrix &SM, int nCols, int *Rank) = {SparseReduceMatrix,
+                                                                  SparseReduceMatrix2,
                                                                   SparseReduceMatrix3,
                                                                   SparseReduceMatrix4,
                                                                   SparseReduceMatrix5,
                                                                   SparseReduceMatrix6,
                                                                   SparseReduceMatrix7};
-        const char *func_names[] = {"column-major",
+        const char *func_names[] = {"default",
+                                    "column-major",
                                     "lazy-evaluation",
                                     "auto-sparse-dense",
                                     "truncated-dense",
                                     "truncated-dense-avx-float",
                                     "precompute-division-cache"};
+        bool include[] = {false,
+                          false,
+                          false,
+                          false,
+                          true,
+                          false,
+                          false};
 
-        vector<pair<double, int> > profiles[7];
-        profiles[0] = memory_usage;
+        vector<pair<double, int> > profiles[nfuncs];
+        int first_func = -1;
 
         for (int i = 0; i < nfuncs; i++) {
-            int rank2 = 0;
-            SparseMatrix SM2 = saved_SM;
+            if (!include[i]) continue;
+
             printf("Reducing in %s mode\n", func_names[i]);
-            int status2 = funcs[i](SM2, cols, &rank2);
-            if (status != status2) {
-                abort();
+
+            int rank_ = 0;
+            SparseMatrix SM_ = saved_SM;
+            int status_ = funcs[i](SM_, cols, &rank_);
+
+            if (first_func == -1) {
+                rank = rank_;
+                status = status_;
+                SM = SM_;
+                first_func = i;
+            } else {
+                if (status != status_) {
+                    abort();
+                }
+                if (rank != rank_) {
+                    abort();
+                }
+                if (SM != SM_) {
+                    abort();
+                }
             }
-            if (rank != rank2) {
-                abort();
-            }
-            if (SM != SM2) {
-                abort();
-            }
-            profiles[i+1] = memory_usage;
+            profiles[i] = memory_usage;
         }
-        for(int i=0; i<profiles[0].size(); i++) {
-            printf("Profile%07d:", i);
-            for(int j=0; j<nfuncs+1; j++) {
-                printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second/1024.);
+#if 0
+        if (first_func >= 0) {
+            for (int i = 0; i < profiles[first_func].size(); i++) {
+                printf("Profile %07d:", i);
+                for (int j = 0; j < nfuncs; j++) {
+                    if (!include[j]) continue;
+                    printf("\t%.02f/%.02f", profiles[j][i].first, profiles[j][i].second / 1024. / 1024.);
+                }
+                putchar('\n');
             }
-            putchar('\n');
         }
+#endif
     }
 #endif
 
