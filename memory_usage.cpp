@@ -8,7 +8,7 @@
 #include <sys/time.h>
 #include <malloc.h>
 
-#ifdef __linux__
+#if defined(__linux__) && defined(PROFILE_MEMORY)
 #include <proc/readproc.h>
 #include <string.h>
 #endif
@@ -23,7 +23,7 @@ double t0;
 vector<pair<double, int> > memory_usage;
 
 size_t current_memory_usage() {
-#ifdef __linux__
+#if defined(__linux__) && defined(PROFILE_MEMORY)
 #if 0
     // Probably the most conservative, but also the slowest to respond when
     // new memory is allocated in increasingly large chunks.
