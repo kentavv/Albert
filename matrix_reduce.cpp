@@ -385,13 +385,15 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
         const __m256 _z = _mm256_set1_ps(0);
 
         for (; r1i < r1.sz - 7; r1i += 8, r2i += 8) {
-            // float x = r2.d[r2i] + s * r1.d[r1i];
-
 //            __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
             __m256 _r2;
             {
+                // load 64-bit integer (8 8-bit values) into first half of destination
                 __m128i v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i));
+                // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
+                // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
                 __m256i v32 = _mm256_cvtepu8_epi32(v);
+                // Convert 8 32-bit integers into 32-bit floats
                 _r2 = _mm256_cvtepi32_ps(v32);
             }
 //            __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
@@ -402,36 +404,61 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
                 _r1 = _mm256_cvtepi32_ps(v32);
             }
 
+            // float x = r2.d[r2i] + s * r1.d[r1i];
             __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
 
-            // r2.d[r2i] = x - int(x / prime) * prime;
+            // Calculate x2 = x - int(x / prime) * prime, in two steps:
+            // float x2 = int(x / prime);
+            // using multiplication with 1/prime, avoiding far slower division.
+            // The rounding mode (truncate, and suppress exceptions) replicates C's truncation.
             __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+            // x2 = x - x2 * prime;
             _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
 
-//            _mm256_storeu_ps(r2.d + r2i, _x2);
-//            {
-            __m256i a = _mm256_cvtps_epi32(_x2);
-            __m256i ab = _mm256_packs_epi32(a, a);
-            __m256i abcd = _mm256_packus_epi16(ab, ab);
-            __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
-//                __m256i  v = _mm256_packus_epi16 (v);
-            __m128i r = _mm256_castsi256_si128(lanefix);
-            _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
-//            }
+            // r2.d[r2i] = x2
             {
+                // convert eight 32-bit floats to 32-bit integers
+                __m256i a = _mm256_cvtps_epi32(_x2);
+
+                // convert two eight 32-bit integers to 16 16-bit integers using signed saturation
+                // stored A[0:3]B[0:3]A[4:7]B[4:7]
+                __m256i ab = _mm256_packs_epi32(a, a);
+
+                // convert two 16 signed 16-bit integers to 32 8-bit integers using unsigned saturation
+                // stored A[0:7]B[0:7]A[8:15]B[8:15]
+                __m256i abcd = _mm256_packus_epi16(ab, ab);
+
+                // shuffle 32-bit integers across lanes using the corresponding index in idx
+                // in the command below, 7 is an unused placeholder
+                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
+//                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
+                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 7, 7, 7, 7, 7, 7));
+//                __m256i  v = _mm256_packus_epi16 (v);
+                // cast 256-bit value to 128-bit value, returning the low 128-bit half of the 256-bit value.
+                __m128i r = _mm256_castsi256_si128(lanefix);
+                // store the low 64-bit of a 128-bit bit value to memory
+                _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
+            }
+//            {
 //                __m256i a = _mm256_cvtps_epi32(_x2);
 //                _mm256_shuffle_epi8
-            }
+//            }
 
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
 
+            // compare two eight 32-bit floating point values using operator.
+            // _CMP_NEQ_UQ = "Not-equal (unordered, non-signaling)"
+            // Ordered vs. unordered relate to how NaNs are compared.
             __m256 _c = _mm256_cmp_ps(_z, _x2, _CMP_NEQ_UQ);
-            unsigned mask = _mm256_movemask_ps(_c);
+            // set bits in destination to the most significant bit of 8 32-bit floats
+            int mask = _mm256_movemask_ps(_c);
+            // count number of bits set in 32-bit integer
             int n = _mm_popcnt_u32(mask);
             r2.nz += n;
         }
     }
 
+    // perform calculations on remaining values
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
@@ -646,7 +673,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
-//    Profile p1("SparseReduceMatrix5");
+    Profile p1("SparseReduceMatrix5");
 
 #if DEBUG_MATRIX
     {
