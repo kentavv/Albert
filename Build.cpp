@@ -390,7 +390,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                                     "truncated-dense",
                                     "truncated-dense-avx-float",
                                     "precompute-division-cache"};
-        bool include[] = {true,
+        bool include[] = {false,
                           false,
                           false,
                           false,
