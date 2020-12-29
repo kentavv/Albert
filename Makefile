@@ -8,8 +8,8 @@ CXX=g++
 
 #CFLAGS=-MMD
 #CFLAGS=-g -O0 -Wall
-#CFLAGS=-g -O -Wall -mavx
-CFLAGS=-g -O3 -Wall -fopenmp -Weffc++ -Wextra -mavx
+#CFLAGS=-g -O -Wall -mavx2
+CFLAGS=-g -O3 -Wall -fopenmp -Weffc++ -Wextra -mavx2
 #CFLAGS=-g -O3 -Wall -fopenmp --coverage
 #CFLAGS=-g -O3 -Wall -fopenmp -fprofile-generate -fprofile-correction
 #CFLAGS=-g -O3 -Wall -fopenmp -fprofile-use -fprofile-correction
@@ -26,7 +26,8 @@ LDFLAGS=-fopenmp
 #LDFLAGS=-g -O3 -flto
 #LIBS=-lcurses -ltermcap -lm
 #LIBS=-lreadline
-LIBS=-lreadline -lprocps
+LIBS=-lreadline
+#LIBS+=-lprocps
 
 C_FILES=$(wildcard *.c)
 CPP_FILES=$(wildcard *.cpp)

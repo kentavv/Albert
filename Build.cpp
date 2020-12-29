@@ -49,6 +49,7 @@ using std::pair;
 #include "SparseReduceMatrix4.h"
 #include "SparseReduceMatrix7.h"
 #include "matrix_reduce.h"
+#include "matrix_reduce_avx.h"
 #include "matrix_reduce_float.h"
 #include "Debug.h"
 #include "memory_usage.h"
@@ -375,28 +376,31 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
     SparseMatrix saved_SM = SM;
 
     if (cols == 12 || 1) {
-        const int nfuncs = 7;
+        const int nfuncs = 8;
         int (*funcs[])(SparseMatrix &SM, int nCols, int *Rank) = {SparseReduceMatrix,
                                                                   SparseReduceMatrix2,
                                                                   SparseReduceMatrix3,
                                                                   SparseReduceMatrix4,
                                                                   SparseReduceMatrix5,
                                                                   SparseReduceMatrix6,
-                                                                  SparseReduceMatrix7};
+                                                                  SparseReduceMatrix7,
+                                                                  SparseReduceMatrix8};
         const char *func_names[] = {"default",
                                     "column-major",
                                     "lazy-evaluation",
                                     "auto-sparse-dense",
                                     "truncated-dense",
                                     "truncated-dense-avx-float",
-                                    "precompute-division-cache"};
-        bool include[] = {false,
+                                    "precompute-division-cache",
+                                    "truncated-dense-avx"};
+        bool include[] = {true,
                           false,
                           false,
                           false,
                           true,
                           false,
-                          false};
+                          false,
+                          true};
 
         vector<pair<double, int> > profiles[nfuncs];
         int first_func = -1;

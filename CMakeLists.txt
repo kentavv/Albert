@@ -11,7 +11,7 @@ endif()
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
 
 add_executable(albert
         Alg_elements.cpp
@@ -91,6 +91,8 @@ add_executable(albert
         Ty_routines_pri.h
         matrix_reduce.cpp
         matrix_reduce.h
+        matrix_reduce_avx.cpp
+        matrix_reduce_avx.h
         matrix_reduce_float.cpp
         matrix_reduce_float.h
         memory_usage.h memory_usage.cpp)
