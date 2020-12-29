@@ -23,7 +23,7 @@ using std::min;
 #include "matrix_reduce.h"
 
 static bool do_sort = true;
-static int sort_freq = 100;
+static int sort_freq = 500;
 static bool use_replay = false;
 
 typedef unsigned char uint8_t;
@@ -331,8 +331,7 @@ inline void avx_ff(const uint8_t *r2p, int r2i, const uint8_t *r1p, int r1i,
         __m256 _r2;
         {
             // load 64-bit integer (8 8-bit values) into first half of destination
-            __m128i
-            v = _mm_loadl_epi64((__m128i const *) (r2p + r2i + ii * 8));
+            __m128i v = _mm_loadl_epi64((__m128i const *) (r2p + r2i + ii * 8));
             // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
             // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
             __m256i v32 = _mm256_cvtepu8_epi32(v);
@@ -342,8 +341,7 @@ inline void avx_ff(const uint8_t *r2p, int r2i, const uint8_t *r1p, int r1i,
 
         __m256 _r1;
         {
-            __m128i
-            v = _mm_loadl_epi64((__m128i const *) (r1p + r1i + ii * 8));
+            __m128i v = _mm_loadl_epi64((__m128i const *) (r1p + r1i + ii * 8));
             __m256i v32 = _mm256_cvtepu8_epi32(v);
             _r1 = _mm256_cvtepi32_ps(v32);
         }
@@ -448,7 +446,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
                 // count number of bits set in 32-bit integer
                 r2.nz += 32 - _mm_popcnt_u32(mask);
 
-                _mm256_storeu_si256((__m256i * )(r2.d + r2i), lanefix);
+                _mm256_storeu_si256((__m256i *) (r2.d + r2i), lanefix);
             }
         }
 
@@ -474,7 +472,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
                 __m128i r = _mm256_castsi256_si128(lanefix);
 
-                _mm_storeu_si128((__m128i * )(r2.d + r2i), r);
+                _mm_storeu_si128((__m128i *) (r2.d + r2i), r);
             }
         }
 
@@ -499,7 +497,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
                 __m128i r = _mm256_castsi256_si128(lanefix);
 
-                _mm_storel_epi64((__m128i * )(r2.d + r2i), r);
+                _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
             }
         }
     }
@@ -545,6 +543,7 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
         }
     }
 #else
+    // Could reuse work from earlier that examined rows with non-zero values in column c.
     vector<int> rr;
     rr.reserve(last_row);
     for (int j = s; j < last_row; j++) {
@@ -619,12 +618,31 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 
         memory_usage_update(i);
 
+#if 0
         int j;
         for (j = nextstairrow; j < last_row; j++) {
             if (rows[j].element(i) != 0) {
                 break;
             }
         }
+#else
+        int j;
+        {
+            int j0 = -1;
+            int nz0 = 0;
+            for (j = nextstairrow; j < last_row; j++) {
+                if (rows[j].element(i) != 0) {
+                    // Selecting the row with the least number of non-zeros tends to be best, as it tends to produce
+                    // less non-zero values during reduction.
+                    if (j0 == -1 || nz0 > rows[j].nz) {
+                        j0 = j;
+                        nz0 = rows[j].nz;
+                    }
+                }
+            }
+            j = j0 != -1 ? j0 : last_row;
+        }
+#endif
 
 #if DEBUG_MATRIX
         {
