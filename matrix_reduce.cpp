@@ -1,4 +1,4 @@
-//
+        //
 // Created by kent on 12/18/2020.
 // kent.vandervelden@gmail.com
 //
@@ -518,7 +518,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     }
 
 //    if (r2.sz > r2.nz * 2) // convert to sparserow?
-    if (r2.fc > r2.sz / 2) r2.shrink();
+//    if (r2.fc > r2.sz / 2) r2.shrink();
 }
 
 static vector<pair<pair<int, int>, TruncatedDenseRow> > replay;
@@ -553,13 +553,20 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
     }
 //    printf("%d -> %d\n", last_row, rr.size());
 //#pragma omp parallel for shared(rows, s, r, c, last_row, rr) schedule(dynamic, 10) default(none)
+//    int n00 = rr.size() / 16 + 1;
+//#pragma omp parallel for shared(rows, s, r, c, last_row, rr, n00) schedule(static, n00) default(none)
 #pragma omp parallel for shared(rows, s, r, c, last_row, rr) default(none)
     for (int jj = 0; jj < rr.size(); jj++) {
         int j = rr[jj];
         add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
     }
-#endif
 
+    for (int jj = 0; jj < rr.size(); jj++) {
+        int j = rr[jj];
+        auto &r2 = rows[j];
+        if (r2.fc > r2.sz / 2) r2.shrink();
+    }
+#endif
 #if 0
     {
         int a = 0;
