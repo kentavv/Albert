@@ -397,7 +397,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
                 __m256 _r2;
                 {
                     // load 64-bit integer (8 8-bit values) into first half of destination
-                    __m128i v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i + ii * 8));
+                    __m128i
+                    v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i + ii * 8));
                     // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
                     // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
                     __m256i v32 = _mm256_cvtepu8_epi32(v);
@@ -407,7 +408,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //            __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
                 __m256 _r1;
                 {
-                    __m128i v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i + ii * 8));
+                    __m128i
+                    v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i + ii * 8));
                     __m256i v32 = _mm256_cvtepu8_epi32(v);
                     _r1 = _mm256_cvtepi32_ps(v32);
                 }
@@ -448,7 +450,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
                 r2.nz += n;
 //                printf("%d\n", n);
 
-                _mm256_storeu_si256((__m256i *) (r2.d + r2i), lanefix);
+                _mm256_storeu_si256((__m256i * )(r2.d + r2i), lanefix);
 
 //                // cast 256-bit value to 128-bit value, returning the low 128-bit half of the 256-bit value.
 //                __m128i r = _mm256_castsi256_si128(lanefix);
@@ -530,15 +532,16 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 #endif
         }
 
-#if 0
+#if 1
         for (; r1i < r1.sz - 15; r1i += 16, r2i += 16) {
             __m256i results[2];
-            for (int ii=0; ii<2; ii++) {
+            for (int ii = 0; ii < 2; ii++) {
 //            __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
                 __m256 _r2;
                 {
                     // load 64-bit integer (8 8-bit values) into first half of destination
-                    __m128i v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i + ii * 8));
+                    __m128i
+                    v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i + ii * 8));
                     // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
                     // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
                     __m256i v32 = _mm256_cvtepu8_epi32(v);
@@ -548,7 +551,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //            __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
                 __m256 _r1;
                 {
-                    __m128i v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i + ii * 8));
+                    __m128i
+                    v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i + ii * 8));
                     __m256i v32 = _mm256_cvtepu8_epi32(v);
                     _r1 = _mm256_cvtepi32_ps(v32);
                 }
@@ -579,56 +583,21 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
                 // shuffle 32-bit integers across lanes using the corresponding index in idx
                 // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
+                // in the command below, 7 is an unused placeholder
                 __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 7, 7, 7, 7));
 
+//                lanefix = _mm256_and_si256(lanefix, _mm256_setr_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0, 0, 0, 0));
+
+#if 1
                 __m256i _c = _mm256_cmpeq_epi8(lanefix, _z3);
+                _c = _mm256_and_si256(_c,
+                                      _mm256_setr_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0, 0, 0, 0));
                 int mask = _mm256_movemask_epi8(_c);
                 // count number of bits set in 32-bit integer
                 int n = 16 - _mm_popcnt_u32(mask);
                 r2.nz += n;
-//                printf("%d\n", n);
-
-                _mm_storeu_si128((__m128i_u *)(r2.d + r2i), lanefix);
-
-//                // cast 256-bit value to 128-bit value, returning the low 128-bit half of the 256-bit value.
-//                __m128i r = _mm256_castsi256_si128(lanefix);
-
-#if 0
-                // Copy the lower 64-bit integer in a to dst.
-                int64_t aa = _mm_cvtsi128_si64x(r);
-                // Compare packed signed 8-bit integers in a and b for greater-than, and store the results in dst
-                __m64 aa2 = _mm_cmpeq_pi8((__m64)aa, _z2);
-                // Create mask from the most significant bit of each 8-bit element
-                int aa3 = _mm_movemask_pi8(aa2);
-                // count number of bits set in 32-bit integer
-                an2 = 8 - _mm_popcnt_u32(aa3);
-                r2.nz += an2;
 #endif
 
-                // store the low 64-bit of a 128-bit bit value to memory
-//                    _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
-
-            }
-#if 0
-            // r2.d[r2i] = x2
-            {
-                // convert eight 32-bit floats to 32-bit integers
-                __m256i a = _mm256_cvtps_epi32(_x2);
-
-                // convert two eight 32-bit integers to 16 16-bit integers using signed saturation
-                // stored A[0:3]B[0:3]A[4:7]B[4:7]
-                __m256i ab = _mm256_packs_epi32(a, a);
-
-                // convert two 16 signed 16-bit integers to 32 8-bit integers using unsigned saturation
-                // stored A[0:7]B[0:7]A[8:15]B[8:15]
-                __m256i abcd = _mm256_packus_epi16(ab, ab);
-
-                // shuffle 32-bit integers across lanes using the corresponding index in idx
-                // in the command below, 7 is an unused placeholder
-                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
-//                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
-                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 7, 7, 7, 7, 7, 7));
-//                __m256i  v = _mm256_packus_epi16 (v);
                 // cast 256-bit value to 128-bit value, returning the low 128-bit half of the 256-bit value.
                 __m128i r = _mm256_castsi256_si128(lanefix);
 
@@ -642,18 +611,12 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
                 // count number of bits set in 32-bit integer
                 an2 = 8 - _mm_popcnt_u32(aa3);
                 r2.nz += an2;
+                printf("%d %d\n", n, an2);
 #endif
 
-                // store the low 64-bit of a 128-bit bit value to memory
-                _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
+                // store a 128-bit value to memory
+                _mm_storeu_si128((__m128i * )(r2.d + r2i), r);
             }
-#endif
-//            {
-//                __m256i a = _mm256_cvtps_epi32(_x2);
-//                _mm256_shuffle_epi8
-//            }
-
-//        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
 
 #if 0
             // compare two eight 32-bit floating point values using operator.
@@ -678,7 +641,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
                 __m256 _r2;
                 {
                     // load 64-bit integer (8 8-bit values) into first half of destination
-                    __m128i v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i + ii * 8));
+                    __m128i
+                    v = _mm_loadl_epi64((__m128i const *) (r2.d + r2i + ii * 8));
                     // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
                     // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
                     __m256i v32 = _mm256_cvtepu8_epi32(v);
@@ -688,7 +652,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //            __m256 _r1 = _mm256_loadu_ps(r1.d + r1i);
                 __m256 _r1;
                 {
-                    __m128i v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i + ii * 8));
+                    __m128i
+                    v = _mm_loadl_epi64((__m128i const *) (r1.d + r1i + ii * 8));
                     __m256i v32 = _mm256_cvtepu8_epi32(v);
                     _r1 = _mm256_cvtepi32_ps(v32);
                 }
@@ -750,7 +715,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 #endif
 
                 // store the low 64-bit of a 128-bit bit value to memory
-                _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
+                _mm_storel_epi64((__m128i * )(r2.d + r2i), r);
             }
 
 #if 0
