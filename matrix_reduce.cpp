@@ -23,7 +23,7 @@ using std::min;
 #include "matrix_reduce.h"
 
 static bool do_sort = true;
-static int sort_freq = 500;
+static int sort_freq = 50;
 static bool use_replay = false;
 
 typedef unsigned char uint8_t;
