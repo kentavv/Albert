@@ -537,12 +537,28 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
         s = r + 1;
     }
 
+#if 0
 #pragma omp parallel for shared(rows, s, r, c, last_row) schedule(dynamic, 10) default(none)
     for (int j = s; j < last_row; j++) {
         if (j != r) {
             add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
         }
     }
+#else
+    vector<int> rr;
+    rr.reserve(last_row);
+    for (int j = s; j < last_row; j++) {
+        if (j != r && rows[j].element(c) != 0) {
+            rr.push_back(j);
+        }
+    }
+
+#pragma omp parallel for shared(rows, s, r, c, last_row, rr) schedule(dynamic, 10) default(none)
+    for (int jj = 0; jj < rr.size(); jj++) {
+        int j = rr[jj];
+        add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
+    }
+#endif
 
 #if 0
     {
