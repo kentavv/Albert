@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <mmintrin.h>
 #include <immintrin.h>
 
 #include "profile.h"
@@ -384,6 +385,9 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
         const __m256 _s = _mm256_set1_ps(s);
         const __m256 _z = _mm256_set1_ps(0);
 
+        const __m64 _z2 = _mm_set1_pi8(0);
+        int an2 = 0;
+
         for (; r1i < r1.sz - 7; r1i += 8, r2i += 8) {
 //            __m256 _r2 = _mm256_loadu_ps(r2.d + r2i);
             __m256 _r2;
@@ -436,6 +440,19 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //                __m256i  v = _mm256_packus_epi16 (v);
                 // cast 256-bit value to 128-bit value, returning the low 128-bit half of the 256-bit value.
                 __m128i r = _mm256_castsi256_si128(lanefix);
+
+#if 0
+                // Copy the lower 64-bit integer in a to dst.
+                int64_t aa = _mm_cvtsi128_si64x(r);
+                // Compare packed signed 8-bit integers in a and b for greater-than, and store the results in dst
+                __m64 aa2 = _mm_cmpeq_pi8((__m64)aa, _z2);
+                // Create mask from the most significant bit of each 8-bit element
+                int aa3 = _mm_movemask_pi8(aa2);
+                // count number of bits set in 32-bit integer
+                an2 = 8 - _mm_popcnt_u32(aa3);
+                r2.nz += an2;
+#endif
+
                 // store the low 64-bit of a 128-bit bit value to memory
                 _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
             }
@@ -446,6 +463,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
 
+#if 1
             // compare two eight 32-bit floating point values using operator.
             // _CMP_NEQ_UQ = "Not-equal (unordered, non-signaling)"
             // Ordered vs. unordered relate to how NaNs are compared.
@@ -455,6 +473,9 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
             // count number of bits set in 32-bit integer
             int n = _mm_popcnt_u32(mask);
             r2.nz += n;
+
+//            printf("%d %d\n", n, an2);
+#endif
         }
     }
 
