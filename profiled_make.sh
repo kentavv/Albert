@@ -26,8 +26,8 @@
 set -e
 
 TIME=/usr/bin/time
-CFLAGS="-w -O3 -fopenmp -mavx"
-LDFLAGS="-fopenmp -mavx"
+CFLAGS="-w -O3 -fopenmp -mavx2"
+LDFLAGS="-fopenmp -mavx2"
 ALBERT_TEST=tests/profile.in
 
 echo "Testing standard build..."
