@@ -23,7 +23,7 @@ using std::min;
 #include "matrix_reduce.h"
 
 static bool do_sort = true;
-static int sort_freq = 1;
+static int sort_freq = 100;
 static bool use_replay = false;
 
 typedef unsigned char uint8_t;
@@ -552,8 +552,9 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
             rr.push_back(j);
         }
     }
-
-#pragma omp parallel for shared(rows, s, r, c, last_row, rr) schedule(dynamic, 10) default(none)
+//    printf("%d -> %d\n", last_row, rr.size());
+//#pragma omp parallel for shared(rows, s, r, c, last_row, rr) schedule(dynamic, 10) default(none)
+#pragma omp parallel for shared(rows, s, r, c, last_row, rr) default(none)
     for (int jj = 0; jj < rr.size(); jj++) {
         int j = rr[jj];
         add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
