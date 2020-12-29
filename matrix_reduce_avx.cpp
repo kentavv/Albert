@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
+#include <mmintrin.h>
+#include <immintrin.h>
+
 #include "profile.h"
 #include "memory_usage.h"
 
@@ -17,7 +20,7 @@ using std::pair;
 using std::make_pair;
 using std::min;
 
-#include "matrix_reduce.h"
+#include "matrix_reduce_avx.h"
 
 static bool do_sort = true;
 static int sort_freq = 50;
@@ -141,7 +144,7 @@ static void swap(TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
     swap(r1.d, r2.d);
 }
 
-struct stats_ {
+struct stats__ {
     //size_t n_zero_elements;
     size_t n_elements;
     size_t capacity;
@@ -155,7 +158,7 @@ struct stats_ {
     time_t prev_update;
     time_t cur_update;
 
-    stats_() : // n_zero_elements(0),
+    stats__() : // n_zero_elements(0),
             n_elements(0),
             capacity(0),
             n_zero_rows(0),
@@ -322,6 +325,44 @@ inline uint8_t S_add(uint8_t x, uint8_t y) {
     return modp(x + y);
 }
 
+
+inline void avx_ff(const uint8_t *r2p, int r2i, const uint8_t *r1p, int r1i,
+                   const __m256 &_k, const __m256 &_p, const __m256 &_s,
+                   __m256i *results, int n) {
+    for (int ii = 0; ii < n; ii++) {
+        __m256 _r2;
+        {
+            // load 64-bit integer (8 8-bit values) into first half of destination
+            __m128i v = _mm_loadl_epi64((__m128i const *) (r2p + r2i + ii * 8));
+            // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
+            // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
+            __m256i v32 = _mm256_cvtepu8_epi32(v);
+            // Convert 8 32-bit integers into 32-bit floats
+            _r2 = _mm256_cvtepi32_ps(v32);
+        }
+
+        __m256 _r1;
+        {
+            __m128i v = _mm_loadl_epi64((__m128i const *) (r1p + r1i + ii * 8));
+            __m256i v32 = _mm256_cvtepu8_epi32(v);
+            _r1 = _mm256_cvtepi32_ps(v32);
+        }
+
+        // float x = r2.d[r2i] + s * r1.d[r1i];
+        __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
+
+        // Calculate x2 = x - int(x / prime) * prime, in two steps:
+        // float x2 = int(x / prime);
+        // using multiplication with 1/prime, avoiding far slower division.
+        // The rounding mode (truncate, and suppress exceptions) replicates C's truncation.
+        __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+        // x2 = x - x2 * prime;
+        _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
+
+        results[ii] = _mm256_cvtps_epi32(_x2);
+    }
+}
+
 static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
     // r2 = r2 + s * r1
     // where -s is the value of r2 in the leading column of r1
@@ -377,6 +418,93 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //        }
     }
 
+    {
+        const __m256 _k = _mm256_set1_ps(1.0f / prime);
+        const __m256 _p = _mm256_set1_ps(prime);
+        const __m256 _s = _mm256_set1_ps(s);
+        const __m256i _z3 = _mm256_setzero_si256();
+
+        for (; r1i < r1.sz - 31; r1i += 32, r2i += 32) {
+            __m256i results[4];
+            avx_ff(r2.d, r2i, r1.d, r1i, _k, _p, _s, results, 4);
+
+            {
+                // convert two eight 32-bit integers to 16 16-bit integers using signed saturation
+                // stored A[0:3]B[0:3]A[4:7]B[4:7]
+                __m256i ab = _mm256_packs_epi32(results[0], results[1]);
+                __m256i cd = _mm256_packs_epi32(results[2], results[3]);
+
+                // convert two 16 signed 16-bit integers to 32 8-bit integers using unsigned saturation
+                // stored A[0:7]B[0:7]A[8:15]B[8:15]
+                // stored ACBD
+                __m256i abcd = _mm256_packus_epi16(ab, cd);
+
+                // shuffle 32-bit integers across lanes using the corresponding index in idx
+                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
+                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
+
+                __m256i _c = _mm256_cmpeq_epi8(lanefix, _z3);
+                int mask = _mm256_movemask_epi8(_c);
+                // count number of bits set in 32-bit integer
+                r2.nz += 32 - _mm_popcnt_u32(mask);
+
+                _mm256_storeu_si256((__m256i *) (r2.d + r2i), lanefix);
+            }
+        }
+
+        for (; r1i < r1.sz - 15; r1i += 16, r2i += 16) {
+            __m256i results[2];
+            avx_ff(r2.d, r2i, r1.d, r1i, _k, _p, _s, results, 2);
+
+            {
+                __m256i ab = _mm256_packs_epi32(results[0], results[1]);
+
+                __m256i abcd = _mm256_packus_epi16(ab, ab);
+
+                // shuffle 32-bit integers across lanes using the corresponding index in idx
+                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
+                // in the command below, 7 is an unused placeholder
+                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 7, 7, 7, 7));
+
+                __m256i _c = _mm256_cmpeq_epi8(lanefix, _z3);
+                _c = _mm256_and_si256(_c,
+                                      _mm256_setr_epi32(0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0, 0, 0, 0));
+                int mask = _mm256_movemask_epi8(_c);
+                r2.nz += 16 - _mm_popcnt_u32(mask);
+
+                __m128i r = _mm256_castsi256_si128(lanefix);
+
+                _mm_storeu_si128((__m128i *) (r2.d + r2i), r);
+            }
+        }
+
+        for (; r1i < r1.sz - 7; r1i += 8, r2i += 8) {
+            __m256i results[1];
+            avx_ff(r2.d, r2i, r1.d, r1i, _k, _p, _s, results, 1);
+
+            {
+                __m256i ab = _mm256_packs_epi32(results[0], results[0]);
+
+                __m256i abcd = _mm256_packus_epi16(ab, ab);
+
+                // shuffle 32-bit integers across lanes using the corresponding index in idx
+                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
+                // in the command below, 7 is an unused placeholder
+                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 7, 7, 7, 7, 7, 7));
+
+                __m256i _c = _mm256_cmpeq_epi8(lanefix, _z3);
+                _c = _mm256_and_si256(_c, _mm256_setr_epi32(0xffffffff, 0xffffffff, 0, 0, 0, 0, 0, 0));
+                int mask = _mm256_movemask_epi8(_c);
+                r2.nz += 8 - _mm_popcnt_u32(mask);
+
+                __m128i r = _mm256_castsi256_si128(lanefix);
+
+                _mm_storel_epi64((__m128i *) (r2.d + r2i), r);
+            }
+        }
+    }
+
+    // perform calculations on remaining values
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
@@ -464,7 +592,7 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
 
 #include "driver.h" // for GetField()
 
-void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
+void matrix_reduce_avx(vector<TruncatedDenseRow> &rows, int n_cols) {
     {
 //        void S_init()
 //        {
@@ -490,7 +618,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
-    stats_ s1;
+    stats__ s1;
     s1.update(rows, 0, 0, n_cols, -1, true);
 
     int nextstairrow = 0;
@@ -578,7 +706,7 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #endif
             {
                 if (do_shrink && i % shrink_freq == 0) {
-                    Profile p("shrink2");
+//                    Profile p("shrink2");
                     for (int i = 0; i < (int) rows.size(); i++) {
                         auto &r2 = rows[i];
                         if (r2.fc > r2.sz / 2) r2.shrink();
@@ -637,10 +765,10 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #include "CreateMatrix.h"
 #include "SparseReduceMatrix.h"
 
-int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
+int SparseReduceMatrix8(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
-    Profile p1("SparseReduceMatrix5");
+    Profile p1("SparseReduceMatrix8");
 
 #if DEBUG_MATRIX
     {
@@ -681,7 +809,7 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
 
     {
 //        Profile p2("reduce");
-        matrix_reduce(rows, nCols);
+        matrix_reduce_avx(rows, nCols);
     }
 
     *Rank = 0;
