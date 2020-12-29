@@ -24,6 +24,8 @@ using std::min;
 
 static bool do_sort = true;
 static int sort_freq = 50;
+static bool do_shrink = true;
+static int shrink_freq = 1000;
 static bool use_replay = false;
 
 typedef unsigned char uint8_t;
@@ -561,11 +563,13 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
         add_row(S_minus(rows[j].element(c)), rows[r], rows[j]);
     }
 
+#if 0
     for (int jj = 0; jj < rr.size(); jj++) {
         int j = rr[jj];
         auto &r2 = rows[j];
         if (r2.fc > r2.sz / 2) r2.shrink();
     }
+#endif
 #endif
 #if 0
     {
@@ -700,6 +704,16 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
                 }
             }
 #endif
+	    {
+                if (do_shrink && i % shrink_freq == 0) {
+	            Profile p("shrink2");
+                    for (int i = 0; i < (int) rows.size(); i++) {
+                        auto &r2 = rows[i];
+                        if (r2.fc > r2.sz / 2) r2.shrink();
+                    }
+		}
+	    }
+
             {
 //                Profile p2("sort1");
                 if (do_sort && i % sort_freq == 0) {
