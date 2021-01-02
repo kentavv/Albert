@@ -10,14 +10,15 @@
 #include "profile.h"
 #include "memory_usage.h"
 
+#include "matrix_reduce.h"
+
+namespace MatrixReduce {
 using std::vector;
 using std::sort;
 using std::swap;
 using std::pair;
 using std::make_pair;
 using std::min;
-
-#include "matrix_reduce.h"
 
 static bool do_sort = true;
 static int sort_freq = 50;
@@ -26,7 +27,7 @@ static int shrink_freq = 1000;
 static bool use_replay = false;
 
 typedef unsigned char uint8_t;
-static uint8_t prime = 251;
+static uint8_t _prime_ = 251;
 static uint16_t _d_;
 static uint32_t _c_;
 
@@ -38,7 +39,7 @@ static uint32_t _c_;
 
 inline uint8_t modp(int x) {
     if (x == 0) return 0;
-    // return x % prime;
+    // return x % _prime_;
     uint32_t t = _c_ * x;
     return ((__uint64_t) t * _d_) >> 32;
     // return x % 251;
@@ -309,7 +310,7 @@ inline uint8_t S_inv(uint8_t x) {
 }
 
 inline uint8_t S_minus(uint8_t x) {
-    return modp(prime - x);
+    return modp(_prime_ - x);
 }
 
 inline uint8_t S_mul(uint8_t x, uint8_t y) {
@@ -462,30 +463,22 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
 #endif
 }
 
-#include "driver.h" // for GetField()
+static void set_prime(uint8_t prime) {
+    _prime_ = prime;
+    _d_ = _prime_;
+    _c_ = (~(0U)) / _d_ + 1;
 
-void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
-    {
-//        void S_init()
-//        {
-//            Prime = GetField();    /* Initialize the global variable Prime. */
-//
-///* Initialize the global table of inverses. */
-        prime = GetField();
-        _d_ = prime;
-        _c_ = (~(0U)) / _d_ + 1;
-
-        for (uint8_t i = 1; i < prime; i++) {
-            for (uint8_t j = 1; j < prime; j++) {
-                if (S_mul(i, j) == 1) {
-                    _inv_table[i] = j;
-                    break;
-                }
+    for (uint8_t i = 1; i < _prime_; i++) {
+        for (uint8_t j = 1; j < _prime_; j++) {
+            if (S_mul(i, j) == 1) {
+                _inv_table[i] = j;
+                break;
             }
         }
-//        }
     }
+}
 
+void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
     if (use_replay) replay.reserve(rows.size());
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
@@ -633,9 +626,12 @@ void matrix_reduce(vector<TruncatedDenseRow> &rows, int n_cols) {
 #endif
 }
 
+}
+
 
 #include "CreateMatrix.h"
 #include "SparseReduceMatrix.h"
+#include "driver.h" // for GetField()
 
 int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
@@ -655,7 +651,7 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
     }
 #endif
 
-    vector<TruncatedDenseRow> rows(SM.size());
+    std::vector<MatrixReduce::TruncatedDenseRow> rows(SM.size());
     {
 //        Profile p1("SM->TRD");
 
@@ -681,7 +677,8 @@ int SparseReduceMatrix5(SparseMatrix &SM, int nCols, int *Rank) {
 
     {
 //        Profile p2("reduce");
-        matrix_reduce(rows, nCols);
+        MatrixReduce::set_prime(GetField());
+        MatrixReduce::matrix_reduce(rows, nCols);
     }
 
     *Rank = 0;
