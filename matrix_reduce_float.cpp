@@ -22,7 +22,7 @@ using std::pair;
 using std::make_pair;
 using std::min;
 
-static const float prime = 251;
+static float _prime_ = 251;
 static const int alignment = 256 / 8; // AVX
 
 static bool do_sort = true;
@@ -36,13 +36,13 @@ static int sort_freq = 1;
 //};
 
 inline float modp(float x) {
-//    return x == 0 ? 0 : x % prime;
-    return x == 0 ? 0 : x - int(float(x) / float(prime)) * prime;
+//    return x == 0 ? 0 : x % _prime_;
+    return x == 0 ? 0 : x - int(float(x) / float(_prime_)) * _prime_;
 
 //    if (x == 0) return 0;
-//    uint8_t rv = x - int(float(x) / float(prime)) * prime;
-//    //printf("%d %d %d\n", x, x % prime, rv);
-//    //printf("%d %d %d\n", x, x % prime, rv);
+//    uint8_t rv = x - int(float(x) / float(_prime_)) * _prime_;
+//    //printf("%d %d %d\n", x, x % _prime_, rv);
+//    //printf("%d %d %d\n", x, x % _prime_, rv);
 //    return rv;
 }
 
@@ -98,7 +98,7 @@ public:
         for (int i = fc; i < sz; i++) {
 //        for (int i = 0; i < sz; i++) {
             if (d[i] != 0) {
-                //d[i] = (d[i] * s) % prime;
+                //d[i] = (d[i] * s) % _prime_;
                 d[i] = modp(d[i] * s);
             }
         }
@@ -180,12 +180,12 @@ inline float S_inv(float x) {
 }
 
 inline float S_minus(float x) {
-    return modp(prime - x);
+    return modp(_prime_ - x);
 }
 
 inline float S_mul(float x, float y) {
     return (x != 0 && y != 0) ? modp(x * y) : 0;
-//    return (x * y) % prime;
+//    return (x * y) % _prime_;
 }
 
 inline float S_add(float x, float y) {
@@ -292,7 +292,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 #if 0
     for (; r1i < r1.sz; r1i++, r2i++) {
 //        r2.d[r2i] = S_add(r2.d[r2i], S_mul(s, r1.d[r1i]));
-//        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % prime;
+//        r2.d[r2i] = (r2.d[r2i] + s * r1.d[r1i]) % _prime_;
 
         if (r2.d[r2i] == 0) { r2.d[r2i] = modp(s * r1.d[r1i]); }
         else if (r1.d[r1i] == 0) {}
@@ -313,7 +313,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     int a = r2i;
     for (; r1i < r1.sz; r1i++, r2i++) {
         float x = r2.d[r2i] + s * r1.d[r1i];
-        r2.d[r2i] = x - int(x / prime) * prime;
+        r2.d[r2i] = x - int(x / _prime_) * _prime_;
     }
     for (; a < r2.sz; a++) {
         if (r2.d[a] != 0) r2.nz++;
@@ -327,7 +327,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     for (int i=0; i<nn; i++, r1i++, r2i++) {
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
-        r2.d[r2i] = x - int(x / prime) * prime;
+        r2.d[r2i] = x - int(x / _prime_) * _prime_;
     }
 #endif
 #if 0
@@ -336,14 +336,14 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     for (int i=0; i<nn; i++, r1i++, r2i++) {
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         float x = r2.d[r2i] + s * r1.d[r1i];
-        r2.d[r2i] = x - int(x / prime) * prime;
+        r2.d[r2i] = x - int(x / _prime_) * _prime_;
     }
     }
 #endif
 
-    const __m256 _k = _mm256_set1_ps(1.0f / prime);
-    //__m256i _p = _mm256_set1_epi32(prime);
-    const __m256 _p = _mm256_set1_ps(prime);
+    const __m256 _k = _mm256_set1_ps(1.0f / _prime_);
+    //__m256i _p = _mm256_set1_epi32(_prime_);
+    const __m256 _p = _mm256_set1_ps(_prime_);
     const __m256 _s = _mm256_set1_ps(s);
     const __m256 _z = _mm256_set1_ps(0);
 
@@ -354,7 +354,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     for (; 0 < nn && r1i < r1.sz; nn--, r1i++, r2i++) {
         r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         // float x = r2.d[r2i] + s * r1.d[r1i];
-        //r2.d[r2i] = x - int(x / prime) * prime;
+        //r2.d[r2i] = x - int(x / _prime_) * _prime_;
         if (r2.d[r2i] != 0) r2.nz++;
     }
 
@@ -376,7 +376,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
 
         __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
 
-        // r2.d[r2i] = x - int(x / prime) * prime;
+        // r2.d[r2i] = x - int(x / _prime_) * _prime_;
         __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
         _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
 #if 0
@@ -400,7 +400,7 @@ static void add_row(float s, const TruncatedDenseRow2 &r1, TruncatedDenseRow2 &r
     for (; r1i < r1.sz; r1i++, r2i++) {
         r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
 //        float x = r2.d[r2i] + s * r1.d[r1i];
-//        r2.d[r2i] = x - int(x / prime) * prime;
+//        r2.d[r2i] = x - int(x / _prime_) * _prime_;
         if (r2.d[r2i] != 0) r2.nz++;
     }
 #endif
@@ -445,24 +445,20 @@ static void knock_out(vector<TruncatedDenseRow2> &rows, int r, int c, int last_r
     }
 }
 
-void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
-    {
-//        void S_init(void)
-//        {
-//            Prime = GetField();    /* Initialize the global variable Prime. */
-//
-///* Initialize the global table of inverses. */
-        for (uint8_t i = 1; i < int(prime); i++) {
-            for (uint8_t j = 1; j < int(prime); j++) {
-                if (S_mul(i, j) == 1) {
-                    _inv_table[i] = j;
-                    break;
-                }
+static void set_prime(uint8_t prime) {
+    _prime_ = prime;
+
+    for (uint8_t i = 1; i < int(prime); i++) {
+        for (uint8_t j = 1; j < int(prime); j++) {
+            if (S_mul(i, j) == 1) {
+                _inv_table[i] = j;
+                break;
             }
         }
-//        }
     }
+}
 
+void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
     if (use_replay) {
         replay.clear();
         replay.reserve(rows.size());
@@ -574,6 +570,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
 
 #include "CreateMatrix.h"
 #include "SparseReduceMatrix.h"
+#include "driver.h" // for GetField()
 
 int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
@@ -631,7 +628,8 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 
     {
         Profile p2("reduce");
-        matrix_reduce_float(rows, nCols);
+        MatrixReduceFloat::set_prime(GetField());
+        MatrixReduceFloat::matrix_reduce_float(rows, nCols);
     }
 
     *Rank = 0;
