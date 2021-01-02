@@ -529,7 +529,7 @@ namespace MatrixReduceFloat {
                 }
 #endif
 
-                printf("%d/%d %d/%d/%d\n", i, n_cols, nextstairrow, last_row, rows.size());
+//                printf("%d/%d %d/%d/%d\n", i, n_cols, nextstairrow, last_row, rows.size());
                 if (do_sort) {
                     if ((++ns) % sort_freq == 0) {
                         sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
@@ -591,7 +591,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
 
     std::vector<MatrixReduceFloat::TruncatedDenseRow2> rows(SM.size());
     {
-        Profile p1("SM->TRD");
+//        Profile p1("SM->TRD");
 
         auto src = SM.begin();
         auto dst = rows.begin();
@@ -626,7 +626,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
     SM.clear();
 
     {
-        Profile p2("reduce");
+//        Profile p2("reduce");
         MatrixReduceFloat::set_prime(GetField());
         MatrixReduceFloat::matrix_reduce_float(rows, nCols);
     }
@@ -634,7 +634,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
     *Rank = 0;
     SM.resize(rows.size());
     {
-        Profile p3("TRD->SM");
+//        Profile p3("TRD->SM");
 
         auto src = rows.begin();
         auto dst = SM.begin();

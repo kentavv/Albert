@@ -417,11 +417,11 @@ namespace SparseReduceMatrix7_ns {
         for (int i = 0; i < nCols; i++) {
             memory_usage_update(i);
 
-            putchar('\n');
-            Profile p("Iteration");
+//            putchar('\n');
+//            Profile p("Iteration");
             int j;
             {
-                Profile p("find next");
+//                Profile p("find next");
                 for (j = nextstairrow; j < last_row; j++) {
                     if (Get_Matrix_Element(SMC, j, i) != S_zero()) {
                         break;
@@ -461,10 +461,10 @@ namespace SparseReduceMatrix7_ns {
                 }
 #endif
                 {
-                    char s[128];
-                    sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SMC.size());
+//                    char s[128];
+//                    sprintf(s, "Knockout %d/%d %d/%d/%d", i, nCols, nextstairrow, last_row, SMC.size());
                     //Profile p0("c");
-                    Profile p(s);
+//                    Profile p(s);
 
                     SparseKnockOut(SMC, nextstairrow, i, last_row);
                 }
@@ -499,7 +499,7 @@ namespace SparseReduceMatrix7_ns {
                     //Profile p1("3");
 //            printf("%d %d\n", SMC.size(), last_row);
                     if (i % sort_freq == 0) {
-                        Profile p1("sort");
+//                        Profile p1("sort");
                         if (do_sort) {
                             //       Profile("sort");
                             SMC.sort();
