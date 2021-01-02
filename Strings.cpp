@@ -34,14 +34,14 @@
 /*     changed to reflect the increased size of Str1.              */
 /*     If unable to find space, No_memory_panic() will be called.  */
 /*******************************************************************/ 
-void Str_cat(char **Str1_ptr, char Str2[], int *Str1_maxsize_ptr)
+void Str_cat(char **Str1_ptr, const char *Str2, int *Str1_maxsize_ptr)
 {
     if (*Str1_maxsize_ptr < (int)strlen(*Str1_ptr) + (int)strlen(Str2) + 1) {
         int n = 2 * (*Str1_maxsize_ptr + strlen(Str2));
 
         *Str1_ptr = (char*) realloc(*Str1_ptr, n);
 
-        if (*Str1_ptr == NULL)
+        if (*Str1_ptr == nullptr)
             No_memory_panic();
         else {
             strcat(*Str1_ptr, Str2);
