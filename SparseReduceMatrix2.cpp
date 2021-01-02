@@ -28,13 +28,6 @@
 #include <vector>
 #include <algorithm>
 
-using std::list;
-using std::vector;
-using std::lower_bound;
-using std::sort;
-using std::max;
-//using std::random_shuffle;
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -47,7 +40,15 @@ using std::max;
 #include "profile.h"
 #include "memory_usage.h"
 
-struct Node2 {
+namespace SparseReduceMatrix2_ns {
+using std::list;
+using std::vector;
+using std::lower_bound;
+using std::sort;
+using std::max;
+//using std::random_shuffle;
+
+    struct Node2 {
     Node2(int e_ = 0, int c_ = 0) : e(e_), c(c_) {};
 
     uint32_t e: 8;
@@ -239,7 +240,7 @@ struct stats {
 
 static int SparseReduceMatrix2_(SparseMatrix2 &SM, int nRows, int *Rank);
 
-int SparseReduceMatrix2(SparseMatrix &SM, int nCols, int *Rank) {
+int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
     if (SM.empty() || nCols == 0 || (SM.size() == 1 && SM[0].empty())) {
@@ -760,3 +761,9 @@ void Print_Node(NODE_PTR Prt_Node) {
 }
 
 #endif
+
+}
+
+int SparseReduceMatrix2(SparseMatrix &SM, int nCols, int *Rank) {
+    return SparseReduceMatrix2_ns::SparseReduceMatrix(SM, nCols, Rank);
+}

@@ -29,13 +29,6 @@
 #include <algorithm>
 #include <numeric>
 
-using std::max;
-using std::min;
-using std::list;
-using std::vector;
-using std::lower_bound;
-//using std::random_shuffle;
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -47,6 +40,19 @@ using std::lower_bound;
 #include "Scalar_arithmetic.h"
 #include "profile.h"
 #include "memory_usage.h"
+
+extern bool __record;
+extern int __deg;
+extern int __nn1;
+extern int __nn2;
+
+namespace SparseReduceMatrix7_ns {
+using std::max;
+using std::min;
+using std::list;
+using std::vector;
+using std::lower_bound;
+//using std::random_shuffle;
 
 static bool SM_sort(const SparseRow &r1, const SparseRow &r2);
 
@@ -247,11 +253,6 @@ struct stats {
     }
 };
 
-extern bool __record;
-extern int __deg;
-extern int __nn1;
-extern int __nn2;
-
 static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCols) {
     int mh = SM.size();
     int mw = nCols;
@@ -387,7 +388,7 @@ static bool SM_sort(const SparseRow &r1, const SparseRow &r2) {
 }
 
 
-int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
+int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
     if (SM.empty() || nCols == 0) {
@@ -833,3 +834,9 @@ void Print_Node(NODE_PTR Prt_Node) {
 }
 
 #endif
+
+}
+
+int SparseReduceMatrix7(SparseMatrix &SM, int nCols, int *Rank) {
+    return SparseReduceMatrix7_ns::SparseReduceMatrix(SM, nCols, Rank);
+}

@@ -28,13 +28,6 @@
 #include <vector>
 #include <algorithm>
 
-using std::max;
-using std::min;
-using std::list;
-using std::vector;
-using std::lower_bound;
-//using std::random_shuffle;
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,6 +40,20 @@ using std::lower_bound;
 #include "Scalar_arithmetic.h"
 #include "profile.h"
 #include "memory_usage.h"
+
+extern bool __record;
+extern int __deg;
+extern int __nn1;
+extern int __nn2;
+
+namespace SparseReduceMatrix4_ns {
+using std::max;
+using std::min;
+using std::list;
+using std::vector;
+using std::lower_bound;
+//using std::random_shuffle;
+
 
 typedef std::vector<Scalar> DenseRow;
 
@@ -418,11 +425,6 @@ struct stats {
     }
 };
 
-extern bool __record;
-extern int __deg;
-extern int __nn1;
-extern int __nn2;
-
 static void save_mat_image(int a, int b, int c, const AutoMatrix &SM, int nCols) {
     int mh = SM.size();
     int mw = nCols;
@@ -591,7 +593,7 @@ void print_matrix(AutoMatrix &SM, int nCols, const char *header) {
     }
 }
 
-int SparseReduceMatrix4(SparseMatrix &SM_, int nCols, int *Rank) {
+int SparseReduceMatrix(SparseMatrix &SM_, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
     if (SM_.empty() || nCols == 0) {
@@ -1065,3 +1067,9 @@ void Print_Node(NODE_PTR Prt_Node) {
 }
 
 #endif
+
+}
+
+int SparseReduceMatrix4(SparseMatrix &SM, int nCols, int *Rank) {
+    return SparseReduceMatrix4_ns::SparseReduceMatrix(SM, nCols, Rank);
+}

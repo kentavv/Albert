@@ -28,13 +28,6 @@
 #include <vector>
 #include <algorithm>
 
-using std::max;
-using std::min;
-using std::list;
-using std::vector;
-using std::lower_bound;
-//using std::random_shuffle;
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -46,6 +39,20 @@ using std::lower_bound;
 #include "Scalar_arithmetic.h"
 #include "profile.h"
 #include "memory_usage.h"
+
+extern bool __record;
+extern int __deg;
+extern int __nn1;
+extern int __nn2;
+
+namespace SparseReduceMatrix_ns {
+
+using std::max;
+using std::min;
+using std::list;
+using std::vector;
+using std::lower_bound;
+//using std::random_shuffle;
 
 static void SparseMultRow(SparseMatrix &SM, int Row, Scalar Factor);
 
@@ -199,11 +206,6 @@ struct stats {
         }
     }
 };
-
-extern bool __record;
-extern int __deg;
-extern int __nn1;
-extern int __nn2;
 
 static void save_mat_image(int a, int b, int c, const SparseMatrix &SM, int nCols) {
     int mh = SM.size();
@@ -762,3 +764,12 @@ void Print_Node(NODE_PTR Prt_Node) {
 }
 
 #endif
+}
+
+int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
+    return SparseReduceMatrix_ns::SparseReduceMatrix(SM, nCols, Rank);
+}
+
+Scalar Get_Matrix_Element(const SparseMatrix &SM, int i, int j) {
+    return SparseReduceMatrix_ns::Get_Matrix_Element(SM, i, j);
+}

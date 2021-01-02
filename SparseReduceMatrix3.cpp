@@ -28,13 +28,6 @@
 #include <vector>
 #include <algorithm>
 
-using std::pair;
-using std::make_pair;
-using std::list;
-using std::vector;
-using std::lower_bound;
-//using std::random_shuffle;
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -46,6 +39,15 @@ using std::lower_bound;
 #include "Scalar_arithmetic.h"
 #include "profile.h"
 #include "memory_usage.h"
+
+namespace SparseReduceMatrix3_ns {
+using std::pair;
+using std::make_pair;
+using std::list;
+using std::vector;
+using std::lower_bound;
+//using std::random_shuffle;
+
 
 typedef std::vector<uint8_t> DenseRow;
 
@@ -203,9 +205,9 @@ struct stats {
 };
 
 
-vector<pair<pair<int, int>, SparseRow> > replay;
+static vector<pair<pair<int, int>, SparseRow> > replay;
 
-int SparseReduceMatrix3(SparseMatrix &SM, int nCols, int *Rank) {
+int SparseReduceMatrix(SparseMatrix &SM, int nCols, int *Rank) {
     memory_usage_init(nCols);
 
     if (SM.empty() || nCols == 0) {
@@ -658,3 +660,9 @@ void Print_Node(NODE_PTR Prt_Node) {
 }
 
 #endif
+
+}
+
+int SparseReduceMatrix3(SparseMatrix &SM, int nCols, int *Rank) {
+    return SparseReduceMatrix3_ns::SparseReduceMatrix(SM, nCols, Rank);
+}

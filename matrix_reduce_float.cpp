@@ -11,14 +11,16 @@
 #include "profile.h"
 #include "memory_usage.h"
 
+#include "matrix_reduce_float.h"
+
+namespace MatrixReduceFloat {
+
 using std::vector;
 using std::sort;
 using std::swap;
 using std::pair;
 using std::make_pair;
 using std::min;
-
-#include "matrix_reduce_float.h"
 
 static const float prime = 251;
 static const int alignment = 256 / 8; // AVX
@@ -568,7 +570,7 @@ void matrix_reduce_float(vector<TruncatedDenseRow2> &rows, int n_cols) {
     }
 #endif
 }
-
+}
 
 #include "CreateMatrix.h"
 #include "SparseReduceMatrix.h"
@@ -591,7 +593,7 @@ int SparseReduceMatrix6(SparseMatrix &SM, int nCols, int *Rank) {
     }
 #endif
 
-    vector<TruncatedDenseRow2> rows(SM.size());
+    std::vector<MatrixReduceFloat::TruncatedDenseRow2> rows(SM.size());
     {
         Profile p1("SM->TRD");
 
