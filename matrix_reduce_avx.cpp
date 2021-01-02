@@ -7,11 +7,14 @@
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
-#include <mmintrin.h>
 #include <immintrin.h>
 
 #include "profile.h"
 #include "memory_usage.h"
+
+#include "matrix_reduce_avx.h"
+
+namespace MatrixReduceAVX {
 
 using std::vector;
 using std::sort;
@@ -20,8 +23,6 @@ using std::pair;
 using std::make_pair;
 using std::min;
 
-#include "matrix_reduce_avx.h"
-
 static bool do_sort = true;
 static int sort_freq = 50;
 static bool do_shrink = true;
@@ -29,7 +30,7 @@ static int shrink_freq = 1000;
 static bool use_replay = false;
 
 typedef unsigned char uint8_t;
-static uint8_t prime = 251;
+static uint8_t _prime_ = 251;
 static uint16_t _d_;
 static uint32_t _c_;
 
@@ -39,9 +40,9 @@ static uint32_t _c_;
 //
 //};
 
-inline uint8_t modp(int x) {
+static inline uint8_t modp(int x) {
     if (x == 0) return 0;
-    // return x % prime;
+    // return x % _prime_;
     uint32_t t = _c_ * x;
     return ((__uint64_t) t * _d_) >> 32;
     // return x % 251;
@@ -144,7 +145,7 @@ static void swap(TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
     swap(r1.d, r2.d);
 }
 
-struct stats__ {
+struct stats {
     //size_t n_zero_elements;
     size_t n_elements;
     size_t capacity;
@@ -158,7 +159,7 @@ struct stats__ {
     time_t prev_update;
     time_t cur_update;
 
-    stats__() : // n_zero_elements(0),
+    stats() : // n_zero_elements(0),
             n_elements(0),
             capacity(0),
             n_zero_rows(0),
@@ -280,10 +281,6 @@ struct stats__ {
     }
 };
 
-class ReduceMatrix {
-public:
-};
-
 static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
     if (r1.empty()) return false;
     if (r2.empty()) return true;
@@ -307,63 +304,71 @@ static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
 
 static uint8_t _inv_table[256] = {0};
 
-inline uint8_t S_inv(uint8_t x) {
+static inline uint8_t S_inv(uint8_t x) {
     return _inv_table[x];
 }
 
-inline uint8_t S_minus(uint8_t x) {
-    return modp(prime - x);
+static inline uint8_t S_minus(uint8_t x) {
+    return modp(_prime_ - x);
 }
 
-inline uint8_t S_mul(uint8_t x, uint8_t y) {
+static inline uint8_t S_mul(uint8_t x, uint8_t y) {
     return (x && y) ? modp(x * y) : 0;
 //    return (!x || !y) ? 0 : modp(x * y);
 //    return modp(x * y);
 }
 
-inline uint8_t S_add(uint8_t x, uint8_t y) {
+static inline uint8_t S_add(uint8_t x, uint8_t y) {
     return modp(x + y);
 }
 
+static inline __m256 avx_load(const __m128i *p) {
+    // load 64-bit integer (8 8-bit values) into first half of destination
+    __m128i v = _mm_loadl_epi64(p);
+    // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
+    // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
+    __m256i v32 = _mm256_cvtepu8_epi32(v);
+    // Convert 8 32-bit integers into 32-bit floats
+    return _mm256_cvtepi32_ps(v32);
+}
 
-inline void avx_ff(const uint8_t *r2p, int r2i, const uint8_t *r1p, int r1i,
+static inline void avx_ff(const uint8_t *r2p, int r2i, const uint8_t *r1p, int r1i,
                    const __m256 &_k, const __m256 &_p, const __m256 &_s,
                    __m256i *results, int n) {
     for (int ii = 0; ii < n; ii++) {
-        __m256 _r2;
-        {
-            // load 64-bit integer (8 8-bit values) into first half of destination
-            __m128i v = _mm_loadl_epi64((__m128i const *) (r2p + r2i + ii * 8));
-            // Zero extend packed unsigned 8-bit integers in a to packed 32-bit integers
-            // Zero extend: fill the higher bits with zeros, instead of copying sign bit.
-            __m256i v32 = _mm256_cvtepu8_epi32(v);
-            // Convert 8 32-bit integers into 32-bit floats
-            _r2 = _mm256_cvtepi32_ps(v32);
-        }
-
-        __m256 _r1;
-        {
-            __m128i v = _mm_loadl_epi64((__m128i const *) (r1p + r1i + ii * 8));
-            __m256i v32 = _mm256_cvtepu8_epi32(v);
-            _r1 = _mm256_cvtepi32_ps(v32);
-        }
+        __m256 _r2 = avx_load((__m128i const *) (r2p + r2i + ii * 8));
+        __m256 _r1 = avx_load((__m128i const *) (r1p + r1i + ii * 8));
 
         // float x = r2.d[r2i] + s * r1.d[r1i];
         __m256 _x = _mm256_add_ps(_r2, _mm256_mul_ps(_s, _r1));
 
-        // Calculate x2 = x - int(x / prime) * prime, in two steps:
-        // float x2 = int(x / prime);
-        // using multiplication with 1/prime, avoiding far slower division.
+        // Calculate x2 = x - int(x / _prime_) * _prime_, in two steps:
+        // float x2 = int(x / _prime_);
+        // using multiplication with 1/_prime_, avoiding far slower division.
         // The rounding mode (truncate, and suppress exceptions) replicates C's truncation.
-        __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-        // x2 = x - x2 * prime;
+
+        // This should work...
+//        __m256 _x2 = _mm256_round_ps(_mm256_mul_ps(_x, _k), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+//        printf("%f = %f %f\n", ((float*)&_x2)[0], ((float*)&_x)[0], ((float*)&_k)[0]);
+        //  but there are times when 1 / x * x are slightly less than 1, so we
+        // need to add a small amount to ensure truncation results in expected value.
+
+        // minimum that works with all primes in range [2, 251]
+//        __m256 _x2 = _mm256_round_ps(_mm256_add_ps(_mm256_set1_ps(.000008), _mm256_mul_ps(_x, _k)), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+        // maximum that works with all primes in range [2, 251]
+//        __m256 _x2 = _mm256_round_ps(_mm256_add_ps(_mm256_set1_ps(.0039749), _mm256_mul_ps(_x, _k)), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+
+        // Selected adjustment value, 4 times the minimum value. No justification over simply using the minimum.
+        __m256 _x2 = _mm256_round_ps(_mm256_add_ps(_mm256_set1_ps(.000008 * 4), _mm256_mul_ps(_x, _k)), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+
+        // x2 = x - x2 * _prime_;
         _x2 = _mm256_sub_ps(_x, _mm256_mul_ps(_x2, _p));
 
         results[ii] = _mm256_cvtps_epi32(_x2);
     }
 }
 
-static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r2) {
+static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r2, bool allow_shrinking=true) {
     // r2 = r2 + s * r1
     // where -s is the value of r2 in the leading column of r1
 
@@ -419,8 +424,8 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
     }
 
     {
-        const __m256 _k = _mm256_set1_ps(1.0f / prime);
-        const __m256 _p = _mm256_set1_ps(prime);
+        const __m256 _k = _mm256_set1_ps(1.0f / _prime_);
+        const __m256 _p = _mm256_set1_ps(_prime_);
         const __m256 _s = _mm256_set1_ps(s);
         const __m256i _z3 = _mm256_setzero_si256();
 
@@ -461,10 +466,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
                 __m256i abcd = _mm256_packus_epi16(ab, ab);
 
-                // shuffle 32-bit integers across lanes using the corresponding index in idx
-                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
-                // in the command below, 7 is an unused placeholder
-                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 7, 7, 7, 7));
+                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
 
                 __m256i _c = _mm256_cmpeq_epi8(lanefix, _z3);
                 _c = _mm256_and_si256(_c,
@@ -487,10 +489,7 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 
                 __m256i abcd = _mm256_packus_epi16(ab, ab);
 
-                // shuffle 32-bit integers across lanes using the corresponding index in idx
-                // _mm256_setr_epi32 sets 8 32-bit values in reverse order, there's also _mm256_set_epi32(...)
-                // in the command below, 7 is an unused placeholder
-                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 7, 7, 7, 7, 7, 7));
+                __m256i lanefix = _mm256_permutevar8x32_epi32(abcd, _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7));
 
                 __m256i _c = _mm256_cmpeq_epi8(lanefix, _z3);
                 _c = _mm256_and_si256(_c, _mm256_setr_epi32(0xffffffff, 0xffffffff, 0, 0, 0, 0, 0, 0));
@@ -510,11 +509,12 @@ static void add_row(uint8_t s, const TruncatedDenseRow &r1, TruncatedDenseRow &r
 //        r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]);
         if (r2.d[r2i] == 0) { r2.d[r2i] = modp(s * r1.d[r1i]); }
         else if (r1.d[r1i] == 0) {}
+//        else { r2.d[r2i] = modp(r2.d[r2i] + modp(s * r1.d[r1i])); }
         else { r2.d[r2i] = modp(r2.d[r2i] + s * r1.d[r1i]); }
         if (r2.d[r2i]) r2.nz++;
     }
 
-    if (r2.nz == 0) r2.clear();
+    if (allow_shrinking && r2.nz == 0) r2.clear();
 
     for (auto p = r2.d + r2.fc; r2.fc < r2.sz - 1 && *p == 0; r2.fc++, p++) {
     }
@@ -590,35 +590,172 @@ static void knock_out(vector<TruncatedDenseRow> &rows, int r, int c, int last_ro
 #endif
 }
 
-#include "driver.h" // for GetField()
+static void set_prime(uint8_t prime) {
+    _prime_ = prime;
+    _d_ = _prime_;
+    _c_ = (~(0U)) / _d_ + 1;
 
-void matrix_reduce_avx(vector<TruncatedDenseRow> &rows, int n_cols) {
-    {
-//        void S_init()
-//        {
-//            Prime = GetField();    /* Initialize the global variable Prime. */
-//
-///* Initialize the global table of inverses. */
-        prime = GetField();
-        _d_ = prime;
-        _c_ = (~(0U)) / _d_ + 1;
+    for (uint8_t i = 1; i < _prime_; i++) {
+        for (uint8_t j = 1; j < _prime_; j++) {
+            if (S_mul(i, j) == 1) {
+                _inv_table[i] = j;
+                break;
+            }
+        }
+    }
+}
 
-        for (uint8_t i = 1; i < prime; i++) {
-            for (uint8_t j = 1; j < prime; j++) {
-                if (S_mul(i, j) == 1) {
-                    _inv_table[i] = j;
-                    break;
+void do_tests() {
+    uint8_t saved_prime = _prime_;
+
+    #if 1
+    uint8_t primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59,
+                        61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149,
+                        151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233,
+                        239, 241, 251};
+#else
+    uint8_t primes[] = {239, 241, 251};
+#endif
+
+    printf("Starting tests...\n");
+    for (int ii = 0; ii < sizeof(primes); ii++) {
+        bool no_go = false;
+        uint8_t p = primes[ii];
+        printf("Testing prime %d\n", p);
+        set_prime(p);
+
+        for (int a = 0; a < p; a++) {
+            for (int b = 0; b < p; b++) {
+                for (int s = 0; s < p; s++) {
+                    uint8_t r = (a + (s * b) % _prime_) % _prime_;
+                    uint8_t r2 = (a + s * b) % _prime_;
+                    if (r != r2) {
+                        printf("one_mod1 %d %d %d %d  %d %d\n", p, a, b, s, r, r2);
+                    }
                 }
             }
         }
-//        }
+
+        for (int a = 0; a < p; a++) {
+            for (int b = 0; b < p; b++) {
+                for (int s = 0; s < p; s++) {
+                    uint8_t r = S_add(b, S_mul(S_minus(s), a));
+                    uint8_t r2 = (b + S_minus(s) * a) % _prime_;
+                    if (r != r2) {
+                        printf("one_mod %d %d %d %d  %d %d\n", p, a, b, s, r, r2);
+                    }
+                }
+            }
+        }
+//            puts("Check 1 done");
+
+        for (int a = 0; a < p; a++) {
+            uint8_t c0 = (p - a) % p;
+            uint8_t c1 = S_minus(a);
+            if (c0 != c1) {
+                printf("%d: S_minus(%d) = %d != %d\n", p, a, c1, c0);
+            }
+
+            for (int b = 0; b < p; b++) {
+                {
+                    uint8_t c0 = (a * b) % p;
+                    uint8_t c1 = S_mul(a, b);
+                    if (c0 != c1) {
+                        printf("%d: S_mul(%d, %d) = %d != %d\n", p, a, b, c1, c0);
+                    }
+                }
+
+                {
+                    uint8_t c0 = (a + b) % p;
+                    uint8_t c1 = S_add(a, b);
+                    if (c0 != c1) {
+                        printf("%d: S_add(%d, %d) = %d != %d\n", p, a, b, c1, c0);
+                    }
+                }
+            }
+        }
+//            puts("Check 2 done");
+
+        for (int a = 0; a < p; a++) {
+            uint8_t c0 = (p - a) % p;
+            uint8_t c1 = S_minus(a);
+            if (c0 != c1) {
+                printf("%d: S_minus(%d) = %d != %d\n", p, a, c1, c0);
+            }
+
+            TruncatedDenseRow A;
+            A.start_col = 0;
+            A.sz = 32 + 16 + 8 + 1;
+            A.d = new uint8_t[A.sz]();
+            A.fc = 0;
+            A.nz = A.sz;
+            for (int i = 0; i < A.sz; i++) {
+                A.d[i] = a;
+            }
+
+//                continue;
+
+            for (int b = 0; b < p; b++) {
+                TruncatedDenseRow B;
+                B.start_col = 0;
+                B.sz = 32 + 16 + 8 + 1;
+                B.d = new uint8_t[B.sz]();
+                B.fc = 0;
+                B.nz = B.sz;
+                for (int i = 0; i < B.sz; i++) {
+                    B.d[i] = b;
+                }
+
+                for (int s = -p + 1; s < p; s++) {
+//                    for(int s=0; s<p; s++) {
+                    // r2 = r2 + s * r1
+                    // where -s is the value of r2 in the leading column of r1
+
+                    TruncatedDenseRow B2 = B.copy();
+                    add_row(S_minus(s), A, B2, false);
+
+                    uint8_t r = S_add(b, S_mul(S_minus(s), a));
+
+                    for (int i = 1; i < B2.sz; i++) {
+                        if (B2.d[0] != B2.d[i]) {
+                            printf("yikes p=%d a=%d b=%d s=%d -s=%d i=%d B2[0]=%d B2[i]=%d\n", p, a, b, s,
+                                   S_minus(s), i, B2.d[0], B2.d[i]);
+                            no_go = true;
+                        }
+                    }
+                    if (r != B2.d[0]) {
+                        puts("yikes2");
+                        no_go = true;
+                    }
+                    if (r != B2.d[B2.sz - 1]) {
+                        puts("yikes3");
+                        no_go = true;
+                    }
+                    B2.clear();
+                    if (no_go) break;
+                }
+                B.clear();
+                if (no_go) break;
+            }
+            A.clear();
+            if (no_go) break;
+        }
+//            puts("Check 3 done");
     }
 
+    set_prime(saved_prime);
+
+    puts("Checks complete");
+
+    exit(1);
+}
+
+void matrix_reduce_avx(vector<TruncatedDenseRow> &rows, int n_cols) {
     if (use_replay) replay.reserve(rows.size());
 
     if (do_sort) sort(rows.begin(), rows.end(), TDR_sort);
 
-    stats__ s1;
+    stats s1;
     s1.update(rows, 0, 0, n_cols, -1, true);
 
     int nextstairrow = 0;
@@ -761,11 +898,15 @@ void matrix_reduce_avx(vector<TruncatedDenseRow> &rows, int n_cols) {
 #endif
 }
 
+}
 
 #include "CreateMatrix.h"
 #include "SparseReduceMatrix.h"
+#include "driver.h" // for GetField()
 
 int SparseReduceMatrix8(SparseMatrix &SM, int nCols, int *Rank) {
+//    MatrixReduceAVX::do_tests();
+
     memory_usage_init(nCols);
 
     Profile p1("SparseReduceMatrix8");
@@ -783,7 +924,7 @@ int SparseReduceMatrix8(SparseMatrix &SM, int nCols, int *Rank) {
     }
 #endif
 
-    vector<TruncatedDenseRow> rows(SM.size());
+    std::vector<MatrixReduceAVX::TruncatedDenseRow> rows(SM.size());
     {
 //        Profile p1("SM->TRD");
 
@@ -809,7 +950,8 @@ int SparseReduceMatrix8(SparseMatrix &SM, int nCols, int *Rank) {
 
     {
 //        Profile p2("reduce");
-        matrix_reduce_avx(rows, nCols);
+        MatrixReduceAVX::set_prime(GetField());
+        MatrixReduceAVX::matrix_reduce_avx(rows, nCols);
     }
 
     *Rank = 0;
