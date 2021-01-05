@@ -32,6 +32,7 @@ using std::vector;
 using std::pair;
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include "Build.h"
@@ -385,7 +386,7 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                                                                   SparseReduceMatrix6,
                                                                   SparseReduceMatrix7,
                                                                   SparseReduceMatrix8};
-        const char *func_names[] = {"default",
+        const char *func_names[] = {"original",
                                     "column-major",
                                     "lazy-evaluation",
                                     "auto-sparse-dense",
@@ -401,6 +402,24 @@ int SolveEquations(SparseMatrix &SM, int cols, vector<Unique_basis_pair> &BPtoCo
                           false,
                           false,
                           true};
+
+        if (getenv("ALBERT_METHODS")) {
+            for (int i=0; i<sizeof(include); i++) {
+                include[i] = false;
+            }
+            const char *env = getenv("ALBERT_METHODS");
+            char *buf = new char[strlen(env)+1];
+            strcpy(buf, env);
+            char *p = strtok(buf, ",");
+            while(p != nullptr) {
+                int i = atoi(p);
+                if(0 <= i && i < sizeof(include)) {
+                    include[i] = true;
+                }
+                p = strtok(nullptr, ",");
+            }
+            delete[] buf;
+        }
 
         vector<pair<double, int> > profiles[nfuncs];
         int first_func = -1;
