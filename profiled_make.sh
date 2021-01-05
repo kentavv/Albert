@@ -29,13 +29,14 @@ TIME=/usr/bin/time
 CFLAGS="-w -O3 -fopenmp -mavx2"
 LDFLAGS="-fopenmp -mavx2"
 ALBERT_TEST=tests/profile.in
+export ALBERT_METHODS=0,1,2,3,4,5,6,7
 
 echo "Testing standard build..."
 make clean > /dev/null
 make CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" > /dev/null
 
 a=$($TIME ./albert 2>&1 < $ALBERT_TEST)
-rm basis.txt mult.txt mult.bin
+rm -f basis.txt mult.txt mult.bin
 
 echo "Generating profile..."
 rm -f *.gcda
@@ -44,7 +45,7 @@ make clean > /dev/null
 make CFLAGS="$CFLAGS -fprofile-generate -fprofile-update=atomic" LDFLAGS="$LDFLAGS -fprofile-generate -fprofile-update=atomic" > /dev/null
 
 b=$($TIME ./albert 2>&1 < $ALBERT_TEST)
-rm basis.txt mult.txt mult.bin
+rm -f basis.txt mult.txt mult.bin
 
 echo "Testing profiled build..."
 make clean > /dev/null
@@ -53,7 +54,7 @@ make CFLAGS="$CFLAGS -fprofile-use" LDFLAGS="$LDFLAGS -fprofile-use" > /dev/null
 rm -f *.gcda
 
 c=$($TIME ./albert 2>&1 < $ALBERT_TEST)
-rm basis.txt mult.txt mult.bin
+rm -f basis.txt mult.txt mult.bin
 
 echo -e "\nStandard build:"
 echo "$a" | tail -2
