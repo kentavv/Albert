@@ -387,8 +387,8 @@ namespace MatrixReduceAVX {
         if (r1.empty()) return false;
         if (r2.empty()) return true;
 
-        if (r1.fc < r2.fc) return true;
-        if (r1.fc > r2.fc) return false;
+        if (r1.start_col + r1.fc < r2.start_col + r2.fc) return true;
+        if (r1.start_col + r1.fc > r2.start_col + r2.fc) return false;
 #if 1
         // Generally results in greater sparsity
         if (r1.nz < r2.nz) return true;
@@ -973,6 +973,7 @@ namespace MatrixReduceAVX {
 
             if (__record && (i / float(n_cols) > nper)) {
                 nper += .1;
+                sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
                 save_mat_image(0, 1, i, rows, n_cols);
             }
 
