@@ -964,7 +964,9 @@ namespace MatrixReduceAVX {
 //                Profile p2("sort1");
                     if (do_sort && i % sort_freq == 0) {
 //                    Profile p("sort2");
-                        sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+                        if (nextstairrow + 1 < last_row) {
+                            sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+                        }
                     }
                 }
 
@@ -973,7 +975,9 @@ namespace MatrixReduceAVX {
 
             if (__record && (i / float(n_cols) > nper)) {
                 nper += .1;
-                sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+                if (nextstairrow + 1 < last_row) {
+                    sort(rows.begin() + nextstairrow + 1, rows.begin() + last_row, TDR_sort);
+                }
                 save_mat_image(0, 1, i, rows, n_cols);
             }
 
