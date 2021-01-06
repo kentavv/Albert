@@ -290,6 +290,8 @@ namespace MatrixReduceAVX {
         int mh = rows.size();
         int mw = nCols;
 
+        if (mh * mw == 0) return;
+
         const int iih = 2160;
         const int iiw = 3840;
 
@@ -337,32 +339,35 @@ namespace MatrixReduceAVX {
         }
 #endif
 
-        if(0) {
+        {
             int s = 1;
             if (ih >= iw) {
                 s = iih / ih;
             } else {
                 s = iih / iw;
             }
-            int hoff = (iih - s * ih) / 2;
-            int woff = (iiw - s * iw) / 2;
 
-            auto s_img = new unsigned char[iih * iiw]();
+            if(s > 1) {
+                int hoff = (iih - s * ih) / 2;
+                int woff = (iiw - s * iw) / 2;
 
-            for (int i = 0; i < ih; i++) {
-                for (int j = 0; j < iw; j++) {
-                    for (int ii = 0; ii < s; ii++) {
-                        for (int jj = 0; jj < s; jj++) {
-                            s_img[((i * s + hoff + ii) * iiw) + woff + j * s + jj] = img[i * iw + j];
+                auto s_img = new unsigned char[iih * iiw]();
+
+                for (int i = 0; i < ih; i++) {
+                    for (int j = 0; j < iw; j++) {
+                        for (int ii = 0; ii < s; ii++) {
+                            for (int jj = 0; jj < s; jj++) {
+                                s_img[((i * s + hoff + ii) * iiw) + woff + j * s + jj] = img[i * iw + j];
+                            }
                         }
                     }
                 }
-            }
 
-            delete[] img;
-            img = s_img;
-            ih = iih;
-            iw = iiw;
+                delete[] img;
+                img = s_img;
+                ih = iih;
+                iw = iiw;
+            }
         }
 
         char fn[128];
