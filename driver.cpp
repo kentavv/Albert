@@ -62,7 +62,7 @@ static int Compatible(struct polynomial *Poly, struct P_type ptype);
 static void usage();
 static void sigCatch(int x);
 
-static const char *enhanced_version = "4.0.12";
+static const char *enhanced_version = "4.0.13";
 static const unsigned short mult_file_version = 0xabef;
 static bool save_tables(const char *filename);
 static bool restore_tables(const char *filename);
