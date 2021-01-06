@@ -14,6 +14,11 @@
 
 #include "matrix_reduce_avx.h"
 
+extern bool __record;
+extern int __deg;
+extern int __nn1;
+extern int __nn2;
+
 namespace MatrixReduceAVX {
 
     using std::vector;
@@ -280,6 +285,98 @@ namespace MatrixReduceAVX {
             }
         }
     };
+
+    static void save_mat_image(int a, int b, int c, const vector<TruncatedDenseRow> &rows, int nCols) {
+        int mh = rows.size();
+        int mw = nCols;
+
+        const int iih = 2160;
+        const int iiw = 3840;
+
+        int ih = min(mh, iih);
+        int iw = min(mw, iiw);
+
+//  if(mh < ih || mw < iw) return;
+
+        auto img = new unsigned char[ih * iw]();
+
+        for (int r = 0; r < (int) rows.size(); r++) {
+            for (int j = rows[r].fc; j < nCols; j++) {
+                if (rows[r].element(j) != 0) {
+                    int col = j;
+
+                    int y = r;
+                    int x = col;
+                    if (ih < mh) y = int(y / float(mh) * ih);
+                    if (iw < mw) x = int(x / float(mw) * iw);
+//if(x >= iw) abort();
+//if(y >= ih) abort();
+                    if (img[y * iw + x] < 255) {
+                        img[y * iw + x]++;
+                    }
+                }
+            }
+        }
+
+#if 0
+        int mv = 0;
+        for (int i = 0; i < ih * iw; i++) {
+            mv = max(int(img[i]), mv);
+        }
+
+        for (int i = 0; i < ih * iw; i++) {
+            if (img[i] != 0) {
+                img[i] = int(float(img[i]) / float(mv) * (255 - 63) + 63 + .5);
+            }
+        }
+#else
+        for (int i = 0; i < ih * iw; i++) {
+            if (img[i]) {
+                img[i] = 255;
+            }
+        }
+#endif
+
+        if(0) {
+            int s = 1;
+            if (ih >= iw) {
+                s = iih / ih;
+            } else {
+                s = iih / iw;
+            }
+            int hoff = (iih - s * ih) / 2;
+            int woff = (iiw - s * iw) / 2;
+
+            auto s_img = new unsigned char[iih * iiw]();
+
+            for (int i = 0; i < ih; i++) {
+                for (int j = 0; j < iw; j++) {
+                    for (int ii = 0; ii < s; ii++) {
+                        for (int jj = 0; jj < s; jj++) {
+                            s_img[((i * s + hoff + ii) * iiw) + woff + j * s + jj] = img[i * iw + j];
+                        }
+                    }
+                }
+            }
+
+            delete[] img;
+            img = s_img;
+            ih = iih;
+            iw = iiw;
+        }
+
+        char fn[128];
+        static int ind = 0;
+        //sprintf(fn, "%d_%d_%d__%d_%d_%d__%d.pgm", __deg, __nn1, __nn2, a, b, c, ind);
+        sprintf(fn, "%08d_%03d_%03d_%03d_%06d_%06d.pgm", ind, __deg, __nn1, __nn2, c, nCols);
+        ind++;
+        FILE *f = fopen(fn, "wb");
+        fprintf(f, "P5\n%d %d 255\n", iw, ih);
+        fwrite(img, 1, ih * iw, f);
+        fclose(f);
+
+        delete[] img;
+    }
 
     static bool TDR_sort(const TruncatedDenseRow &r1, const TruncatedDenseRow &r2) {
         if (r1.empty()) return false;
@@ -760,6 +857,11 @@ namespace MatrixReduceAVX {
         stats s1;
         s1.update(rows, 0, 0, n_cols, -1, true);
 
+        float nper = .1;
+        if (__record) {
+            save_mat_image(0, 0, 0, rows, n_cols);
+        }
+
         int nextstairrow = 0;
 
         int last_row = rows.size();
@@ -864,6 +966,11 @@ namespace MatrixReduceAVX {
                 nextstairrow++;
             }
 
+            if (__record && (i / float(n_cols) > nper)) {
+                nper += .1;
+                save_mat_image(0, 1, i, rows, n_cols);
+            }
+
             {
 //            Profile p("update");
                 s1.update(rows, nextstairrow, i, n_cols, 60, true);
@@ -892,6 +999,10 @@ namespace MatrixReduceAVX {
 
         s1.update(rows, nextstairrow, n_cols, n_cols, -1, true);
         putchar('\n');
+
+        if (__record) {
+            save_mat_image(0, 2, n_cols, rows, n_cols);
+        }
 
 #if 0
         for(int i=0; i<rows.size(); i++) {
